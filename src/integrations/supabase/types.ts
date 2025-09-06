@@ -175,6 +175,36 @@ export type Database = {
           },
         ]
       }
+      contact_submissions: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          message: string
+          name: string
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          message: string
+          name: string
+          status?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string
+          name?: string
+          status?: string
+          subject?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -202,6 +232,57 @@ export type Database = {
           name?: string
           read?: boolean
           subject?: string
+        }
+        Relationships: []
+      }
+      experiences: {
+        Row: {
+          achievements: string[] | null
+          company: string
+          company_url: string | null
+          created_at: string
+          current: boolean
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          role: string
+          start_date: string
+          tech_used: string[] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achievements?: string[] | null
+          company: string
+          company_url?: string | null
+          created_at?: string
+          current?: boolean
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          role: string
+          start_date: string
+          tech_used?: string[] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achievements?: string[] | null
+          company?: string
+          company_url?: string | null
+          created_at?: string
+          current?: boolean
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          role?: string
+          start_date?: string
+          tech_used?: string[] | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -512,25 +593,100 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string | null
+          email: string | null
+          github_url: string | null
           id: string
+          linkedin_url: string | null
+          location: string | null
+          name: string | null
+          resume_url: string | null
+          twitter_url: string | null
           updated_at: string | null
+          user_id: string | null
           username: string | null
+          website: string | null
         }
         Insert: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
+          github_url?: string | null
           id: string
+          linkedin_url?: string | null
+          location?: string | null
+          name?: string | null
+          resume_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
+          user_id?: string | null
           username?: string | null
+          website?: string | null
         }
         Update: {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string | null
+          email?: string | null
+          github_url?: string | null
           id?: string
+          linkedin_url?: string | null
+          location?: string | null
+          name?: string | null
+          resume_url?: string | null
+          twitter_url?: string | null
           updated_at?: string | null
+          user_id?: string | null
           username?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          content: string | null
+          created_at: string
+          demo_url: string | null
+          description: string
+          featured: boolean
+          github_url: string | null
+          id: string
+          image_url: string | null
+          status: string
+          tech_stack: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          demo_url?: string | null
+          description: string
+          featured?: boolean
+          github_url?: string | null
+          id?: string
+          image_url?: string | null
+          status?: string
+          tech_stack?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          demo_url?: string | null
+          description?: string
+          featured?: boolean
+          github_url?: string | null
+          id?: string
+          image_url?: string | null
+          status?: string
+          tech_stack?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -558,6 +714,42 @@ export type Database = {
           status?: string
           table_number?: number
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      skills: {
+        Row: {
+          category: string
+          created_at: string
+          icon: string | null
+          id: string
+          level: string
+          name: string
+          updated_at: string
+          user_id: string
+          years_experience: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          level?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          years_experience?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          level?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          years_experience?: number | null
         }
         Relationships: []
       }
