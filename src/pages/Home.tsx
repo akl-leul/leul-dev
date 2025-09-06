@@ -1,0 +1,274 @@
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowRight, ExternalLink, Github, Calendar, Clock } from 'lucide-react';
+import { format } from 'date-fns';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string | null;
+  github_url: string | null;
+  demo_url: string | null;
+  tech_stack: string[];
+  featured: boolean;
+}
+
+interface Post {
+  id: number;
+  title: string;
+  excerpt: string | null;
+  slug: string;
+  created_at: string;
+  reading_time: number;
+  tags: string[] | null;
+}
+
+const Home = () => {
+  const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
+  const [latestPosts, setLatestPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Fetch featured projects
+        const { data: projects } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('featured', true)
+          .limit(3);
+
+        // Fetch latest blog posts
+        const { data: posts } = await supabase
+          .from('posts')
+          .select('id, title, excerpt, slug, created_at, reading_time, tags')
+          .eq('published', true)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        setFeaturedProjects(projects || []);
+        setLatestPosts(posts || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  return (
+    <div className="space-y-20">
+      {/* Hero Section */}
+      <section className="relative py-20 lg:py-32">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+              Hi, I'm{' '}
+              <span className="text-primary">John Doe</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+              A passionate full-stack developer who loves creating beautiful, 
+              functional web applications and sharing knowledge through code.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" asChild>
+                <Link to="/projects">
+                  View My Work
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link to="/contact">Get In Touch</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Projects Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Featured Projects
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Some of my recent work that I'm proud of
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <div className="aspect-video bg-muted rounded-t-lg"></div>
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-full mb-4"></div>
+                      <div className="flex gap-2">
+                        <div className="h-6 bg-muted rounded w-16"></div>
+                        <div className="h-6 bg-muted rounded w-20"></div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredProjects.map((project) => (
+                  <Card key={project.id} className="group hover:shadow-lg transition-all duration-300">
+                    {project.image_url && (
+                      <div className="aspect-video overflow-hidden rounded-t-lg">
+                        <img
+                          src={project.image_url}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    )}
+                    <CardContent className="p-6">
+                      <h3 className="text-xl font-semibold mb-2 text-foreground">
+                        {project.title}
+                      </h3>
+                      <p className="text-muted-foreground mb-4 line-clamp-2">
+                        {project.description}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {project.tech_stack.slice(0, 3).map((tech) => (
+                          <Badge key={tech} variant="secondary">
+                            {tech}
+                          </Badge>
+                        ))}
+                        {project.tech_stack.length > 3 && (
+                          <Badge variant="outline">
+                            +{project.tech_stack.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        {project.github_url && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={project.github_url} target="_blank" rel="noopener noreferrer">
+                              <Github className="h-4 w-4 mr-2" />
+                              Code
+                            </a>
+                          </Button>
+                        )}
+                        {project.demo_url && (
+                          <Button size="sm" asChild>
+                            <a href={project.demo_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Live Demo
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {!loading && (
+              <div className="text-center mt-12">
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/projects">
+                    View All Projects
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Latest Blog Posts Section */}
+      <section className="py-16 bg-muted/50">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                Latest Blog Posts
+              </h2>
+              <p className="text-lg text-muted-foreground">
+                Thoughts, tutorials, and insights from my development journey
+              </p>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                      <div className="h-3 bg-muted rounded w-full mb-4"></div>
+                      <div className="h-3 bg-muted rounded w-2/3"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {latestPosts.map((post) => (
+                  <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
+                    <CardHeader>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                        <Calendar className="h-4 w-4" />
+                        {format(new Date(post.created_at), 'MMM dd, yyyy')}
+                        <Clock className="h-4 w-4 ml-2" />
+                        {post.reading_time} min read
+                      </div>
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        <Link to={`/blog/${post.slug}`}>
+                          {post.title}
+                        </Link>
+                      </CardTitle>
+                      {post.excerpt && (
+                        <CardDescription className="line-clamp-3">
+                          {post.excerpt}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    <CardContent>
+                      {post.tags && post.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {post.tags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="secondary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+
+            {!loading && (
+              <div className="text-center mt-12">
+                <Button variant="outline" size="lg" asChild>
+                  <Link to="/blog">
+                    Read All Posts
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Home;
