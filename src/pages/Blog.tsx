@@ -63,6 +63,12 @@ const Blog = () => {
   }, []);
 
   useEffect(() => {
+    document.title = 'Blog - Leul Ayfokru';
+    const meta = document.querySelector('meta[name="description"]');
+    meta?.setAttribute('content', 'Read articles and tutorials by Leul Ayfokru, full-stack developer based in Ethiopia.');
+  }, []);
+
+  useEffect(() => {
     let filtered = posts;
 
     // Filter by search term
@@ -123,6 +129,11 @@ const Blog = () => {
             <p className="text-xl text-muted-foreground">
               Thoughts, tutorials, and insights from my development journey
             </p>
+            <div className="mt-6">
+              <Button variant="outline" asChild>
+                <Link to="/admin">Write a Post</Link>
+              </Button>
+            </div>
           </div>
 
           {/* Search and Filter Section */}

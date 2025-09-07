@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Calendar, Clock, Eye } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Link as LinkIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 
@@ -59,6 +59,14 @@ const BlogPost = () => {
 
     fetchPost();
   }, [slug]);
+
+  useEffect(() => {
+    if (post) {
+      document.title = `${post.title} - Leul Ayfokru`;
+      const meta = document.querySelector('meta[name="description"]');
+      meta?.setAttribute('content', post.excerpt || post.title);
+    }
+  }, [post]);
 
   if (loading) {
     return (
@@ -227,6 +235,37 @@ const BlogPost = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Share Section */}
+            <section className="mt-8">
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <Share2 className="h-4 w-4" /> Share this post
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer">
+                    X / Twitter
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">
+                    LinkedIn
+                  </a>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">
+                    Facebook
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(window.location.href)}
+                >
+                  <Copy className="h-4 w-4 mr-2" /> Copy link
+                </Button>
+              </div>
+            </section>
 
             {/* Post Footer */}
             <footer className="mt-12 pt-8 border-t border-border">

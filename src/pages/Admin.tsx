@@ -9,6 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Edit, Plus } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 
 interface Project {
   id: string;
@@ -34,7 +37,81 @@ const Admin = () => {
   const { toast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
-  const [loading, setLoading] = useState(true);
+const [loading, setLoading] = useState(true);
+
+  // New Post form state
+  const [newPostOpen, setNewPostOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [slug, setSlug] = useState('');
+  const [excerpt, setExcerpt] = useState('');
+  const [content, setContent] = useState('');
+  const [published, setPublished] = useState(false);
+  const [readTime, setReadTime] = useState(5);
+  const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
+  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
+
+  const slugify = (str: string) =>
+    str
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setFeaturedImageFile(file);
+  };
+
+  const handleCreatePost = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setLoading(true);
+    try {
+      let imageUrl = featuredImageUrl;
+
+      if (featuredImageFile) {
+        const path = `user-${user.id}/${Date.now()}-${featuredImageFile.name}`;
+        const { error: uploadError } = await supabase
+          .storage
+          .from('blog-images')
+          .upload(path, featuredImageFile);
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from('blog-images').getPublicUrl(path);
+        imageUrl = data.publicUrl;
+      }
+
+      const { error: insertError } = await supabase.from('posts').insert({
+        title,
+        slug,
+        excerpt,
+        content,
+        featured_image: imageUrl || null,
+        published,
+        published_at: published ? new Date().toISOString() : null,
+        read_time: readTime,
+        user_id: user.id,
+      } as any);
+      if (insertError) throw insertError;
+
+      toast({ title: 'Post created', description: 'Your post has been created successfully.' });
+      setNewPostOpen(false);
+      setTitle('');
+      setSlug('');
+      setExcerpt('');
+      setContent('');
+      setPublished(false);
+      setReadTime(5);
+      setFeaturedImageFile(null);
+      setFeaturedImageUrl('');
+      fetchData();
+    } catch (error: any) {
+      console.error('Failed to create post', error);
+      toast({ title: 'Error', description: error.message || 'Failed to create post', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -109,8 +186,11 @@ const Admin = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-6 space-y-4 text-center">
             <p>Please log in to access the admin panel.</p>
+            <Button asChild>
+              <a href="/auth">Go to Login</a>
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -183,10 +263,57 @@ const Admin = () => {
           <TabsContent value="posts" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Blog Posts</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Post
-              </Button>
+              <Dialog open={newPostOpen} onOpenChange={setNewPostOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Post
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>Create New Post</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleCreatePost} className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title</Label>
+                      <Input id="title" value={title} onChange={(e) => { setTitle(e.target.value); setSlug(slugify(e.target.value)); }} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="slug">Slug</Label>
+                      <Input id="slug" value={slug} onChange={(e) => setSlug(slugify(e.target.value))} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="excerpt">Excerpt</Label>
+                      <Textarea id="excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label htmlFor="content">Content (Markdown)</Label>
+                      <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} className="min-h-[160px]" required />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="read_time">Read time (min)</Label>
+                        <Input id="read_time" type="number" min={1} value={readTime} onChange={(e) => setReadTime(Number(e.target.value))} />
+                      </div>
+                      <div className="flex items-center justify-between gap-4 pt-6">
+                        <Label htmlFor="published">Publish now</Label>
+                        <Switch id="published" checked={published} onCheckedChange={setPublished} />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Featured image</Label>
+                      <Input type="file" accept="image/*" onChange={handleFileChange} />
+                      <div className="text-xs text-muted-foreground mt-1">Or paste an image URL</div>
+                      <Input placeholder="https://..." value={featuredImageUrl} onChange={(e) => setFeaturedImageUrl(e.target.value)} />
+                    </div>
+                    <div className="flex justify-end gap-2 pt-2">
+                      <Button type="button" variant="outline" onClick={() => setNewPostOpen(false)}>Cancel</Button>
+                      <Button type="submit" disabled={loading}>{loading ? 'Creating...' : 'Create Post'}</Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
             
             {loading ? (
