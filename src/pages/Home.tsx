@@ -24,8 +24,7 @@ interface Post {
   excerpt: string | null;
   slug: string;
   created_at: string;
-  reading_time: number;
-  tags: string[] | null;
+  read_time: number;
 }
 
 const Home = () => {
@@ -46,7 +45,7 @@ const Home = () => {
         // Fetch latest blog posts
         const { data: posts } = await supabase
           .from('posts')
-          .select('id, title, excerpt, slug, created_at, reading_time, tags')
+          .select('id, title, excerpt, slug, created_at, read_time')
           .eq('published', true)
           .order('created_at', { ascending: false })
           .limit(3);
@@ -71,10 +70,10 @@ const Home = () => {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
               Hi, I'm{' '}
-              <span className="text-primary">John Doe</span>
+              <span className="text-primary">Leul Ayfokru</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              A passionate full-stack developer who loves creating beautiful, 
+              A passionate full-stack developer based in Ethiopia who loves creating beautiful, 
               functional web applications and sharing knowledge through code.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -225,7 +224,7 @@ const Home = () => {
                         <Calendar className="h-4 w-4" />
                         {format(new Date(post.created_at), 'MMM dd, yyyy')}
                         <Clock className="h-4 w-4 ml-2" />
-                        {post.reading_time} min read
+                        {post.read_time} min read
                       </div>
                       <CardTitle className="group-hover:text-primary transition-colors">
                         <Link to={`/blog/${post.slug}`}>
@@ -239,15 +238,7 @@ const Home = () => {
                       )}
                     </CardHeader>
                     <CardContent>
-                      {post.tags && post.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2">
-                          {post.tags.slice(0, 3).map((tag) => (
-                            <Badge key={tag} variant="secondary">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
+                      {/* Tags will be implemented later with proper relationships */}
                     </CardContent>
                   </Card>
                 ))}

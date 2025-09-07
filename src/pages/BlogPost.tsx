@@ -15,8 +15,7 @@ interface Post {
   excerpt: string | null;
   featured_image: string | null;
   published_at: string;
-  reading_time: number;
-  tags: string[] | null;
+  read_time: number;
   views: number;
 }
 
@@ -33,12 +32,12 @@ const BlogPost = () => {
       try {
         const { data, error } = await supabase
           .from('posts')
-          .select('id, title, content, excerpt, featured_image, published_at, reading_time, tags, views')
+          .select('id, title, content, excerpt, featured_image, published_at, read_time, views')
           .eq('slug', slug)
           .eq('published', true)
-          .single();
+          .maybeSingle();
 
-        if (error) {
+        if (error || !data) {
           setError('Post not found');
           return;
         }
@@ -46,12 +45,10 @@ const BlogPost = () => {
         setPost(data);
 
         // Increment view count
-        if (data) {
-          await supabase
-            .from('posts')
-            .update({ views: data.views + 1 })
-            .eq('id', data.id);
-        }
+        await supabase
+          .from('posts')
+          .update({ views: data.views + 1 })
+          .eq('id', data.id);
       } catch (error) {
         console.error('Error fetching post:', error);
         setError('Failed to load post');
@@ -135,7 +132,7 @@ const BlogPost = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4" />
-                  <span>{post.reading_time} min read</span>
+                  <span>{post.read_time} min read</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Eye className="h-4 w-4" />
@@ -143,16 +140,7 @@ const BlogPost = () => {
                 </div>
               </div>
 
-              {/* Tags */}
-              {post.tags && post.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mb-8">
-                  {post.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              {/* Tags - Remove for now until we implement proper tag relationships */}
 
               {/* Featured Image */}
               {post.featured_image && (

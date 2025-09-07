@@ -15,8 +15,7 @@ interface Post {
   excerpt: string | null;
   featured_image: string | null;
   published_at: string;
-  reading_time: number;
-  tags: string[] | null;
+  read_time: number;
   views: number;
 }
 
@@ -40,7 +39,7 @@ const Blog = () => {
         // Fetch published posts
         const { data: postsData } = await supabase
           .from('posts')
-          .select('id, title, slug, excerpt, featured_image, published_at, reading_time, tags, views')
+          .select('id, title, slug, excerpt, featured_image, published_at, read_time, views')
           .eq('published', true)
           .order('published_at', { ascending: false });
 
@@ -75,22 +74,16 @@ const Blog = () => {
       );
     }
 
-    // Filter by tag
+    // Filter by tag - simplified for now
     if (selectedTag) {
-      filtered = filtered.filter((post) =>
-        post.tags?.some((tag) =>
-          tag.toLowerCase().includes(selectedTag.toLowerCase())
-        )
-      );
+      // Will implement tag filtering later with proper relationships
     }
 
     setFilteredPosts(filtered);
   }, [posts, searchTerm, selectedTag]);
 
-  // Get all unique tags for filter
-  const allTags = Array.from(
-    new Set(posts.flatMap((post) => post.tags || []))
-  ).sort();
+  // Get all unique tags for filter - simplified for now
+  const allTags: string[] = [];
 
   if (loading) {
     return (
@@ -205,8 +198,8 @@ const Blog = () => {
                         {format(new Date(post.published_at), 'MMM dd, yyyy')}
                       </div>
                       <div className="flex items-center gap-1">
-                        <Clock className="h-4 w-4" />
-                        {post.reading_time} min read
+                          <Clock className="h-4 w-4" />
+                           {post.read_time} min read
                       </div>
                     </div>
 
@@ -224,21 +217,7 @@ const Blog = () => {
                   </CardHeader>
 
                   <CardContent>
-                    {/* Tags */}
-                    {post.tags && post.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {post.tags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {post.tags.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{post.tags.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    )}
+                    {/* Tags - Remove for now since we need to implement proper tag relationship */}
 
                     {/* Read More Button */}
                     <Button variant="outline" size="sm" asChild className="w-full">
