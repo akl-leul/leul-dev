@@ -515,7 +515,6 @@ export type Database = {
       }
       posts: {
         Row: {
-          author_id: number
           category_id: number | null
           content: string
           created_at: string
@@ -534,7 +533,6 @@ export type Database = {
           views: number
         }
         Insert: {
-          author_id: number
           category_id?: number | null
           content: string
           created_at?: string
@@ -553,7 +551,6 @@ export type Database = {
           views?: number
         }
         Update: {
-          author_id?: number
           category_id?: number | null
           content?: string
           created_at?: string
@@ -572,13 +569,6 @@ export type Database = {
           views?: number
         }
         Relationships: [
-          {
-            foreignKeyName: "posts_author_id_users_id_fk"
-            columns: ["author_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "posts_category_id_categories_id_fk"
             columns: ["category_id"]
@@ -639,6 +629,77 @@ export type Database = {
           user_id?: string | null
           username?: string | null
           website?: string | null
+        }
+        Relationships: []
+      }
+      project_logs: {
+        Row: {
+          change: Json
+          created_at: string
+          id: string
+          note: string | null
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          change: Json
+          created_at?: string
+          id?: string
+          note?: string | null
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          change?: Json
+          created_at?: string
+          id?: string
+          note?: string | null
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_management_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_management_projects: {
+        Row: {
+          created_at: string
+          deadline: string
+          id: string
+          name: string
+          price: number
+          progress: number
+          status: Database["public"]["Enums"]["project_status"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          deadline: string
+          id?: string
+          name: string
+          price: number
+          progress?: number
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          deadline?: string
+          id?: string
+          name?: string
+          price?: number
+          progress?: number
+          status?: Database["public"]["Enums"]["project_status"]
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -774,6 +835,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string
@@ -809,7 +888,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      project_status: "not_started" | "in_progress" | "blocked" | "done"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -936,6 +1015,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      project_status: ["not_started", "in_progress", "blocked", "done"],
+    },
   },
 } as const
