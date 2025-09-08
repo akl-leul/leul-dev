@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Link as LinkIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, HeartCrack } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
+import { useToast } from '@/hooks/use-toast';
 
 interface Post {
   id: number;
@@ -17,6 +18,7 @@ interface Post {
   published_at: string;
   read_time: number;
   views: number;
+  likes_count: number;
 }
 
 const BlogPost = () => {
@@ -24,6 +26,9 @@ const BlogPost = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -32,7 +37,7 @@ const BlogPost = () => {
       try {
         const { data, error } = await supabase
           .from('posts')
-          .select('id, title, content, excerpt, featured_image, published_at, read_time, views')
+          .select('id, title, content, excerpt, featured_image, published_at, read_time, views, likes_count')
           .eq('slug', slug)
           .eq('published', true)
           .maybeSingle();
@@ -43,6 +48,12 @@ const BlogPost = () => {
         }
 
         setPost(data);
+        setLikesCount(data.likes_count || 0);
+
+        // Check if user has liked this post
+        const userSessionKey = `liked_post_${data.id}`;
+        const hasLiked = localStorage.getItem(userSessionKey) === 'true';
+        setLiked(hasLiked);
 
         // Increment view count
         await supabase
@@ -59,6 +70,49 @@ const BlogPost = () => {
 
     fetchPost();
   }, [slug]);
+
+  const handleLike = async () => {
+    if (!post) return;
+
+    const userSessionKey = `liked_post_${post.id}`;
+    const hasLiked = localStorage.getItem(userSessionKey) === 'true';
+
+    try {
+      if (hasLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', userSessionKey); // Using session key as user_id for anonymous users
+
+        if (error) throw error;
+
+        localStorage.removeItem(userSessionKey);
+        setLiked(false);
+        setLikesCount(prev => Math.max(0, prev - 1));
+        toast({ title: 'Removed like', description: 'You unliked this post.' });
+      } else {
+        // Like
+        const { error } = await supabase
+          .from('post_likes')
+          .insert({ 
+            post_id: post.id, 
+            user_id: userSessionKey // Using session key as user_id for anonymous users
+          });
+
+        if (error) throw error;
+
+        localStorage.setItem(userSessionKey, 'true');
+        setLiked(true);
+        setLikesCount(prev => prev + 1);
+        toast({ title: 'Liked!', description: 'You liked this post.' });
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     if (post) {
@@ -146,6 +200,15 @@ const BlogPost = () => {
                   <Eye className="h-4 w-4" />
                   <span>{post.views} views</span>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLike}
+                  className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500`}
+                >
+                  {liked ? <Heart className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}
+                  <span>{likesCount}</span>
+                </Button>
               </div>
 
               {/* Tags - Remove for now until we implement proper tag relationships */}
