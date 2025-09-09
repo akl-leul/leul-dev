@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, Check, Clock } from 'lucide-react';
+import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -82,6 +83,34 @@ const Admin = () => {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Search states
+  const [projectSearch, setProjectSearch] = useState('');
+  const [postSearch, setPostSearch] = useState('');
+  const [skillSearch, setSkillSearch] = useState('');
+  const [experienceSearch, setExperienceSearch] = useState('');
+  const [contactSearch, setContactSearch] = useState('');
+
+  // Filtered data
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [filteredSkills, setFilteredSkills] = useState<Skill[]>([]);
+  const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>([]);
+  const [filteredContacts, setFilteredContacts] = useState<ContactSubmission[]>([]);
+
+  // Analytics data
+  const [analytics, setAnalytics] = useState({
+    totalProjects: 0,
+    featuredProjects: 0,
+    totalPosts: 0,
+    publishedPosts: 0,
+    totalViews: 0,
+    totalLikes: 0,
+    totalSkills: 0,
+    totalExperiences: 0,
+    totalContacts: 0,
+    newContacts: 0,
+  });
 
   // Form states
   const [newPostOpen, setNewPostOpen] = useState(false);
@@ -417,6 +446,64 @@ const Admin = () => {
     }
   }, [user]);
 
+  // Filter effects
+  useEffect(() => {
+    const filtered = projects.filter(project =>
+      project.title.toLowerCase().includes(projectSearch.toLowerCase()) ||
+      project.description.toLowerCase().includes(projectSearch.toLowerCase())
+    );
+    setFilteredProjects(filtered);
+  }, [projects, projectSearch]);
+
+  useEffect(() => {
+    const filtered = posts.filter(post =>
+      post.title.toLowerCase().includes(postSearch.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(postSearch.toLowerCase())
+    );
+    setFilteredPosts(filtered);
+  }, [posts, postSearch]);
+
+  useEffect(() => {
+    const filtered = skills.filter(skill =>
+      skill.name.toLowerCase().includes(skillSearch.toLowerCase()) ||
+      skill.category.toLowerCase().includes(skillSearch.toLowerCase())
+    );
+    setFilteredSkills(filtered);
+  }, [skills, skillSearch]);
+
+  useEffect(() => {
+    const filtered = experiences.filter(exp =>
+      exp.role.toLowerCase().includes(experienceSearch.toLowerCase()) ||
+      exp.company.toLowerCase().includes(experienceSearch.toLowerCase())
+    );
+    setFilteredExperiences(filtered);
+  }, [experiences, experienceSearch]);
+
+  useEffect(() => {
+    const filtered = contacts.filter(contact =>
+      contact.name.toLowerCase().includes(contactSearch.toLowerCase()) ||
+      contact.email.toLowerCase().includes(contactSearch.toLowerCase()) ||
+      contact.subject.toLowerCase().includes(contactSearch.toLowerCase())
+    );
+    setFilteredContacts(filtered);
+  }, [contacts, contactSearch]);
+
+  // Update analytics when data changes
+  useEffect(() => {
+    setAnalytics({
+      totalProjects: projects.length,
+      featuredProjects: projects.filter(p => p.featured).length,
+      totalPosts: posts.length,
+      publishedPosts: posts.filter(p => p.published).length,
+      totalViews: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0),
+      totalLikes: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0),
+      totalSkills: skills.length,
+      totalExperiences: experiences.length,
+      totalContacts: contacts.length,
+      newContacts: contacts.filter(c => c.status === 'new').length,
+    });
+  }, [projects, posts, skills, experiences, contacts]);
+
   const fetchData = async () => {
     try {
       const [projectsRes, postsRes, skillsRes, experiencesRes, contactsRes] = await Promise.all([
@@ -477,6 +564,23 @@ const Admin = () => {
     } else {
       toast({ title: "Success", description: "Experience deleted successfully" });
       fetchData();
+    }
+  };
+
+  const handleConfirmDelete = (type: string, id: string, name: string) => {
+    switch (type) {
+      case 'project':
+        deleteProject(id);
+        break;
+      case 'post':
+        deletePost(Number(id));
+        break;
+      case 'skill':
+        deleteSkill(id);
+        break;
+      case 'experience':
+        deleteExperience(id);
+        break;
     }
   };
 
@@ -563,8 +667,9 @@ const Admin = () => {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
         
-        <Tabs defaultValue="projects">
-          <TabsList className="grid w-full grid-cols-6">
+        <Tabs defaultValue="analytics">
+          <TabsList className="grid w-full grid-cols-7">
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
             <TabsTrigger value="projects">Projects</TabsTrigger>
             <TabsTrigger value="posts">Blog Posts</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
@@ -573,9 +678,142 @@ const Admin = () => {
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Analytics Overview</h2>
+              <Badge variant="secondary">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Dashboard
+              </Badge>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
+                      <p className="text-2xl font-bold">{analytics.totalProjects}</p>
+                    </div>
+                    <FileText className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {analytics.featuredProjects} featured
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Blog Posts</p>
+                      <p className="text-2xl font-bold">{analytics.totalPosts}</p>
+                    </div>
+                    <Edit className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {analytics.publishedPosts} published
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Skills</p>
+                      <p className="text-2xl font-bold">{analytics.totalSkills}</p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    across {skills.reduce((acc, skill) => {
+                      if (!acc.includes(skill.category)) acc.push(skill.category);
+                      return acc;
+                    }, [] as string[]).length} categories
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Contact Messages</p>
+                      <p className="text-2xl font-bold">{analytics.totalContacts}</p>
+                    </div>
+                    <Mail className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {analytics.newContacts} unread
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Activity</CardTitle>
+                  <CardDescription>Latest updates across all content</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {posts.slice(0, 3).map((post) => (
+                      <div key={post.id} className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-primary rounded-full"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{post.title}</p>
+                          <p className="text-xs text-muted-foreground">Blog post • ❤️ {post.likes_count || 0}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {projects.slice(0, 2).map((project) => (
+                      <div key={project.id} className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-secondary rounded-full"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{project.title}</p>
+                          <p className="text-xs text-muted-foreground">Project • {project.status}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Content Statistics</CardTitle>
+                  <CardDescription>Overview of your content performance</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Work Experience</span>
+                      <Badge variant="outline">{analytics.totalExperiences} entries</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Technical Skills</span>
+                      <Badge variant="outline">{skills.filter(s => s.category === 'technical').length} skills</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Featured Projects</span>
+                      <Badge variant="outline">{analytics.featuredProjects} projects</Badge>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm">Published Posts</span>
+                      <Badge variant="outline">{analytics.publishedPosts} posts</Badge>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           <TabsContent value="projects" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Projects</h2>
+              <h2 className="text-2xl font-semibold">Projects ({filteredProjects.length})</h2>
               <Dialog open={newProjectOpen} onOpenChange={(open) => { setNewProjectOpen(open); if (!open) resetForms(); }}>
                 <DialogTrigger asChild>
                   <Button>
@@ -649,12 +887,22 @@ const Admin = () => {
                 </DialogContent>
               </Dialog>
             </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search projects..."
+                value={projectSearch}
+                onChange={(e) => setProjectSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             
             {loading ? (
               <div>Loading...</div>
             ) : (
               <div className="grid gap-4">
-                {projects.map((project) => (
+                {filteredProjects.map((project) => (
                   <Card key={project.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -670,9 +918,27 @@ const Admin = () => {
                           <Button size="sm" variant="outline" onClick={() => editProject(project)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => deleteProject(project.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Project</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{project.title}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleConfirmDelete('project', project.id, project.title)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardHeader>
@@ -691,7 +957,7 @@ const Admin = () => {
 
           <TabsContent value="posts" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Blog Posts</h2>
+              <h2 className="text-2xl font-semibold">Blog Posts ({filteredPosts.length})</h2>
               <Dialog open={newPostOpen} onOpenChange={(open) => { setNewPostOpen(open); if (!open) resetForms(); }}>
                 <DialogTrigger asChild>
                   <Button>
@@ -744,12 +1010,22 @@ const Admin = () => {
                 </DialogContent>
               </Dialog>
             </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search blog posts..."
+                value={postSearch}
+                onChange={(e) => setPostSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             
             {loading ? (
               <div>Loading...</div>
             ) : (
               <div className="grid gap-4">
-                {posts.map((post) => (
+                {filteredPosts.map((post) => (
                   <Card key={post.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -771,9 +1047,27 @@ const Admin = () => {
                           <Button size="sm" variant="outline" onClick={() => editPost(post)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => deletePost(post.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Post</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{post.title}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleConfirmDelete('post', post.id.toString(), post.title)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardHeader>
@@ -785,7 +1079,7 @@ const Admin = () => {
 
           <TabsContent value="skills" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Skills</h2>
+              <h2 className="text-2xl font-semibold">Skills ({filteredSkills.length})</h2>
               <Dialog open={newSkillOpen} onOpenChange={(open) => { setNewSkillOpen(open); if (!open) resetForms(); }}>
                 <DialogTrigger asChild>
                   <Button>
@@ -846,17 +1140,28 @@ const Admin = () => {
                 </DialogContent>
               </Dialog>
             </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search skills..."
+                value={skillSearch}
+                onChange={(e) => setSkillSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             
             {loading ? (
               <div>Loading...</div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {skills.map((skill) => (
+                {filteredSkills.map((skill) => (
                   <Card key={skill.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="flex items-center gap-2">
+                            {skill.icon && <span>{skill.icon}</span>}
                             {skill.name}
                             <Badge variant="outline">{skill.level}</Badge>
                           </CardTitle>
@@ -868,9 +1173,27 @@ const Admin = () => {
                           <Button size="sm" variant="outline" onClick={() => editSkill(skill)}>
                             <Edit className="h-3 w-3" />
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => deleteSkill(skill.id)}>
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Skill</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{skill.name}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleConfirmDelete('skill', skill.id, skill.name)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardHeader>
@@ -882,7 +1205,7 @@ const Admin = () => {
 
           <TabsContent value="experiences" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Work Experience</h2>
+              <h2 className="text-2xl font-semibold">Work Experience ({filteredExperiences.length})</h2>
               <Dialog open={newExperienceOpen} onOpenChange={(open) => { setNewExperienceOpen(open); if (!open) resetForms(); }}>
                 <DialogTrigger asChild>
                   <Button>
@@ -949,12 +1272,22 @@ const Admin = () => {
                 </DialogContent>
               </Dialog>
             </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search experiences..."
+                value={experienceSearch}
+                onChange={(e) => setExperienceSearch(e.target.value)}
+                className="pl-10"
+              />
+            </div>
             
             {loading ? (
               <div>Loading...</div>
             ) : (
               <div className="space-y-4">
-                {experiences.map((exp) => (
+                {filteredExperiences.map((exp) => (
                   <Card key={exp.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -973,9 +1306,27 @@ const Admin = () => {
                           <Button size="sm" variant="outline" onClick={() => editExperience(exp)}>
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button size="sm" variant="destructive" onClick={() => deleteExperience(exp.id)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Experience</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{exp.role} at {exp.company}"? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleConfirmDelete('experience', exp.id, `${exp.role} at ${exp.company}`)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardHeader>
@@ -1010,15 +1361,25 @@ const Admin = () => {
           </TabsContent>
           <TabsContent value="contacts" className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Contact Messages</h2>
+              <h2 className="text-2xl font-semibold">Contact Messages ({filteredContacts.length})</h2>
               <Badge variant="secondary">{contacts.filter(c => c.status === 'new').length} new</Badge>
+            </div>
+
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search contacts..."
+                value={contactSearch}
+                onChange={(e) => setContactSearch(e.target.value)}
+                className="pl-10"
+              />
             </div>
             
             {loading ? (
               <div>Loading...</div>
             ) : (
               <div className="space-y-4">
-                {contacts.map((contact) => (
+                {filteredContacts.map((contact) => (
                   <Card key={contact.id} className={contact.status === 'new' ? 'border-primary' : ''}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -1057,7 +1418,7 @@ const Admin = () => {
                   </Card>
                 ))}
                 
-                {contacts.length === 0 && (
+                {filteredContacts.length === 0 && (
                   <Card>
                     <CardContent className="p-8 text-center">
                       <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />

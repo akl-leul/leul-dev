@@ -238,35 +238,6 @@ const Projects = () => {
             </div>
           )}
 
-          {/* Stats Section */}
-          {projects.length > 0 && (
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {projects.length}
-                  </div>
-                  <div className="text-muted-foreground">Total Projects</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {projects.filter(p => p.featured).length}
-                  </div>
-                  <div className="text-muted-foreground">Featured Projects</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {allTechnologies.length}
-                  </div>
-                  <div className="text-muted-foreground">Technologies Used</div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
     </div>

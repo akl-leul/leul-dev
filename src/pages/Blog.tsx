@@ -242,35 +242,6 @@ const Blog = () => {
             </div>
           )}
 
-          {/* Blog Stats */}
-          {posts.length > 0 && (
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {posts.length}
-                  </div>
-                  <div className="text-muted-foreground">Published Posts</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {posts.reduce((sum, post) => sum + post.views, 0)}
-                  </div>
-                  <div className="text-muted-foreground">Total Views</div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-primary mb-2">
-                    {allTags.length}
-                  </div>
-                  <div className="text-muted-foreground">Unique Tags</div>
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       </div>
     </div>
