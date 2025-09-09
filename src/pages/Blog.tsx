@@ -5,8 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Search, Tag } from 'lucide-react';
+import { Calendar, Clock, Search, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Post {
   id: number;
@@ -32,6 +40,14 @@ const Blog = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTag, setSelectedTag] = useState<string>('');
+  
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6;
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const currentPosts = filteredPosts.slice(startIndex, endIndex);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,6 +102,7 @@ const Blog = () => {
     }
 
     setFilteredPosts(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
   }, [posts, searchTerm, selectedTag]);
 
   // Get all unique tags for filter - simplified for now
@@ -183,63 +200,116 @@ const Blog = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPosts.map((post) => (
-                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
-                  {/* Post Image */}
-                  {post.featured_image ? (
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img
-                        src={post.featured_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
-                      <div className="text-muted-foreground">No Image</div>
-                    </div>
-                  )}
-
-                  <CardHeader>
-                    {/* Post Meta */}
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {format(new Date(post.published_at), 'MMM dd, yyyy')}
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentPosts.map((post) => (
+                  <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
+                    {/* Post Image */}
+                    {post.featured_image ? (
+                      <div className="aspect-video overflow-hidden rounded-t-lg">
+                        <img
+                          src={post.featured_image}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
-                      <div className="flex items-center gap-1">
-                          <Clock className="h-4 w-4" />
-                           {post.read_time} min read
+                    ) : (
+                      <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+                        <div className="text-muted-foreground">No Image</div>
                       </div>
-                    </div>
-
-                    <CardTitle className="group-hover:text-primary transition-colors">
-                      <Link to={`/blog/${post.slug}`}>
-                        {post.title}
-                      </Link>
-                    </CardTitle>
-
-                    {post.excerpt && (
-                      <CardDescription className="line-clamp-3">
-                        {post.excerpt}
-                      </CardDescription>
                     )}
-                  </CardHeader>
 
-                  <CardContent>
-                    {/* Tags - Remove for now since we need to implement proper tag relationship */}
+                    <CardHeader>
+                      {/* Post Meta */}
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {format(new Date(post.published_at), 'MMM dd, yyyy')}
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Clock className="h-4 w-4" />
+                             {post.read_time} min read
+                        </div>
+                      </div>
 
-                    {/* Read More Button */}
-                    <Button variant="outline" size="sm" asChild className="w-full">
-                      <Link to={`/blog/${post.slug}`}>
-                        Read More
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                      <CardTitle className="group-hover:text-primary transition-colors">
+                        <Link to={`/blog/${post.slug}`}>
+                          {post.title}
+                        </Link>
+                      </CardTitle>
+
+                      {post.excerpt && (
+                        <CardDescription className="line-clamp-3">
+                          {post.excerpt}
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+
+                    <CardContent>
+                      {/* Tags - Remove for now since we need to implement proper tag relationship */}
+
+                      {/* Read More Button */}
+                      <Button variant="outline" size="sm" asChild className="w-full">
+                        <Link to={`/blog/${post.slug}`}>
+                          Read More
+                        </Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage > 1) setCurrentPage(currentPage - 1);
+                          }}
+                          className={currentPage === 1 ? 'opacity-50 pointer-events-none' : ''}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(page);
+                            }}
+                            isActive={currentPage === page}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                          }}
+                          className={currentPage === totalPages ? 'opacity-50 pointer-events-none' : ''}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+
+              {/* Results Summary */}
+              <div className="mt-4 text-center text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredPosts.length)} of {filteredPosts.length} posts
+              </div>
+            </>
           )}
 
         </div>

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText } from 'lucide-react';
+import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
@@ -27,6 +27,7 @@ interface Project {
   demo_url?: string;
   featured: boolean;
   status: string;
+  created_at: string;
 }
 
 interface Post {
@@ -39,6 +40,7 @@ interface Post {
   featured_image?: string;
   read_time: number;
   likes_count: number;
+  created_at: string;
 }
 
 interface Skill {
@@ -48,6 +50,7 @@ interface Skill {
   category: string;
   years_experience?: number;
   icon?: string;
+  created_at: string;
 }
 
 interface Experience {
@@ -62,6 +65,7 @@ interface Experience {
   current: boolean;
   achievements?: string[];
   tech_used?: string[];
+  created_at: string;
 }
 
 interface ContactSubmission {
@@ -90,6 +94,13 @@ const Admin = () => {
   const [skillSearch, setSkillSearch] = useState('');
   const [experienceSearch, setExperienceSearch] = useState('');
   const [contactSearch, setContactSearch] = useState('');
+
+  // Date filter states
+  const [projectSortBy, setProjectSortBy] = useState('latest');
+  const [postSortBy, setPostSortBy] = useState('latest');
+  const [skillSortBy, setSkillSortBy] = useState('latest');
+  const [experienceSortBy, setExperienceSortBy] = useState('latest');
+  const [contactSortBy, setContactSortBy] = useState('latest');
 
   // Filtered data
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -448,45 +459,95 @@ const Admin = () => {
 
   // Filter effects
   useEffect(() => {
-    const filtered = projects.filter(project =>
+    let filtered = projects.filter(project =>
       project.title.toLowerCase().includes(projectSearch.toLowerCase()) ||
       project.description.toLowerCase().includes(projectSearch.toLowerCase())
     );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || '').getTime();
+      const dateB = new Date(b.created_at || '').getTime();
+      
+      if (projectSortBy === 'oldest') return dateA - dateB;
+      return dateB - dateA; // latest (default)
+    });
+    
     setFilteredProjects(filtered);
-  }, [projects, projectSearch]);
+  }, [projects, projectSearch, projectSortBy]);
 
   useEffect(() => {
-    const filtered = posts.filter(post =>
+    let filtered = posts.filter(post =>
       post.title.toLowerCase().includes(postSearch.toLowerCase()) ||
       post.excerpt.toLowerCase().includes(postSearch.toLowerCase())
     );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || '').getTime();
+      const dateB = new Date(b.created_at || '').getTime();
+      
+      if (postSortBy === 'oldest') return dateA - dateB;
+      return dateB - dateA; // latest (default)
+    });
+    
     setFilteredPosts(filtered);
-  }, [posts, postSearch]);
+  }, [posts, postSearch, postSortBy]);
 
   useEffect(() => {
-    const filtered = skills.filter(skill =>
+    let filtered = skills.filter(skill =>
       skill.name.toLowerCase().includes(skillSearch.toLowerCase()) ||
       skill.category.toLowerCase().includes(skillSearch.toLowerCase())
     );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || '').getTime();
+      const dateB = new Date(b.created_at || '').getTime();
+      
+      if (skillSortBy === 'oldest') return dateA - dateB;
+      return dateB - dateA; // latest (default)
+    });
+    
     setFilteredSkills(filtered);
-  }, [skills, skillSearch]);
+  }, [skills, skillSearch, skillSortBy]);
 
   useEffect(() => {
-    const filtered = experiences.filter(exp =>
+    let filtered = experiences.filter(exp =>
       exp.role.toLowerCase().includes(experienceSearch.toLowerCase()) ||
       exp.company.toLowerCase().includes(experienceSearch.toLowerCase())
     );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at || '').getTime();
+      const dateB = new Date(b.created_at || '').getTime();
+      
+      if (experienceSortBy === 'oldest') return dateA - dateB;
+      return dateB - dateA; // latest (default)
+    });
+    
     setFilteredExperiences(filtered);
-  }, [experiences, experienceSearch]);
+  }, [experiences, experienceSearch, experienceSortBy]);
 
   useEffect(() => {
-    const filtered = contacts.filter(contact =>
+    let filtered = contacts.filter(contact =>
       contact.name.toLowerCase().includes(contactSearch.toLowerCase()) ||
       contact.email.toLowerCase().includes(contactSearch.toLowerCase()) ||
       contact.subject.toLowerCase().includes(contactSearch.toLowerCase())
     );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      
+      if (contactSortBy === 'oldest') return dateA - dateB;
+      return dateB - dateA; // latest (default)
+    });
+    
     setFilteredContacts(filtered);
-  }, [contacts, contactSearch]);
+  }, [contacts, contactSearch, contactSortBy]);
 
   // Update analytics when data changes
   useEffect(() => {
@@ -888,14 +949,26 @@ const Admin = () => {
               </Dialog>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search projects..."
-                value={projectSearch}
-                onChange={(e) => setProjectSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search projects..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={projectSortBy} onValueChange={setProjectSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {loading ? (
@@ -1011,14 +1084,26 @@ const Admin = () => {
               </Dialog>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search blog posts..."
-                value={postSearch}
-                onChange={(e) => setPostSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search blog posts..."
+                  value={postSearch}
+                  onChange={(e) => setPostSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={postSortBy} onValueChange={setPostSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {loading ? (
@@ -1141,14 +1226,26 @@ const Admin = () => {
               </Dialog>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search skills..."
-                value={skillSearch}
-                onChange={(e) => setSkillSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search skills..."
+                  value={skillSearch}
+                  onChange={(e) => setSkillSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={skillSortBy} onValueChange={setSkillSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {loading ? (
@@ -1273,14 +1370,26 @@ const Admin = () => {
               </Dialog>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search experiences..."
-                value={experienceSearch}
-                onChange={(e) => setExperienceSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search experiences..."
+                  value={experienceSearch}
+                  onChange={(e) => setExperienceSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={experienceSortBy} onValueChange={setExperienceSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {loading ? (
@@ -1365,14 +1474,26 @@ const Admin = () => {
               <Badge variant="secondary">{contacts.filter(c => c.status === 'new').length} new</Badge>
             </div>
 
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search contacts..."
-                value={contactSearch}
-                onChange={(e) => setContactSearch(e.target.value)}
-                className="pl-10"
-              />
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search contacts..."
+                  value={contactSearch}
+                  onChange={(e) => setContactSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={contactSortBy} onValueChange={setContactSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {loading ? (

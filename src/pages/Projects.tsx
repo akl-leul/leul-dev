@@ -5,6 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { ExternalLink, Github, Search, Star } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
 
 interface Project {
   id: string;
@@ -26,6 +34,14 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTech, setSelectedTech] = useState<string>('');
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 6;
+  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
+  const startIndex = (currentPage - 1) * projectsPerPage;
+  const endIndex = startIndex + projectsPerPage;
+  const currentProjects = filteredProjects.slice(startIndex, endIndex);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -69,6 +85,7 @@ const Projects = () => {
     }
 
     setFilteredProjects(filtered);
+    setCurrentPage(1); // Reset to first page when filtering
   }, [projects, searchTerm, selectedTech]);
 
   // Get all unique technologies for filter
@@ -162,80 +179,133 @@ const Projects = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <Card key={project.id} className="group hover:shadow-lg transition-all duration-300">
-                  {/* Project Image */}
-                  {project.image_url ? (
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img
-                        src={project.image_url}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
-                      <div className="text-muted-foreground">No Image</div>
-                    </div>
-                  )}
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {currentProjects.map((project) => (
+                  <Card key={project.id} className="group hover:shadow-lg transition-all duration-300">
+                    {/* Project Image */}
+                    {project.image_url ? (
+                      <div className="aspect-video overflow-hidden rounded-t-lg">
+                        <img
+                          src={project.image_url}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center">
+                        <div className="text-muted-foreground">No Image</div>
+                      </div>
+                    )}
 
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                        {project.title}
-                        {project.featured && (
-                          <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                          {project.title}
+                          {project.featured && (
+                            <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />
+                          )}
+                        </CardTitle>
+                        <Badge variant={project.status === 'completed' ? 'default' : 'secondary'}>
+                          {project.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+
+                    <CardContent className="space-y-4">
+                      <p className="text-muted-foreground text-sm line-clamp-3">
+                        {project.description}
+                      </p>
+
+                      {/* Tech Stack */}
+                      <div className="flex flex-wrap gap-2">
+                        {project.tech_stack.slice(0, 4).map((tech) => (
+                          <Badge key={tech} variant="secondary" className="text-xs">
+                            {tech}
+                          </Badge>
+                        ))}
+                        {project.tech_stack.length > 4 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{project.tech_stack.length - 4} more
+                          </Badge>
                         )}
-                      </CardTitle>
-                      <Badge variant={project.status === 'completed' ? 'default' : 'secondary'}>
-                        {project.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
+                      </div>
 
-                  <CardContent className="space-y-4">
-                    <p className="text-muted-foreground text-sm line-clamp-3">
-                      {project.description}
-                    </p>
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-2">
+                        {project.github_url && (
+                          <Button size="sm" variant="outline" asChild className="flex-1">
+                            <a href={project.github_url} target="_blank" rel="noopener noreferrer">
+                              <Github className="h-4 w-4 mr-2" />
+                              Code
+                            </a>
+                          </Button>
+                        )}
+                        {project.demo_url && (
+                          <Button size="sm" asChild className="flex-1">
+                            <a href={project.demo_url} target="_blank" rel="noopener noreferrer">
+                              <ExternalLink className="h-4 w-4 mr-2" />
+                              Live Demo
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
 
-                    {/* Tech Stack */}
-                    <div className="flex flex-wrap gap-2">
-                      {project.tech_stack.slice(0, 4).map((tech) => (
-                        <Badge key={tech} variant="secondary" className="text-xs">
-                          {tech}
-                        </Badge>
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-8 flex justify-center">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage > 1) setCurrentPage(currentPage - 1);
+                          }}
+                          className={currentPage === 1 ? 'opacity-50 pointer-events-none' : ''}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(page);
+                            }}
+                            isActive={currentPage === page}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
                       ))}
-                      {project.tech_stack.length > 4 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{project.tech_stack.length - 4} more
-                        </Badge>
-                      )}
-                    </div>
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          href="#" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                          }}
+                          className={currentPage === totalPages ? 'opacity-50 pointer-events-none' : ''}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-2 pt-2">
-                      {project.github_url && (
-                        <Button size="sm" variant="outline" asChild className="flex-1">
-                          <a href={project.github_url} target="_blank" rel="noopener noreferrer">
-                            <Github className="h-4 w-4 mr-2" />
-                            Code
-                          </a>
-                        </Button>
-                      )}
-                      {project.demo_url && (
-                        <Button size="sm" asChild className="flex-1">
-                          <a href={project.demo_url} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="h-4 w-4 mr-2" />
-                            Live Demo
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+              {/* Results Summary */}
+              <div className="mt-4 text-center text-sm text-muted-foreground">
+                Showing {startIndex + 1}-{Math.min(endIndex, filteredProjects.length)} of {filteredProjects.length} projects
+              </div>
+            </>
           )}
 
         </div>
