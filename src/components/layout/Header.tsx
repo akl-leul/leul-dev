@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
@@ -13,8 +14,27 @@ import {
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [profilePicture, setProfilePicture] = useState<string | null>(null);
   const { user, signOut } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    const fetchProfilePicture = async () => {
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', user.id)
+          .single();
+        
+        if (data?.avatar_url) {
+          setProfilePicture(data.avatar_url);
+        }
+      }
+    };
+
+    fetchProfilePicture();
+  }, [user]);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -63,8 +83,16 @@ const Header = () => {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-4 w-4" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full p-0">
+                    {profilePicture ? (
+                      <img 
+                        src={profilePicture} 
+                        alt="Profile" 
+                        className="h-8 w-8 rounded-full object-cover"
+                      />
+                    ) : (
+                      <User className="h-4 w-4" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">

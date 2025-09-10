@@ -73,7 +73,7 @@ const Home = () => {
               <span className="text-primary">Leul Ayfokru</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              A passionate full-stack developer based in Ethiopia who loves creating beautiful, 
+              A passionate full-stack developer based in Addis Ababa, Ethiopia who loves creating beautiful, 
               functional web applications and sharing knowledge through code.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

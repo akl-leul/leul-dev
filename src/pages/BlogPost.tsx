@@ -186,30 +186,21 @@ const BlogPost = () => {
                 {post.title}
               </h1>
 
-              {/* Post Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  <span>{format(new Date(post.published_at), 'MMMM dd, yyyy')}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4" />
-                  <span>{post.read_time} min read</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4" />
-                  <span>{post.views} views</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500`}
-                >
-                  {liked ? <Heart className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}
-                  <span>{likesCount}</span>
-                </Button>
-              </div>
+               {/* Post Meta */}
+               <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
+                 <div className="flex items-center gap-2">
+                   <Calendar className="h-4 w-4" />
+                   <span>{format(new Date(post.published_at), 'MMMM dd, yyyy')}</span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <Clock className="h-4 w-4" />
+                   <span>{post.read_time} min read</span>
+                 </div>
+                 <div className="flex items-center gap-2">
+                   <Eye className="h-4 w-4" />
+                   <span>{post.views} views</span>
+                 </div>
+               </div>
 
               {/* Tags - Remove for now until we implement proper tag relationships */}
 
@@ -305,6 +296,15 @@ const BlogPost = () => {
                 <Share2 className="h-4 w-4" /> Share this post
               </h3>
               <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLike}
+                  className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500`}
+                >
+                  {liked ? <Heart className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}
+                  <span>{likesCount} likes</span>
+                </Button>
                 <Button variant="outline" size="sm" asChild>
                   <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer">
                     X / Twitter
