@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, HeartCrack } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast';
@@ -51,9 +50,15 @@ const BlogPost = () => {
         setLikesCount(data.likes_count || 0);
 
         // Check if user has liked this post
-        const userSessionKey = `liked_post_${data.id}`;
-        const hasLiked = localStorage.getItem(userSessionKey) === 'true';
-        setLiked(hasLiked);
+        const anonUserId = getAnonUserId();
+        const { data: likeData } = await supabase
+          .from('post_likes')
+          .select('id')
+          .eq('post_id', data.id)
+          .eq('user_id', anonUserId)
+          .maybeSingle();
+
+        setLiked(!!likeData);
 
         // Increment view count
         await supabase
@@ -72,54 +77,66 @@ const BlogPost = () => {
   }, [slug]);
 
   // Generate or reuse anonymous user id once
-const getAnonUserId = () => {
-  let userId = localStorage.getItem("anon_user_id");
-  if (!userId) {
-    userId = crypto.randomUUID(); // unique ID
-    localStorage.setItem("anon_user_id", userId);
-  }
-  return userId;
-};
-
-const handleLike = async () => {
-  if (!post) return;
-
-  const anonUserId = getAnonUserId();
-
-  try {
-    if (liked) {
-      // Unlike
-      const { error } = await supabase
-        .from('post_likes')
-        .delete()
-        .eq('post_id', post.id)
-        .eq('user_id', anonUserId);
-
-      if (error) throw error;
-
-      setLiked(false);
-      setLikesCount(prev => Math.max(0, prev - 1));
-      toast({ title: 'Removed like', description: 'You unliked this post.' });
-    } else {
-      // Like
-      const { error } = await supabase
-        .from('post_likes')
-        .insert({ 
-          post_id: post.id, 
-          user_id: anonUserId
-        });
-
-      if (error) throw error;
-
-      setLiked(true);
-      setLikesCount(prev => prev + 1);
-      toast({ title: 'Liked!', description: 'You liked this post.' });
+  const getAnonUserId = () => {
+    let userId = localStorage.getItem("anon_user_id");
+    if (!userId) {
+      userId = crypto.randomUUID(); // unique ID
+      localStorage.setItem("anon_user_id", userId);
     }
-  } catch (error) {
-    console.error('Error toggling like:', error);
-    toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
-  }
-};
+    return userId;
+  };
+
+  const handleLike = async () => {
+    if (!post) return;
+
+    const anonUserId = getAnonUserId();
+
+    try {
+      if (liked) {
+        // Unlike
+        const { error } = await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', anonUserId);
+
+        if (error) throw error;
+
+        // Update likes_count in posts table
+        await supabase
+          .from('posts')
+          .update({ likes_count: Math.max(0, likesCount - 1) })
+          .eq('id', post.id);
+
+        setLiked(false);
+        setLikesCount(prev => Math.max(0, prev - 1));
+        toast({ title: 'Removed like', description: 'You unliked this post.' });
+      } else {
+        // Like
+        const { error } = await supabase
+          .from('post_likes')
+          .insert({
+            post_id: post.id,
+            user_id: anonUserId
+          });
+
+        if (error) throw error;
+
+        // Update likes_count in posts table
+        await supabase
+          .from('posts')
+          .update({ likes_count: likesCount + 1 })
+          .eq('id', post.id);
+
+        setLiked(true);
+        setLikesCount(prev => prev + 1);
+        toast({ title: 'Liked!', description: 'You liked this post.' });
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
+    }
+  };
 
   useEffect(() => {
     if (post) {
@@ -218,10 +235,8 @@ const handleLike = async () => {
                 </Button>
               </div>
 
-              {/* Tags - Remove for now until we implement proper tag relationships */}
-
               {/* Featured Image */}
-              {post.featured_image && (
+              {post.featureed_image && (
                 <div className="aspect-video overflow-hidden rounded-lg mb-8">
                   <img
                     src={post.featured_image}
@@ -236,72 +251,7 @@ const handleLike = async () => {
             <Card>
               <CardContent className="p-8">
                 <div className="prose prose-neutral dark:prose-invert max-w-none">
-                  <ReactMarkdown
-                    components={{
-                      h1: ({ children }) => (
-                        <h1 className="text-3xl font-bold text-foreground mt-8 mb-4 first:mt-0">
-                          {children}
-                        </h1>
-                      ),
-                      h2: ({ children }) => (
-                        <h2 className="text-2xl font-semibold text-foreground mt-6 mb-3">
-                          {children}
-                        </h2>
-                      ),
-                      h3: ({ children }) => (
-                        <h3 className="text-xl font-semibold text-foreground mt-4 mb-2">
-                          {children}
-                        </h3>
-                      ),
-                      p: ({ children }) => (
-                        <p className="text-muted-foreground leading-relaxed mb-4">
-                          {children}
-                        </p>
-                      ),
-                      code: ({ children, className }) => {
-                        const isInline = !className;
-                        return isInline ? (
-                          <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                            {children}
-                          </code>
-                        ) : (
-                          <code className={className}>{children}</code>
-                        );
-                      },
-                      pre: ({ children }) => (
-                        <pre className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-                          {children}
-                        </pre>
-                      ),
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground my-4">
-                          {children}
-                        </blockquote>
-                      ),
-                      ul: ({ children }) => (
-                        <ul className="list-disc list-inside text-muted-foreground mb-4 space-y-1">
-                          {children}
-                        </ul>
-                      ),
-                      ol: ({ children }) => (
-                        <ol className="list-decimal list-inside text-muted-foreground mb-4 space-y-1">
-                          {children}
-                        </ol>
-                      ),
-                      a: ({ children, href }) => (
-                        <a
-                          href={href}
-                          className="text-primary hover:underline"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {children}
-                        </a>
-                      ),
-                    }}
-                  >
-                    {post.content}
-                  </ReactMarkdown>
+                  <ReactMarkdown>{post.content}</ReactMarkdown>
                 </div>
               </CardContent>
             </Card>
@@ -313,17 +263,29 @@ const handleLike = async () => {
               </h3>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     X / Twitter
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     LinkedIn
                   </a>
                 </Button>
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Facebook
                   </a>
                 </Button>
