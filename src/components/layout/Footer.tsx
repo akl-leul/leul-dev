@@ -115,7 +115,7 @@ const Footer = () => {
               © {currentYear} Portfolio. All rights reserved.
             </p>
             <p className="text-sm text-muted-foreground flex items-center mt-4 md:mt-0">
-              Made with <Heart className="h-4 w-4 text-red-500 mx-1" /> using React & Supabase
+              Made with <Heart className="h-4 w-4 text-red-500 mx-1" /> by Leul
             </p>
           </div>
         </div>
