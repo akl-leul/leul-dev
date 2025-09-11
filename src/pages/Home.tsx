@@ -61,7 +61,7 @@ const Home = () => {
 
     fetchData();
   }, []);
-export default function HeroSection() {
+
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
