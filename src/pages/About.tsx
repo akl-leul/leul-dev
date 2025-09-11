@@ -109,7 +109,7 @@ const About = () => {
                 <CardContent className="p-6 text-center">
                   {profile?.avatar_url && (
                     <img
-                      src={profile.avatar_url}
+                      src={profile.avatar_url || 'https://gcxqcxrshrfzuhyhfciv.supabase.co/storage/v1/object/public/project-images/avatars/0282d3df-966e-4c01-afcf-a7d3e88642ca-1757474473335.jpg' }
                       alt={profile.name || 'Profile'}
                       className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
                     />
