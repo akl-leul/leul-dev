@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -61,34 +61,97 @@ const Home = () => {
 
     fetchData();
   }, []);
+export default function HeroSection() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    window.addEventListener("resize", () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    // Create random circles
+    const colors = ["#FF6B6B", "#FFD460", "#6BCB77", "#4D96FF", "#E14D2A"];
+    const circles = Array.from({ length: 30 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      radius: 40 + Math.random() * 60,
+      dx: (Math.random() - 0.5) * 1.5,
+      dy: (Math.random() - 0.5) * 1.5,
+      color: colors[Math.floor(Math.random() * colors.length)],
+    }));
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+
+      circles.forEach((c) => {
+        ctx.beginPath();
+        const gradient = ctx.createRadialGradient(
+          c.x, c.y, 0, c.x, c.y, c.radius
+        );
+        gradient.addColorStop(0, c.color + "AA"); // semi-bright center
+        gradient.addColorStop(1, c.color + "00"); // fade out
+        ctx.fillStyle = gradient;
+        ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Move circle
+        c.x += c.dx;
+        c.y += c.dy;
+
+        if (c.x + c.radius > width || c.x - c.radius < 0) c.dx *= -1;
+        if (c.y + c.radius > height || c.y - c.radius < 0) c.dy *= -1;
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  }, []);
+ 
   return (
     <div className="space-y-20">
       {/* Hero Section */}
-      <section className="relative py-20 lg:py-32">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-              Hi, I'm{' '}
-              <span className="text-primary">Leul Ayfokru</span>
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Full-stack website and application developer based in Ethiopia. 
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" asChild>
-                <Link to="/projects">
-                  View My Work
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link to="/contact">Get In Touch</Link>
-              </Button>
-            </div>
+      
+    <section className="relative py-20 lg:py-32 overflow-hidden">
+      {/* Animated background */}
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+      ></canvas>
+
+      {/* Foreground content */}
+      <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
+            Hi, I'm <span className="text-primary">Leul Ayfokru</span>
+          </h1>
+          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            Full-stack website and application developer based in Ethiopia.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" asChild>
+              <Link to="/projects">
+                View My Work
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild>
+              <Link to="/contact">Get In Touch</Link>
+            </Button>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
+ 
 
       {/* Featured Projects Section */}
       <section className="py-16">
