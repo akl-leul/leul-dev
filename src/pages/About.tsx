@@ -7,16 +7,16 @@ import { Download, MapPin, Mail, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Profile {
-  name: string | 'Leul Ayfokru' ;
-  bio: string | 'Full-stack Website and Application Developer' ;
-  location: string | "Addis Ababa, Ethiopia" ;
-  email: string | "layfokru@gmail.com" ;
-  website: string | "https://leul-dev.lovable.app";
-  github_url: string | "https://github.com/akl-leul" ;
-  linkedin_url: string | "https://linkedin.com/in/leul-ayfokru" ;
-  twitter_url: string | "https://x.com/LAyfokru44401?t=5FkoLuXg7Z_1KaUzneFbGQ&s=09" ;
-  resume_url: string | "https://leul-dev.lovable.app/about" ;
-  avatar_url: string | "https://gcxqcxrshrfzuhyhfciv.supabase.co/storage/v1/object/public/project-images/avatars/0282d3df-966e-4c01-afcf-a7d3e88642ca-1757474473335.jpg" ;
+  name: string || 'Leul Ayfokru' ;
+  bio: string || 'Full-stack Website and Application Developer' ;
+  location: string || "Addis Ababa, Ethiopia" ;
+  email: string || "layfokru@gmail.com" ;
+  website: string || "https://leul-dev.lovable.app";
+  github_url: string || "https://github.com/akl-leul" ;
+  linkedin_url: string || "https://linkedin.com/in/leul-ayfokru" ;
+  twitter_url: string || "https://x.com/LAyfokru44401?t=5FkoLuXg7Z_1KaUzneFbGQ&s=09" ;
+  resume_url: string || "https://leul-dev.lovable.app/about" ;
+  avatar_url: string || "https://gcxqcxrshrfzuhyhfciv.supabase.co/storage/v1/object/public/project-images/avatars/0282d3df-966e-4c01-afcf-a7d3e88642ca-1757474473335.jpg" ;
 }
 
 interface Experience {
