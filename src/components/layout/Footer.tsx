@@ -7,22 +7,22 @@ const Footer = () => {
   const socialLinks = [
     { 
       name: 'GitHub', 
-      href: 'https://github.com', 
+      href: 'https://github.com/akl-leul', 
       icon: Github 
     },
     { 
       name: 'LinkedIn', 
-      href: 'https://linkedin.com', 
+      href: 'https://linkedin.com/in/leul-ayfokru', 
       icon: Linkedin 
     },
     { 
       name: 'Twitter', 
-      href: 'https://twitter.com', 
+      href: 'https://x.com/LAyfokru44401?t=5FkoLuXg7Z_1KaUzneFbGQ&s=09', 
       icon: Twitter 
     },
     { 
       name: 'Email', 
-      href: 'mailto:hello@example.com', 
+      href: 'mailto:layfokru@gmail.com', 
       icon: Mail 
     },
   ];
@@ -42,7 +42,7 @@ const Footer = () => {
       links: [
         { name: 'Blog', href: '/blog' },
         { name: 'Contact', href: '/contact' },
-        { name: 'RSS Feed', href: '/rss.xml' },
+  
       ],
     },
   ];
