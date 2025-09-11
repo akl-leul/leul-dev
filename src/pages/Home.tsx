@@ -121,7 +121,7 @@ const Home = () => {
     <div className="space-y-20">
       {/* Hero Section */}
       
-    <section className="relative py-20 lg:py-32 overflow-hidden">
+    <section className="relative min-h-screen flex items-center overflow-hidden">
       {/* Animated background */}
       <canvas
         ref={canvasRef}
