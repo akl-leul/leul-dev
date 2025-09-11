@@ -115,7 +115,7 @@ const About = () => {
                     />
                   )}
                   <h2 className="text-2xl font-bold text-foreground mb-2">
-                    {profile?.name || 'John Doe'}
+                    {profile?.name || 'Leul Ayfokru'}
                   </h2>
                   
                   <div className="space-y-2 text-sm text-muted-foreground">
