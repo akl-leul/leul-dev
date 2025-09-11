@@ -7,8 +7,8 @@ import { Download, MapPin, Mail, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface Profile {
-  name: string | "Leul Ayfokru" ;
-  bio: string | "Full-stack Website and Application Developer" ;
+  name: string | 'Leul Ayfokru' ;
+  bio: string | 'Full-stack Website and Application Developer' ;
   location: string | "Addis Ababa, Ethiopia" ;
   email: string | "layfokru@gmail.com" ;
   website: string | "https://leul-dev.lovable.app";
