@@ -122,7 +122,7 @@ const About = () => {
                     {profile?.location && (
                       <div className="flex items-center justify-center gap-2">
                         <MapPin className="h-4 w-4" />
-                        {profile.location}
+                        {profile.location || 'Addis Ababa, Ethiopia' }
                       </div>
                     )}
                     {profile?.email && (
@@ -132,7 +132,7 @@ const About = () => {
                           href={`mailto:${profile.email}`}
                           className="hover:text-primary transition-colors"
                         >
-                          {profile.email}
+                          {profile.email || 'layfokru@gmail.com' }
                         </a>
                       </div>
                     )}
