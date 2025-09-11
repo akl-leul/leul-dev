@@ -71,48 +71,55 @@ const BlogPost = () => {
     fetchPost();
   }, [slug]);
 
-  const handleLike = async () => {
-    if (!post) return;
+  // Generate or reuse anonymous user id once
+const getAnonUserId = () => {
+  let userId = localStorage.getItem("anon_user_id");
+  if (!userId) {
+    userId = crypto.randomUUID(); // unique ID
+    localStorage.setItem("anon_user_id", userId);
+  }
+  return userId;
+};
 
-    const userSessionKey = `liked_post_${post.id}`;
-    const hasLiked = localStorage.getItem(userSessionKey) === 'true';
+const handleLike = async () => {
+  if (!post) return;
 
-    try {
-      if (hasLiked) {
-        // Unlike
-        const { error } = await supabase
-          .from('post_likes')
-          .delete()
-          .eq('post_id', post.id)
-          .eq('user_id', userSessionKey); // Using session key as user_id for anonymous users
+  const anonUserId = getAnonUserId();
 
-        if (error) throw error;
+  try {
+    if (liked) {
+      // Unlike
+      const { error } = await supabase
+        .from('post_likes')
+        .delete()
+        .eq('post_id', post.id)
+        .eq('user_id', anonUserId);
 
-        localStorage.removeItem(userSessionKey);
-        setLiked(false);
-        setLikesCount(prev => Math.max(0, prev - 1));
-        toast({ title: 'Removed like', description: 'You unliked this post.' });
-      } else {
-        // Like
-        const { error } = await supabase
-          .from('post_likes')
-          .insert({ 
-            post_id: post.id, 
-            user_id: userSessionKey // Using session key as user_id for anonymous users
-          });
+      if (error) throw error;
 
-        if (error) throw error;
+      setLiked(false);
+      setLikesCount(prev => Math.max(0, prev - 1));
+      toast({ title: 'Removed like', description: 'You unliked this post.' });
+    } else {
+      // Like
+      const { error } = await supabase
+        .from('post_likes')
+        .insert({ 
+          post_id: post.id, 
+          user_id: anonUserId
+        });
 
-        localStorage.setItem(userSessionKey, 'true');
-        setLiked(true);
-        setLikesCount(prev => prev + 1);
-        toast({ title: 'Liked!', description: 'You liked this post.' });
-      }
-    } catch (error) {
-      console.error('Error toggling like:', error);
-      toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
+      if (error) throw error;
+
+      setLiked(true);
+      setLikesCount(prev => prev + 1);
+      toast({ title: 'Liked!', description: 'You liked this post.' });
     }
-  };
+  } catch (error) {
+    console.error('Error toggling like:', error);
+    toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
+  }
+};
 
   useEffect(() => {
     if (post) {
