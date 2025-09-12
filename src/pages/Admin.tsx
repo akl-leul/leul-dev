@@ -1575,7 +1575,7 @@ const handleDeleteConfirm = async () => {
         setDeleteModalOpen(true);
       }}
     >
-      <Trash2 className="h-5 w-5" />
+      Delete <Trash2 className="h-5 w-5" />
     </Button>
   </Card>
 ))}
