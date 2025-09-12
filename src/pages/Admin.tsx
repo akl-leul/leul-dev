@@ -360,7 +360,7 @@ const [contactToDelete, setContactToDelete] = useState(null);
   };
 const handleDeleteConfirm = async () => {
   if (!contactToDelete) return;
-  const { error } = await supabase.from(ContactSubmission").delete().eq("id", contactToDelete.id);
+  const { error } = await supabase.from("contact_submissions").delete().eq("id", contactToDelete.id);
   if (error) {
     alert("Failed to delete: " + error.message);
   } else {
@@ -1575,7 +1575,7 @@ const handleDeleteConfirm = async () => {
         setDeleteModalOpen(true);
       }}
     >
-      Delete <Trash2 className="h-5 w-5" />
+      <Trash2 className="h-5 w-5" />
     </Button>
   </Card>
 ))}
