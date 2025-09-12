@@ -109,6 +109,8 @@ const Admin = () => {
   const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<ContactSubmission[]>([]);
 
+const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+const [contactToDelete, setContactToDelete] = useState(null);
   // Analytics data
   const [analytics, setAnalytics] = useState({
     totalProjects: 0,
@@ -356,7 +358,17 @@ const Admin = () => {
       setLoading(false);
     }
   };
-
+const handleDeleteConfirm = async () => {
+  if (!contactToDelete) return;
+  const { error } = await supabase.from("contact_submissions").delete().eq("id", contactToDelete.id);
+  if (error) {
+    alert("Failed to delete: " + error.message);
+  } else {
+    mutate(); // refresh list
+    setDeleteModalOpen(false);
+    setContactToDelete(null);
+  }
+};
   const handleCreateExperience = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -1540,43 +1552,95 @@ const Admin = () => {
                   </Card>
                 ))}
                 
-                {filteredContacts.length === 0 && (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No contact messages yet.</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-            
-            {/* Reply Modal */}
-            <Dialog open={replyModalOpen} onOpenChange={setReplyModalOpen}>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Reply to {selectedContact?.name}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSendReply} className="space-y-4">
-                  <div>
-                    <Label htmlFor="replySubject">Subject</Label>
-                    <Input id="replySubject" value={replySubject} onChange={(e) => setReplySubject(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="replyMessage">Your Reply</Label>
-                    <Textarea id="replyMessage" value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} className="min-h-[200px]" required placeholder="Write your reply here..." />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setReplyModalOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Sending...' : 'Send Reply'}
-                      <Send className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-          </TabsContent>
+   {filteredContacts.length === 0 && (
+  <Card>
+    <CardContent className="p-8 text-center">
+      <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+      <p className="text-muted-foreground">No contact messages yet.</p>
+    </CardContent>
+  </Card>
+)}
+
+{filteredContacts.map((contact) => (
+  <Card key={contact.id} className="p-4 flex justify-between items-center mb-2">
+    <div>
+      <p className="font-medium">{contact.name}</p>
+      <p className="text-sm text-muted-foreground">{contact.email}</p>
+    </div>
+    <Button
+      variant="destructive"
+      size="icon"
+      onClick={() => {
+        setContactToDelete(contact);
+        setDeleteModalOpen(true);
+      }}
+    >
+      <Trash2 className="h-5 w-5" />
+    </Button>
+  </Card>
+))}
+
+{/* Delete Confirmation Modal */}
+<Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Confirm Deletion</DialogTitle>
+    </DialogHeader>
+    <p>Are you sure you want to delete this message?</p>
+    <DialogFooter>
+      <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+        Cancel
+      </Button>
+      <Button variant="destructive" onClick={handleDeleteConfirm}>
+        Delete
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
+
+{/* Reply Modal */}
+<Dialog open={replyModalOpen} onOpenChange={setReplyModalOpen}>
+  <DialogContent className="sm:max-w-2xl">
+    <DialogHeader>
+      <DialogTitle>Reply to {selectedContact?.name}</DialogTitle>
+    </DialogHeader>
+    <form onSubmit={handleSendReply} className="space-y-4">
+      <div>
+        <Label htmlFor="replySubject">Subject</Label>
+        <Input
+          id="replySubject"
+          value={replySubject}
+          onChange={(e) => setReplySubject(e.target.value)}
+          required
+        />
+      </div>
+      <div>
+        <Label htmlFor="replyMessage">Your Reply</Label>
+        <Textarea
+          id="replyMessage"
+          value={replyMessage}
+          onChange={(e) => setReplyMessage(e.target.value)}
+          className="min-h-[200px]"
+          required
+          placeholder="Write your reply here..."
+        />
+      </div>
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => setReplyModalOpen(false)}
+        >
+          Cancel
+        </Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Sending..." : "Send Reply"}
+          <Send className="h-4 w-4 ml-2" />
+        </Button>
+      </div>
+    </form>
+  </DialogContent>
+</Dialog>
 
           <TabsContent value="settings" className="space-y-6">
             <div className="flex justify-between items-center">
