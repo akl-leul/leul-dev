@@ -59,8 +59,8 @@ const Header = () => {
           {/* Right side actions */}
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            
-            {user ? (
+
+            {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -80,12 +80,6 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) 
-            
-            : (
-              <Button asChild variant="ghost">
-                <Link to="/auth">Sign In</Link>
-              </Button>
             )}
 
             {/* Mobile menu button */}
