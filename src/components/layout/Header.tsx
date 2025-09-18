@@ -80,7 +80,9 @@ const Header = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-            ) : (
+            ) 
+            
+            : (
               <Button asChild variant="ghost">
                 <Link to="/auth">Sign In</Link>
               </Button>
