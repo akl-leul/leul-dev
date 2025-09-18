@@ -125,7 +125,7 @@ toast({ title: 'Error', description: 'Failed to update like status.', variant: '
 
 useEffect(() => {
 if (post) {
-document.title = ${post.title} - Leul Ayfokru;
+document.title = `${post.title} - Leul Ayfokru`;
 const meta = document.querySelector('meta[name="description"]');
 meta?.setAttribute('content', post.excerpt || post.title);
 }
