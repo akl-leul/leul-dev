@@ -749,7 +749,8 @@ const Admin = () => {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-amber-100 via-orange-100 to-orange-200 dark:from-orange-900 dark:to-amber-800
+">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -764,7 +765,8 @@ const Admin = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:from-sky-900 dark:to-sky-800
+">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -779,7 +781,8 @@ const Admin = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-violet-100 via-indigo-100 to-indigo-200 dark:from-indigo-900 dark:to-violet-900
+">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -797,7 +800,8 @@ const Admin = () => {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-zinc-100 via-zinc-50 to-amber-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-yellow-900
+">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -974,7 +978,7 @@ const Admin = () => {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {filteredProjects.map((project) => (
                   <Card key={project.id}>
                     <CardHeader>
@@ -1109,7 +1113,7 @@ const Admin = () => {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {filteredPosts.map((post) => (
                   <Card key={post.id}>
                     <CardHeader>
@@ -1147,7 +1151,9 @@ const Admin = () => {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleConfirmDelete('post', post.id.toString(), post.title)}>
+                                <AlertDialogAction 
+                                className='bg-red-600 hover:bg-red-700 focus:ring-red-600'
+                                onClick={() => handleConfirmDelete('post', post.id.toString(), post.title)}>
                                   Delete
                                 </AlertDialogAction>
                               </AlertDialogFooter>
@@ -1396,7 +1402,7 @@ const Admin = () => {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredExperiences.map((exp) => (
                   <Card key={exp.id}>
                     <CardHeader>
@@ -1500,7 +1506,7 @@ const Admin = () => {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {filteredContacts.map((contact) => (
                   <Card key={contact.id} className={contact.status === 'new' ? 'border-primary' : ''}>
                     <CardHeader>
@@ -1583,7 +1589,7 @@ const Admin = () => {
               <h2 className="text-2xl font-semibold">Account Settings</h2>
             </div>
             
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">

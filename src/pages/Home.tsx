@@ -131,8 +131,9 @@ const Home = () => {
       {/* Foreground content */}
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6">
-            Hi, I'm <span className="text-primary">Leul Ayfokru</span>
+          <h1 className="text-4xl md:text-7xl font-bold text-foreground mb-6">
+            Hi, I'm <span className="bg-gradient-to-r from-violet-400 to-cyan-500 bg-clip-text text-transparent">Leul Ayfokru</span>
+
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
             Full-stack website and application developer based in Ethiopia.

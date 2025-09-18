@@ -11,7 +11,7 @@ interface Profile {
   bio: string | 'Full-stack Website and Application Developer' ;
   location: string | "Addis Ababa, Ethiopia" ;
   email: string | "layfokru@gmail.com" ;
-  website: string | "https://leul-dev.lovable.app";
+  website: string | "https://leul-dev.vercel.app";
   github_url: string | "https://github.com/akl-leul" ;
   linkedin_url: string | "https://linkedin.com/in/leul-ayfokru" ;
   twitter_url: string | "https://x.com/LAyfokru44401?t=5FkoLuXg7Z_1KaUzneFbGQ&s=09" ;
