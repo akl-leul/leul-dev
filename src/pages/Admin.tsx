@@ -8,13 +8,18 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc } from 'lucide-react';
+import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send,   FolderKanban,
+  PenLine,
+  BadgeInfo,
+  BriefcaseBusiness, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
+ 
+
 
 interface Project {
   id: string;
@@ -729,15 +734,42 @@ const Admin = () => {
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
         
         <Tabs defaultValue="analytics">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="projects">Projects</TabsTrigger>
-            <TabsTrigger value="posts">Blog Posts</TabsTrigger>
-            <TabsTrigger value="skills">Skills</TabsTrigger>
-            <TabsTrigger value="experiences">Experience</TabsTrigger>
-            <TabsTrigger value="contacts">Messages</TabsTrigger>
-            <TabsTrigger value="settings">Settings</TabsTrigger>
-          </TabsList>
+         <TabsList className="grid w-full grid-cols-7">
+  <TabsTrigger value="analytics">
+    <BarChart3 className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Analytics</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="projects">
+    <FolderKanban className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Projects</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="posts">
+    <PenLine className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Blog Posts</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="skills">
+    <BadgeInfo className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Skills</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="experiences">
+    <BriefcaseBusiness className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Experience</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="contacts">
+    <Mail className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Messages</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="settings">
+    <Settings className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Settings</span>
+  </TabsTrigger>
+</TabsList>
 
           <TabsContent value="analytics" className="space-y-6">
             <div className="flex justify-between items-center">
