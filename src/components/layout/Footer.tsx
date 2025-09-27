@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Github, Linkedin, Twitter, Mail, Heart } from 'lucide-react';
-
+import { FaXTwitter } from "react-icons/fa6";
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
@@ -18,7 +18,7 @@ const Footer = () => {
     { 
       name: 'Twitter', 
       href: 'https://x.com/LAyfokru44401?t=5FkoLuXg7Z_1KaUzneFbGQ&s=09', 
-      icon: Twitter 
+      icon: FaXTwitter
     },
     { 
       name: 'Email', 
