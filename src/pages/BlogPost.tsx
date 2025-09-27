@@ -4,10 +4,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, HeartCrack } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, HeartCrack, UserRoundPen, SquareArrowOutUpRight } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast'; 
+import { FaXTwitter, FaLinkedin, FaFacebook } from "react-icons/fa6";
+
 
 interface Post {
 id: number;
@@ -209,15 +211,9 @@ Back to Blog
               <Eye className="h-4 w-4" />  
               <span>{post.views} views</span>  
             </div>  
-            <Button  
-              variant="ghost"  
-              size="sm"  
-              onClick={handleLike}  
-              className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500`}  
-            >  
-              {liked ? <Heart className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}  
-              <span>{likesCount}</span>  
-            </Button>  
+            <div className="flex items-center gap-2">
+              <UserRoundPen className='h-4 w-4'/> <span>by Leul Ayfokru</span>
+           </div>
           </div>  
 
           {/* Tags - Remove for now until we implement proper tag relationships */}  
@@ -291,14 +287,17 @@ Back to Blog
                     </ol>  
                   ),  
                   a: ({ children, href }) => (  
-                    <a  
-                      href={href}  
-                      className="text-primary hover:underline"  
-                      target="_blank"  
-                      rel="noopener noreferrer"  
-                    >  
-                      {children}  
-                    </a>  
+                   <a  
+  href={href}  
+  className="inline-flex items-center gap-1 text-primary hover:text-primary/80
+ hover:underline whitespace-nowrap"  
+  target="_blank"  
+  rel="noopener noreferrer"  
+>  
+  {children}  
+  <SquareArrowOutUpRight className="h-4 w-4" />  
+</a>  
+
                   ),  
                 }}  
               >  
@@ -313,30 +312,66 @@ Back to Blog
           <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">  
             <Share2 className="h-4 w-4" /> Share this post  
           </h3>  
-          <div className="flex flex-wrap gap-2">  
-            <Button variant="outline" size="sm" asChild>  
-              <a href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`} target="_blank" rel="noopener noreferrer">  
-                X / Twitter  
-              </a>  
-            </Button>  
-            <Button variant="outline" size="sm" asChild>  
-              <a href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">  
-                LinkedIn  
-              </a>  
-            </Button>  
-            <Button variant="outline" size="sm" asChild>  
-              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`} target="_blank" rel="noopener noreferrer">  
-                Facebook  
-              </a>  
-            </Button>  
-            <Button  
-              variant="outline"  
-              size="sm"  
-              onClick={() => navigator.clipboard.writeText(window.location.href)}  
-            >  
-              <Copy className="h-4 w-4 mr-2" /> Copy link  
-            </Button>  
-          </div>  
+        
+
+<div className="flex flex-wrap gap-2">  
+  {/* Twitter/X */}
+  <Button variant="outline" size="sm" asChild>  
+    <a
+      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}  
+      target="_blank"  
+      rel="noopener noreferrer"
+      className="flex items-center gap-2"
+    >  
+      <FaXTwitter className="h-4 w-4" />  
+    </a>  
+  </Button>  
+
+  {/* LinkedIn */}
+  <Button variant="outline" size="sm" asChild>  
+    <a
+      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}  
+      target="_blank"  
+      rel="noopener noreferrer"
+      className="flex items-center gap-2"
+    >  
+      <FaLinkedin className="h-4 w-4 text-blue-600 dark:text-blue-400" />  
+    </a>  
+  </Button>  
+
+  {/* Facebook */}
+  <Button variant="outline" size="sm" asChild>  
+    <a
+      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}  
+      target="_blank"  
+      rel="noopener noreferrer"
+      className="flex items-center gap-2"
+    >  
+      <FaFacebook className="h-4 w-4 text-blue-500" />  
+    </a>  
+  </Button>  
+
+  {/* Copy Link */}
+  <Button  
+    variant="outline"  
+    size="sm"  
+    onClick={() => navigator.clipboard.writeText(window.location.href)}  
+  >  
+    <Copy className="h-4 w-4" />
+  </Button>  
+
+  {/* Like Button */}
+  <Button  
+    variant="outline"  
+    size="sm"  
+    onClick={handleLike}  
+    className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500`}  
+  >  
+    {liked ? <Heart className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}  
+    <span>{likesCount}</span>  
+  </Button>  
+</div>
+
         </section>  
 
         {/* Post Footer */}  
@@ -350,7 +385,7 @@ Back to Blog
             </Button>  
 
             <div className="text-sm text-muted-foreground">  
-              Published on {format(new Date(post.published_at), 'MMMM dd, yyyy')}  
+              Published on {format(new Date(post.published_at), 'MMMM dd, yyyy')}  by Leul Ayfokru
             </div>  
           </div>  
         </footer>  

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Clock, Search, Tag, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Search, Tag, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Pagination,
@@ -138,20 +138,35 @@ const Blog = () => {
     <div className="min-h-screen py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
-          {/* Header Section */}
-          <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              Blog
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Thoughts, tutorials, and insights from my development journey
-            </p>
-            <div className="mt-6">
-              <Button variant="outline" asChild>
-                <Link to="/admin">Write a Post</Link>
-              </Button>
-            </div>
-          </div>
+       {/* Header Section */}
+ 
+<div className="relative w-full text-center mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
+ py-24 rounded-3xl">
+  {/* Decorative gradient glow overlay */}
+  <div className="absolute inset-0 -z-10">
+    <div className="w-[200%] h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 blur-[180px] opacity-25"></div>
+  </div>
+
+  {/* Heading */}
+ <h1 className="text-5xl md:text-6xl font-extrabold text-foreground drop-shadow-md mb-4">
+  Blog
+  </h1>
+
+  {/* Subheading */}
+  <p className="text-lg md:text-xl text-foreground drop-shadow-md max-w-2xl mx-auto leading-relaxed  ">
+    Thoughts, tutorials, and insights from my{" "}
+    <span className="font-semibold">development journey</span>.
+  </p>
+
+  {/* Accent underline */}
+  <div className="mt-6 flex justify-center">
+    <div className="h-1 w-24 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full shadow-lg shadow-pink-500/30"></div>
+  </div>
+</div>
+
+
+
+
 
           {/* Search and Filter Section */}
           <div className="mb-8 space-y-4 md:space-y-0 md:flex md:gap-4 md:items-center">
@@ -249,11 +264,12 @@ const Blog = () => {
                       {/* Tags - Remove for now since we need to implement proper tag relationship */}
 
                       {/* Read More Button */}
-                      <Button variant="outline" size="sm" asChild className="w-full">
-                        <Link to={`/blog/${post.slug}`}>
-                          Read More
-                        </Link>
-                      </Button>
+                      <Button variant="outline" size="sm" asChild className="w-full group">
+  <Link to={`/blog/${post.slug}`} className="flex items-center justify-center gap-2">
+    Read More
+    <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+  </Link>
+</Button>
                     </CardContent>
                   </Card>
                 ))}
