@@ -28,13 +28,13 @@ interface Skill {
 const skillIcons: Record<string, JSX.Element> = {
   // Programming / Language
   JavaScript: <SiJavascript className="text-yellow-400" />,
-  TypesScript: <BiLogoTypescript className="text-blue-600" />,
+  TypeScript: <BiLogoTypescript className="text-blue-600" />,
   Python: <SiPython className="text-blue-400" />,
   HTML5: <SiHtml5 className="text-orange-500" />,
   CSS3: <SiCss3 className="text-blue-500" />,
   React: <SiReact className="text-cyan-400" />,
   'React Native': <SiReact className="text-cyan-500" />,
-  Next.js: <TbBrandNextjs className="text-black" />,
+  Nextjs: <TbBrandNextjs className="text-black" />,
   Vite: <SiVite className="text-blue-400" />,
   
   Redux: <SiRedux className="text-purple-600" />,
