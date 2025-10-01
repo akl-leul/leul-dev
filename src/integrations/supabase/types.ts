@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          action: string
+          created_at: string | null
+          description: string | null
+          id: string
+          metadata: Json | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          metadata?: Json | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      admin_roles: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string | null
@@ -283,6 +340,36 @@ export type Database = {
           tech_used?: string[] | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      home_content: {
+        Row: {
+          created_at: string | null
+          hero_image: string | null
+          id: string
+          my_story: string | null
+          name: string
+          tagline: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hero_image?: string | null
+          id?: string
+          my_story?: string | null
+          name: string
+          tagline: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hero_image?: string | null
+          id?: string
+          my_story?: string | null
+          name?: string
+          tagline?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -637,25 +724,31 @@ export type Database = {
           change: Json
           created_at: string
           id: string
+          image_urls: string[] | null
           note: string | null
           project_id: string
           user_id: string
+          website_url: string | null
         }
         Insert: {
           change: Json
           created_at?: string
           id?: string
+          image_urls?: string[] | null
           note?: string | null
           project_id: string
           user_id: string
+          website_url?: string | null
         }
         Update: {
           change?: Json
           created_at?: string
           id?: string
+          image_urls?: string[] | null
           note?: string | null
           project_id?: string
           user_id?: string
+          website_url?: string | null
         }
         Relationships: [
           {
@@ -669,10 +762,16 @@ export type Database = {
       }
       project_management_projects: {
         Row: {
+          client_company: string | null
+          client_email: string | null
+          client_name: string | null
+          client_phone: string | null
           created_at: string
           deadline: string
+          description: string | null
           id: string
           name: string
+          notes: string | null
           price: number
           progress: number
           status: Database["public"]["Enums"]["project_status"]
@@ -680,10 +779,16 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          client_company?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           created_at?: string
           deadline: string
+          description?: string | null
           id?: string
           name: string
+          notes?: string | null
           price: number
           progress?: number
           status?: Database["public"]["Enums"]["project_status"]
@@ -691,10 +796,16 @@ export type Database = {
           user_id: string
         }
         Update: {
+          client_company?: string | null
+          client_email?: string | null
+          client_name?: string | null
+          client_phone?: string | null
           created_at?: string
           deadline?: string
+          description?: string | null
           id?: string
           name?: string
+          notes?: string | null
           price?: number
           progress?: number
           status?: Database["public"]["Enums"]["project_status"]
@@ -702,6 +813,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      project_shares: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string
+          id: string
+          last_viewed_at: string | null
+          project_id: string
+          share_token: string
+          view_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at: string
+          id?: string
+          last_viewed_at?: string | null
+          project_id: string
+          share_token: string
+          view_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string
+          id?: string
+          last_viewed_at?: string | null
+          project_id?: string
+          share_token?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_shares_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_management_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       projects: {
         Row: {
@@ -885,7 +1037,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       project_status: "not_started" | "in_progress" | "blocked" | "done"

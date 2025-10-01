@@ -83,6 +83,14 @@ interface ContactSubmission {
   created_at: string;
 }
 
+interface HomeContent {
+  id: string;
+  name: string;
+  tagline: string;
+  hero_image: string | null;
+  my_story: string | null;
+}
+
 const Admin = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -91,6 +99,7 @@ const Admin = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
+  const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Search states
@@ -133,6 +142,7 @@ const Admin = () => {
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [newSkillOpen, setNewSkillOpen] = useState(false);
   const [newExperienceOpen, setNewExperienceOpen] = useState(false);
+  const [newHomeContentOpen, setNewHomeContentOpen] = useState(false);
   const [replyModalOpen, setReplyModalOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -179,6 +189,13 @@ const Admin = () => {
   const [expAchievements, setExpAchievements] = useState('');
   const [expTechUsed, setExpTechUsed] = useState('');
   
+  // Home content form state
+  const [homeName, setHomeName] = useState('');
+  const [homeTagline, setHomeTagline] = useState('');
+  const [homeStory, setHomeStory] = useState('');
+  const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
+  const [homeImageUrl, setHomeImageUrl] = useState('');
+  
   // Reply form state
   const [replySubject, setReplySubject] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
@@ -212,6 +229,9 @@ const Admin = () => {
     // Reset experience form
     setExpRole(''); setExpCompany(''); setExpCompanyUrl(''); setExpLocation(''); setExpDescription('');
     setExpStartDate(''); setExpEndDate(''); setExpCurrent(false); setExpAchievements(''); setExpTechUsed('');
+    
+    // Reset home content form
+    setHomeName(''); setHomeTagline(''); setHomeStory(''); setHomeImageFile(null); setHomeImageUrl('');
     
     // Reset reply form
     setReplySubject(''); setReplyMessage('');
@@ -253,6 +273,11 @@ const Admin = () => {
   const handleProjectFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setProjectImageFile(file);
+  };
+
+  const handleHomeImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setHomeImageFile(file);
   };
 
   // CRUD Functions
@@ -427,6 +452,47 @@ const Admin = () => {
     }
   };
 
+  const handleUpdateHomeContent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setLoading(true);
+    try {
+      let imageUrl = homeImageUrl;
+      if (homeImageFile) {
+        imageUrl = await uploadImage(homeImageFile, 'project-images') || '';
+      }
+
+      const contentData = {
+        name: homeName,
+        tagline: homeTagline,
+        my_story: homeStory || null,
+        hero_image: imageUrl || null,
+      };
+
+      if (homeContent) {
+        const { error } = await supabase
+          .from('home_content')
+          .update(contentData)
+          .eq('id', homeContent.id);
+        if (error) throw error;
+        toast({ title: 'Updated', description: 'Home content has been updated successfully.' });
+      } else {
+        const { error } = await supabase.from('home_content').insert(contentData);
+        if (error) throw error;
+        toast({ title: 'Created', description: 'Home content has been created successfully.' });
+      }
+
+      setNewHomeContentOpen(false);
+      resetForms();
+      fetchData();
+    } catch (error: any) {
+      console.error('Failed to save home content', error);
+      toast({ title: 'Error', description: error.message || 'Failed to save home content', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -572,12 +638,13 @@ const Admin = () => {
 
   const fetchData = async () => {
     try {
-      const [projectsRes, postsRes, skillsRes, experiencesRes, contactsRes] = await Promise.all([
+      const [projectsRes, postsRes, skillsRes, experiencesRes, contactsRes, homeContentRes] = await Promise.all([
         supabase.from('projects').select('*').eq('user_id', user?.id),
         supabase.from('posts').select('*').eq('user_id', user?.id),
         supabase.from('skills').select('*').eq('user_id', user?.id),
         supabase.from('experiences').select('*').eq('user_id', user?.id),
         supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('home_content').select('*').limit(1).maybeSingle(),
       ]);
 
       setProjects(projectsRes.data || []);
@@ -585,6 +652,7 @@ const Admin = () => {
       setSkills(skillsRes.data || []);
       setExperiences(experiencesRes.data || []);
       setContacts(contactsRes.data || []);
+      setHomeContent(homeContentRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -713,6 +781,16 @@ const Admin = () => {
     setReplyModalOpen(true);
   };
 
+  const editHomeContent = () => {
+    if (homeContent) {
+      setHomeName(homeContent.name);
+      setHomeTagline(homeContent.tagline);
+      setHomeStory(homeContent.my_story || '');
+      setHomeImageUrl(homeContent.hero_image || '');
+      setNewHomeContentOpen(true);
+    }
+  };
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -734,10 +812,15 @@ const Admin = () => {
         <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
         
         <Tabs defaultValue="analytics">
-         <TabsList className="grid w-full grid-cols-7">
+         <TabsList className="grid w-full grid-cols-8">
   <TabsTrigger value="analytics">
     <BarChart3 className="w-5 h-5 inline md:mr-2" />
     <span className="hidden md:inline">Analytics</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="home">
+    <span className="text-lg">🏠</span>
+    <span className="hidden md:inline ml-2">Home</span>
   </TabsTrigger>
 
   <TabsTrigger value="projects">
@@ -906,6 +989,58 @@ const Admin = () => {
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
+
+          {/* Home Content Tab */}
+          <TabsContent value="home" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Home Page Content</h2>
+              <Button onClick={editHomeContent}>
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Home Content
+              </Button>
+            </div>
+
+            {homeContent ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Current Home Page Content</CardTitle>
+                  <CardDescription>Manage the hero section displayed on the home page</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="font-semibold">Name</Label>
+                    <p className="text-lg mt-1">{homeContent.name}</p>
+                  </div>
+                  <div>
+                    <Label className="font-semibold">Tagline</Label>
+                    <p className="text-muted-foreground mt-1">{homeContent.tagline}</p>
+                  </div>
+                  {homeContent.hero_image && (
+                    <div>
+                      <Label className="font-semibold">Hero Image</Label>
+                      <img src={homeContent.hero_image} alt="Hero" className="mt-2 max-w-md rounded-lg border" />
+                    </div>
+                  )}
+                  {homeContent.my_story && (
+                    <div>
+                      <Label className="font-semibold">My Story</Label>
+                      <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{homeContent.my_story}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground mb-4">No home content found. Click the button above to create one.</p>
+                  <Button onClick={() => setNewHomeContentOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Home Content
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="projects" className="space-y-6">
@@ -1678,6 +1813,77 @@ const Admin = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Home Content Dialog */}
+        <Dialog open={newHomeContentOpen} onOpenChange={(open) => { setNewHomeContentOpen(open); if (!open) resetForms(); }}>
+          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>{homeContent ? 'Edit Home Content' : 'Create Home Content'}</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleUpdateHomeContent} className="space-y-4">
+              <div>
+                <Label htmlFor="homeName">Name *</Label>
+                <Input
+                  id="homeName"
+                  value={homeName}
+                  onChange={(e) => setHomeName(e.target.value)}
+                  placeholder="Your Name"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="homeTagline">Tagline *</Label>
+                <Textarea
+                  id="homeTagline"
+                  value={homeTagline}
+                  onChange={(e) => setHomeTagline(e.target.value)}
+                  placeholder="A short tagline about yourself"
+                  className="min-h-[80px]"
+                  required
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="homeStory">My Story (optional)</Label>
+                <Textarea
+                  id="homeStory"
+                  value={homeStory}
+                  onChange={(e) => setHomeStory(e.target.value)}
+                  placeholder="Tell your story..."
+                  className="min-h-[120px]"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor="homeImage">Hero Image (optional)</Label>
+                <Input
+                  id="homeImage"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleHomeImageChange}
+                />
+                {homeImageUrl && (
+                  <div className="mt-2">
+                    <img src={homeImageUrl} alt="Preview" className="max-w-sm rounded border" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => {
+                  setNewHomeContentOpen(false);
+                  resetForms();
+                }}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={loading}>
+                  {loading ? 'Saving...' : (homeContent ? 'Update' : 'Create')}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

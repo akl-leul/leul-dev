@@ -27,9 +27,18 @@ interface Post {
   read_time: number;
 }
 
+interface HomeContent {
+  id: string;
+  name: string;
+  tagline: string;
+  hero_image: string | null;
+  my_story: string | null;
+}
+
 const Home = () => {
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [latestPosts, setLatestPosts] = useState<Post[]>([]);
+  const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,8 +59,16 @@ const Home = () => {
           .order('created_at', { ascending: false })
           .limit(3);
 
+        // Fetch home content
+        const { data: content } = await supabase
+          .from('home_content')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+
         setFeaturedProjects(projects || []);
         setLatestPosts(posts || []);
+        setHomeContent(content);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -132,11 +149,12 @@ const Home = () => {
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-4xl md:text-7xl font-bold text-foreground mb-6">
-            Hi, I'm <span className="bg-gradient-to-r from-violet-400 to-cyan-500 bg-clip-text text-transparent">Leul Ayfokru</span>
-
+            Hi, I'm <span className="bg-gradient-to-r from-violet-400 to-cyan-500 bg-clip-text text-transparent">
+              {homeContent?.name || 'Leul Ayfokru'}
+            </span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-            Full-stack website and application developer based in Ethiopia.
+            {homeContent?.tagline || 'Full-stack website and application developer based in Ethiopia.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
