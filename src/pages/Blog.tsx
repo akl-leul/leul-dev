@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -140,27 +140,27 @@ const Blog = () => {
         <div className="max-w-6xl mx-auto">
        {/* Header Section */}
  
-<div className="relative w-full text-center mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
- py-24 rounded-3xl">
+<div className="relative w-full text-center mb-12 md:mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
+ py-12 md:py-20 lg:py-24 px-4 rounded-3xl">
   {/* Decorative gradient glow overlay */}
   <div className="absolute inset-0 -z-10">
     <div className="w-[200%] h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 blur-[180px] opacity-25"></div>
   </div>
 
   {/* Heading */}
- <h1 className="text-5xl md:text-6xl font-extrabold text-foreground drop-shadow-md mb-4">
+ <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground drop-shadow-md mb-3 md:mb-4">
   Blog
   </h1>
 
   {/* Subheading */}
-  <p className="text-lg md:text-xl text-foreground drop-shadow-md max-w-2xl mx-auto leading-relaxed  ">
+  <p className="text-base sm:text-lg md:text-xl text-foreground drop-shadow-md max-w-2xl mx-auto leading-relaxed px-4">
     Thoughts, tutorials, and insights from my{" "}
     <span className="font-semibold">development journey</span>.
   </p>
 
   {/* Accent underline */}
-  <div className="mt-6 flex justify-center">
-    <div className="h-1 w-24 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full shadow-lg shadow-pink-500/30"></div>
+  <div className="mt-4 md:mt-6 flex justify-center">
+    <div className="h-1 w-20 md:w-24 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full shadow-lg shadow-pink-500/30"></div>
   </div>
 </div>
 
@@ -169,25 +169,27 @@ const Blog = () => {
 
 
           {/* Search and Filter Section */}
-          <div className="mb-8 space-y-4 md:space-y-0 md:flex md:gap-4 md:items-center">
+          <div className="mb-6 md:mb-8 space-y-3 md:space-y-0 md:flex md:gap-4 md:items-center">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search posts..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 w-full"
               />
             </div>
             
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-2 flex-wrap items-center">
               <Button
                 variant={selectedTag === '' ? 'default' : 'outline'}
                 onClick={() => setSelectedTag('')}
                 size="sm"
+                className="text-xs sm:text-sm"
               >
-                <Tag className="h-4 w-4 mr-2" />
-                All Tags
+                <Tag className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                <span className="hidden xs:inline">All Tags</span>
+                <span className="xs:hidden">All</span>
               </Button>
               {allTags.slice(0, 4).map((tag) => (
                 <Button
@@ -195,6 +197,7 @@ const Blog = () => {
                   variant={selectedTag === tag ? 'default' : 'outline'}
                   onClick={() => setSelectedTag(selectedTag === tag ? '' : tag)}
                   size="sm"
+                  className="text-xs sm:text-sm"
                 >
                   {tag}
                 </Button>
@@ -277,9 +280,9 @@ const Blog = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-8 flex justify-center">
+                <div className="mt-8 flex justify-center overflow-x-auto px-2">
                   <Pagination>
-                    <PaginationContent>
+                    <PaginationContent className="flex-wrap justify-center gap-1">
                       <PaginationItem>
                         <PaginationPrevious 
                           href="#" 
@@ -291,20 +294,42 @@ const Blog = () => {
                         />
                       </PaginationItem>
                       
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                        <PaginationItem key={page}>
-                          <PaginationLink
-                            href="#"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              setCurrentPage(page);
-                            }}
-                            isActive={currentPage === page}
-                          >
-                            {page}
-                          </PaginationLink>
-                        </PaginationItem>
-                      ))}
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => {
+                          // On mobile, show fewer pages
+                          if (totalPages <= 5) return true;
+                          if (page === 1 || page === totalPages) return true;
+                          if (page >= currentPage - 1 && page <= currentPage + 1) return true;
+                          return false;
+                        })
+                        .map((page, index, array) => {
+                          // Add ellipsis
+                          const prevPage = array[index - 1];
+                          const showEllipsis = prevPage && page - prevPage > 1;
+                          
+                          return (
+                            <React.Fragment key={page}>
+                              {showEllipsis && (
+                                <PaginationItem>
+                                  <span className="px-2">...</span>
+                                </PaginationItem>
+                              )}
+                              <PaginationItem>
+                                <PaginationLink
+                                  href="#"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    setCurrentPage(page);
+                                  }}
+                                  isActive={currentPage === page}
+                                  className="min-w-[2.5rem]"
+                                >
+                                  {page}
+                                </PaginationLink>
+                              </PaginationItem>
+                            </React.Fragment>
+                          );
+                        })}
                       
                       <PaginationItem>
                         <PaginationNext 
@@ -322,7 +347,7 @@ const Blog = () => {
               )}
 
               {/* Results Summary */}
-              <div className="mt-4 text-center text-sm text-muted-foreground">
+              <div className="mt-4 text-center text-xs sm:text-sm text-muted-foreground px-4">
                 Showing {startIndex + 1}-{Math.min(endIndex, filteredPosts.length)} of {filteredPosts.length} posts
               </div>
             </>
