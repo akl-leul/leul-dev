@@ -64,7 +64,7 @@ const Contact = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           {/* Header Section */}
-          <div className="text-center mb-16">
+          <div className="text-center mb-16 mt-8" >
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
               Get In Touch
             </h1>

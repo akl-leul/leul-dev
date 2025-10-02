@@ -28,16 +28,17 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-sm">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[95%] max-w-7xl rounded-xl bg-background/70 backdrop-blur-md shadow-lg border border-border">
+      <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link 
-            to="/" 
-            className="text-xl font-bold text-foreground hover:text-primary transition-colors"
-          >
-            LEUL
-          </Link>
+         <Link 
+  to="/" 
+  className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent font-logo tracking-wide hover:opacity-80 transition duration-300"
+>
+  Leul Dev
+</Link>
+
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">

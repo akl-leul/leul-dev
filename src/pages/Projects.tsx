@@ -125,7 +125,7 @@ const Projects = () => {
         <div className="max-w-6xl mx-auto">
           {/* Header Section */}
           <div className="text-center mb-16">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6 mt-8">
               My Projects
             </h1>
             <p className="text-xl text-muted-foreground">
