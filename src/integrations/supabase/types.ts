@@ -345,30 +345,45 @@ export type Database = {
       }
       home_content: {
         Row: {
+          accent_color: string | null
+          background_gradient: string | null
+          background_image: string | null
           created_at: string | null
           hero_image: string | null
           id: string
-          my_story: string | null
           name: string
+          primary_color: string | null
+          secondary_color: string | null
           tagline: string
+          text_color: string | null
           updated_at: string | null
         }
         Insert: {
+          accent_color?: string | null
+          background_gradient?: string | null
+          background_image?: string | null
           created_at?: string | null
           hero_image?: string | null
           id?: string
-          my_story?: string | null
           name: string
+          primary_color?: string | null
+          secondary_color?: string | null
           tagline: string
+          text_color?: string | null
           updated_at?: string | null
         }
         Update: {
+          accent_color?: string | null
+          background_gradient?: string | null
+          background_image?: string | null
           created_at?: string | null
           hero_image?: string | null
           id?: string
-          my_story?: string | null
           name?: string
+          primary_color?: string | null
+          secondary_color?: string | null
           tagline?: string
+          text_color?: string | null
           updated_at?: string | null
         }
         Relationships: []

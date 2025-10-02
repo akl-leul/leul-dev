@@ -88,7 +88,12 @@ interface HomeContent {
   name: string;
   tagline: string;
   hero_image: string | null;
-  my_story: string | null;
+  background_image: string | null;
+  background_gradient: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  text_color: string | null;
+  accent_color: string | null;
 }
 
 const Admin = () => {
@@ -192,7 +197,12 @@ const Admin = () => {
   // Home content form state
   const [homeName, setHomeName] = useState('');
   const [homeTagline, setHomeTagline] = useState('');
-  const [homeStory, setHomeStory] = useState('');
+  const [backgroundImage, setBackgroundImage] = useState('');
+  const [backgroundGradient, setBackgroundGradient] = useState('linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))');
+  const [primaryColor, setPrimaryColor] = useState('hsl(262, 83%, 58%)');
+  const [secondaryColor, setSecondaryColor] = useState('hsl(180, 100%, 50%)');
+  const [textColor, setTextColor] = useState('hsl(0, 0%, 100%)');
+  const [accentColor, setAccentColor] = useState('hsl(262, 90%, 65%)');
   const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
   const [homeImageUrl, setHomeImageUrl] = useState('');
   
@@ -231,7 +241,9 @@ const Admin = () => {
     setExpStartDate(''); setExpEndDate(''); setExpCurrent(false); setExpAchievements(''); setExpTechUsed('');
     
     // Reset home content form
-    setHomeName(''); setHomeTagline(''); setHomeStory(''); setHomeImageFile(null); setHomeImageUrl('');
+    setHomeName(''); setHomeTagline(''); setBackgroundImage(''); setBackgroundGradient('linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'); 
+    setPrimaryColor('hsl(262, 83%, 58%)'); setSecondaryColor('hsl(180, 100%, 50%)'); setTextColor('hsl(0, 0%, 100%)'); 
+    setAccentColor('hsl(262, 90%, 65%)'); setHomeImageFile(null); setHomeImageUrl('');
     
     // Reset reply form
     setReplySubject(''); setReplyMessage('');
@@ -465,8 +477,13 @@ const Admin = () => {
       const contentData = {
         name: homeName,
         tagline: homeTagline,
-        my_story: homeStory || null,
         hero_image: imageUrl || null,
+        background_image: backgroundImage || null,
+        background_gradient: backgroundGradient || null,
+        primary_color: primaryColor || null,
+        secondary_color: secondaryColor || null,
+        text_color: textColor || null,
+        accent_color: accentColor || null,
       };
 
       if (homeContent) {
@@ -785,7 +802,12 @@ const Admin = () => {
     if (homeContent) {
       setHomeName(homeContent.name);
       setHomeTagline(homeContent.tagline);
-      setHomeStory(homeContent.my_story || '');
+      setBackgroundImage(homeContent.background_image || '');
+      setBackgroundGradient(homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))');
+      setPrimaryColor(homeContent.primary_color || 'hsl(262, 83%, 58%)');
+      setSecondaryColor(homeContent.secondary_color || 'hsl(180, 100%, 50%)');
+      setTextColor(homeContent.text_color || 'hsl(0, 0%, 100%)');
+      setAccentColor(homeContent.accent_color || 'hsl(262, 90%, 65%)');
       setHomeImageUrl(homeContent.hero_image || '');
       setNewHomeContentOpen(true);
     }
@@ -1022,10 +1044,42 @@ const Admin = () => {
                       <img src={homeContent.hero_image} alt="Hero" className="mt-2 max-w-md rounded-lg border" />
                     </div>
                   )}
-                  {homeContent.my_story && (
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="font-semibold">My Story</Label>
-                      <p className="text-muted-foreground mt-1 whitespace-pre-wrap">{homeContent.my_story}</p>
+                      <Label className="font-semibold">Primary Color</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.primary_color || '' }}></div>
+                        <span className="text-sm text-muted-foreground">{homeContent.primary_color}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="font-semibold">Secondary Color</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.secondary_color || '' }}></div>
+                        <span className="text-sm text-muted-foreground">{homeContent.secondary_color}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="font-semibold">Text Color</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.text_color || '' }}></div>
+                        <span className="text-sm text-muted-foreground">{homeContent.text_color}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label className="font-semibold">Accent Color</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.accent_color || '' }}></div>
+                        <span className="text-sm text-muted-foreground">{homeContent.accent_color}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {homeContent.background_gradient && (
+                    <div>
+                      <Label className="font-semibold">Background Gradient</Label>
+                      <div className="mt-1 p-4 rounded border" style={{ background: homeContent.background_gradient }}>
+                        <p className="text-xs text-muted-foreground">{homeContent.background_gradient}</p>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -1844,14 +1898,68 @@ const Admin = () => {
                 />
               </div>
               
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="primaryColor">Primary Color</Label>
+                  <Input
+                    id="primaryColor"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    placeholder="hsl(262, 83%, 58%)"
+                  />
+                  <div className="mt-2 w-full h-10 rounded border" style={{ background: primaryColor }}></div>
+                </div>
+                <div>
+                  <Label htmlFor="secondaryColor">Secondary Color</Label>
+                  <Input
+                    id="secondaryColor"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    placeholder="hsl(180, 100%, 50%)"
+                  />
+                  <div className="mt-2 w-full h-10 rounded border" style={{ background: secondaryColor }}></div>
+                </div>
+                <div>
+                  <Label htmlFor="textColor">Text Color</Label>
+                  <Input
+                    id="textColor"
+                    value={textColor}
+                    onChange={(e) => setTextColor(e.target.value)}
+                    placeholder="hsl(0, 0%, 100%)"
+                  />
+                  <div className="mt-2 w-full h-10 rounded border" style={{ background: textColor }}></div>
+                </div>
+                <div>
+                  <Label htmlFor="accentColor">Accent Color</Label>
+                  <Input
+                    id="accentColor"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    placeholder="hsl(262, 90%, 65%)"
+                  />
+                  <div className="mt-2 w-full h-10 rounded border" style={{ background: accentColor }}></div>
+                </div>
+              </div>
+              
               <div>
-                <Label htmlFor="homeStory">My Story (optional)</Label>
+                <Label htmlFor="backgroundGradient">Background Gradient</Label>
                 <Textarea
-                  id="homeStory"
-                  value={homeStory}
-                  onChange={(e) => setHomeStory(e.target.value)}
-                  placeholder="Tell your story..."
-                  className="min-h-[120px]"
+                  id="backgroundGradient"
+                  value={backgroundGradient}
+                  onChange={(e) => setBackgroundGradient(e.target.value)}
+                  placeholder="linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))"
+                  className="min-h-[60px]"
+                />
+                <div className="mt-2 w-full h-20 rounded border" style={{ background: backgroundGradient }}></div>
+              </div>
+              
+              <div>
+                <Label htmlFor="backgroundImage">Background Image URL (optional)</Label>
+                <Input
+                  id="backgroundImage"
+                  value={backgroundImage}
+                  onChange={(e) => setBackgroundImage(e.target.value)}
+                  placeholder="https://example.com/background.jpg"
                 />
               </div>
               

@@ -32,7 +32,12 @@ interface HomeContent {
   name: string;
   tagline: string;
   hero_image: string | null;
-  my_story: string | null;
+  background_image: string | null;
+  background_gradient: string | null;
+  primary_color: string | null;
+  secondary_color: string | null;
+  text_color: string | null;
+  accent_color: string | null;
 }
 
 const Home = () => {
@@ -138,32 +143,69 @@ const Home = () => {
     <div className="space-y-20">
       {/* Hero Section */}
       
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section 
+      className="relative min-h-screen flex items-center overflow-hidden"
+      style={{
+        background: homeContent?.background_image 
+          ? `url(${homeContent.background_image}), ${homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'}`
+          : homeContent?.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
       {/* Animated background */}
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 w-full h-full"
+        className="absolute inset-0 w-full h-full opacity-30"
       ></canvas>
 
       {/* Foreground content */}
       <div className="relative container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl md:text-7xl font-bold text-foreground mb-6">
-            Hi, I'm <span className="bg-gradient-to-r from-violet-400 to-cyan-500 bg-clip-text text-transparent">
+          <h1 
+            className="text-4xl md:text-7xl font-bold mb-6"
+            style={{ color: homeContent?.text_color || 'hsl(0, 0%, 100%)' }}
+          >
+            Hi, I'm <span 
+              style={{
+                background: `linear-gradient(to right, ${homeContent?.primary_color || 'hsl(262, 83%, 58%)'}, ${homeContent?.secondary_color || 'hsl(180, 100%, 50%)'})`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
               {homeContent?.name || 'Leul Ayfokru'}
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+          <p 
+            className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto"
+            style={{ color: homeContent?.text_color || 'hsl(0, 0%, 100%)' }}
+          >
             {homeContent?.tagline || 'Full-stack website and application developer based in Ethiopia.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" asChild>
+            <Button 
+              size="lg" 
+              asChild
+              style={{
+                backgroundColor: homeContent?.primary_color || 'hsl(262, 83%, 58%)',
+                color: 'white',
+              }}
+            >
               <Link to="/projects">
                 View My Work
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              asChild
+              style={{
+                borderColor: homeContent?.accent_color || 'hsl(262, 90%, 65%)',
+                color: homeContent?.text_color || 'hsl(0, 0%, 100%)',
+              }}
+            >
               <Link to="/contact">Get In Touch</Link>
             </Button>
           </div>
