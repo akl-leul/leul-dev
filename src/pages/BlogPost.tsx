@@ -271,16 +271,16 @@ Back to Blog
 }
 
 return (
-    <div className="min-h-screen py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Back Button */}
-          <Button variant="ghost" asChild className="mb-8">
-            <Link to="/blog">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Blog
-            </Link>
-          </Button>
+<div className="min-h-screen py-16">
+<div className="container mx-auto px-4 sm:px-6 lg:px-8">
+<div className="max-w-4xl mx-auto">
+{/* Back Button */}
+<Button variant="ghost" asChild className="mb-8">
+<Link to="/blog">
+<ArrowLeft className="h-4 w-4 mr-2" />
+Back to Blog
+</Link>
+</Button>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
