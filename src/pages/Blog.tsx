@@ -140,7 +140,7 @@ const Blog = () => {
         <div className="max-w-6xl mx-auto">
        {/* Header Section */}
  
-<div className="relative w-full text-center mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
+<div className="relative md:w-full text-center mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
  py-24 rounded-3xl">
   {/* Decorative gradient glow overlay */}
   <div className="absolute inset-0 -z-10">
