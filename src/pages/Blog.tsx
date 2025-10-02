@@ -140,11 +140,11 @@ const Blog = () => {
         <div className="max-w-6xl mx-auto">
        {/* Header Section */}
  
-<div className="relative w-full text-center mb-12 md:mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
- py-12 md:py-20 lg:py-24 px-4 rounded-3xl">
+<div className="relative w-full text-center mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950
+ py-24 rounded-3xl">
   {/* Decorative gradient glow overlay */}
   <div className="absolute inset-0 -z-10">
-    <div className="w-[200%] h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 blur-[180px] opacity-25"></div>
+    <div className="md:w-[200%] h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 blur-[180px] opacity-25"></div>
   </div>
 
   {/* Heading */}
