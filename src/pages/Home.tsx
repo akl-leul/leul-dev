@@ -173,7 +173,8 @@ const Home = () => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
-              }}
+                
+              }} className='font-logo'
             >
               {homeContent?.name || 'Leul Ayfokru'}
             </span>
