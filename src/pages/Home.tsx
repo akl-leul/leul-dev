@@ -203,7 +203,7 @@ const Home = () => {
               asChild
               style={{
                 borderColor: homeContent?.accent_color || 'hsl(262, 90%, 65%)',
-                color: homeContent?.text_color || 'hsl(0, 0%, 100%)',
+                color: homeContent?.text_color || 'hsla(0, 0%, 0%, 1.00)',
               }}
             >
               <Link to="/contact">Get In Touch</Link>
