@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Download, MapPin, Mail, ExternalLink, Calendar, Twitter } from 'lucide-react';
+import { Download, MapPin, Mail, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
-import { FaXTwitter} from "react-icons/fa6";
+import { FaXTwitter } from "react-icons/fa6";
+
 interface Profile {
   name: string;
   bio: string;
@@ -54,22 +55,10 @@ const About = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch profile data
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .single();
+        const { data: profileData } = await supabase.from('profiles').select('*').single();
+        if (profileData) setProfile({ ...defaultProfile, ...profileData });
 
-        if (profileData) {
-          setProfile({ ...defaultProfile, ...profileData });
-        }
-
-        // Fetch experiences
-        const { data: experiencesData } = await supabase
-          .from('experiences')
-          .select('*')
-          .order('start_date', { ascending: false });
-
+        const { data: experiencesData } = await supabase.from('experiences').select('*').order('start_date', { ascending: false });
         setExperiences(experiencesData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -77,7 +66,6 @@ const About = () => {
         setLoading(false);
       }
     };
-
     fetchData();
   }, []);
 
@@ -87,223 +75,180 @@ const About = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="animate-pulse">
-              <div className="h-8 bg-muted rounded w-1/3 mb-8"></div>
-              <div className="space-y-4">
-                <div className="h-4 bg-muted rounded"></div>
-                <div className="h-4 bg-muted rounded w-5/6"></div>
-                <div className="h-4 bg-muted rounded w-4/6"></div>
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="min-h-screen py-16 flex items-center justify-center">
+        <p className="text-lg text-gray-600">Loading profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-16">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
-          {/* Header Section */}
-          <div className="text-center mb-16 mt-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-              About Me
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Get to know more about my journey, experience, and passion for development
-            </p>
-          </div>
+    <div className="min-h-screen py-16 bg-gray-50">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+        {/* Header */}
+        <div className="text-center mb-16 mt-8">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">About Me</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Get to know more about my journey, experience, and passion for development
+          </p>
+        </div>
 
-          {/* Profile Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-            <div className="lg:col-span-1">
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.name}
-                    className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
-                  />
-                  <h2 className="text-2xl font-bold text-foreground mb-2">
-                    {profile.name}
-                  </h2>
+        {/* Profile and socials */}
+        <div className="grid lg:grid-cols-3 gap-10 mb-20">
+          <Card className="bg-white rounded-lg shadow-md border border-gray-200">
+            <div className="p-6 text-center">
+              <img
+                src={profile.avatar_url}
+                alt={profile.name}
+                className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
+              />
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">{profile.name}</h2>
+              
+              <div className="space-y-3 text-gray-600 text-sm mt-3">
+                <div className="flex items-center justify-center gap-2">
+                  <MapPin className="h-5 w-5 text-indigo-600" />
+                  <span>{profile.location}</span>
+                </div>
+                <div className="flex items-center justify-center gap-2">
+                  <Mail className="h-5 w-5 text-indigo-600" />
+                  <a href={`mailto:${profile.email}`} className="hover:text-indigo-700 transition-colors">{profile.email}</a>
+                </div>
+              </div>
+
+              <Button className="mt-6 w-full" asChild>
+                <a href={profile.resume_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center space-x-2">
+                  <Download className="h-5 w-5" />
+                  <span>Download Resume</span>
+                </a>
+              </Button>
+
+              <div className="flex justify-center gap-5 mt-8">
+                <SocialButton url={profile.website} icon={<ExternalLink className="h-5 w-5" />} />
+                <SocialButton url={profile.github_url} icon={<GithubIcon />} />
+                <SocialButton url={profile.linkedin_url} icon={<LinkedinIcon />} />
+                <SocialButton url={profile.twitter_url} icon={<FaXTwitter className="h-5 w-5" />} />
+              </div>
+            </div>
+          </Card>
+
+          {/* Story */}
+          <div className="lg:col-span-2">
+            <Card className="bg-white rounded-lg shadow-md border border-gray-200">
+              <CardHeader>
+                <CardTitle>My Story</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 leading-relaxed mb-4">
+                  Full stack website and application developer
+                </p>
+                <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                  I'm a passionate full-stack developer with a love for creating elegant solutions to complex problems. With several years of experience in web development, I enjoy working with modern technologies and frameworks to build scalable, user-friendly applications.
                   
-                  <div className="space-y-2 text-sm text-muted-foreground">
-                    <div className="flex items-center justify-center gap-2">
-                      <MapPin className="h-4 w-4" />
-                      {profile.location}
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <Mail className="h-4 w-4" />
-                      <a 
-                        href={`mailto:${profile.email}`}
-                        className="hover:text-primary transition-colors"
-                      >
-                        {profile.email}
-                      </a>
-                    </div>
-                  </div>
-
-                  <Button className="mt-4" asChild>
-                    <a href={profile.resume_url} target="_blank" rel="noopener noreferrer">
-                      <Download className="h-4 w-4 mr-2" />
-                      Download Resume
-                    </a>
-                  </Button>
-
-                  {/* Social Links */}
-                  <div className="flex justify-center gap-4 mt-6">
-                    <Button variant="outline" size="icon" asChild>
-                      <a href={profile.website} target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
-                    </Button>
-                    <Button variant="outline" size="icon" asChild>
-                      <a href={profile.github_url} target="_blank" rel="noopener noreferrer">
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                        </svg>
-                      </a>
-                    </Button>
-                    <Button variant="outline" size="icon" asChild>
-                      <a href={profile.linkedin_url} target="_blank" rel="noopener noreferrer">
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                        </svg>
-                      </a>
-                    </Button>
-                    <Button variant="outline" size="icon" asChild>
-                      <a href={profile.twitter_url} target="_blank" rel="noopener noreferrer">
-                       <FaXTwitter className="h-4 w-4" />  
-                      </a>
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Story</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="prose prose-neutral dark:prose-invert max-w-none">
-                    <p className='text-muted-foreground leading-relaxed'>
-                      Full stack website and application developer 
-                    </p> <br />
-                    <p className="text-muted-foreground leading-relaxed">
-                      I'm a passionate full-stack developer with a love for creating elegant solutions 
-to complex problems. With several years of experience in web development, I enjoy 
-working with modern technologies and frameworks to build scalable, user-friendly applications.
-<br /><br />
-When I'm not coding, you can find me exploring new technologies, contributing to 
-open-source projects, or sharing my knowledge through blog posts and tutorials. 
-I believe in continuous learning and staying up-to-date with the latest trends 
-in web development.
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+                  {"\n\n"}
+                  When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or sharing my knowledge through blog posts and tutorials. I believe in continuous learning and staying up-to-date with the latest trends in web development.
+                </p>
+              </CardContent>
+            </Card>
           </div>
+        </div>
 
-          {/* Experience Section */}
-          <section>
-            <h2 className="text-3xl font-bold text-foreground mb-8">Work Experience</h2>
-            
-            {experiences.length === 0 ? (
-              <Card>
-                <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">No work experience added yet.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className=" grid md:grid-cols-2 gap-4 ms:grid-cols-1">
-                {experiences.map((experience) => (
-                  <Card key={experience.id}>
-                    <CardContent className="p-6">
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-                        <div>
-                          <h3 className="text-xl font-semibold text-foreground mb-1">
-                            {experience.role}
-                          </h3>
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            {experience.company_url ? (
-                              <a
-                                href={experience.company_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="font-medium hover:text-primary transition-colors"
-                              >
-                                {experience.company}
-                              </a>
-                            ) : (
-                              <span className="font-medium">{experience.company}</span>
-                            )}
-                            {experience.location && (
-                              <>
-                                <span>•</span>
-                                <span>{experience.location}</span>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2 md:mt-0">
-                          <Calendar className="h-4 w-4" />
-                          <span>
-                            {formatDate(experience.start_date)} - {' '}
-                            {experience.current || !experience.end_date 
-                              ? 'Present' 
-                              : formatDate(experience.end_date)
-                            }
-                          </span>
+        {/* Experience Section */}
+        <section>
+          <h2 className="text-3xl font-bold text-gray-900 mb-8">Work Experience</h2>
+          {experiences.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-gray-600">No work experience added yet.</CardContent>
+            </Card>
+          ) : (
+            <div className="grid md:grid-cols-2 gap-6">
+              {experiences.map((exp) => (
+                <Card key={exp.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                  <CardContent className="p-6">
+                    <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-1">{exp.role}</h3>
+                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                          {exp.company_url ? (
+                            <a
+                              href={exp.company_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-medium hover:text-indigo-600 transition-colors"
+                            >
+                              {exp.company}
+                            </a>
+                          ) : (
+                            <span className="font-medium">{exp.company}</span>
+                          )}
+                          {exp.location && (
+                            <>
+                              <span>•</span>
+                              <span>{exp.location}</span>
+                            </>
+                          )}
                         </div>
                       </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-3 md:mt-0">
+                        <Calendar className="h-5 w-5" />
+                        <span>
+                          {formatDate(exp.start_date)} - {exp.current || !exp.end_date ? 'Present' : formatDate(exp.end_date)}
+                        </span>
+                      </div>
+                    </div>
 
-                      {experience.description && (
-                        <p className="text-muted-foreground mb-4">
-                          {experience.description}
-                        </p>
-                      )}
+                    {exp.description && (
+                      <p className="text-gray-600 mb-4">{exp.description}</p>
+                    )}
 
-                      {experience.achievements && experience.achievements.length > 0 && (
-                        <div className="mb-4">
-                          <h4 className="font-medium text-foreground mb-2">Key Achievements:</h4>
-                          <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                            {experience.achievements.map((achievement, index) => (
-                              <li key={index}>{achievement}</li>
-                            ))}
-                          </ul>
+                    {exp.achievements && exp.achievements.length > 0 && (
+                      <div className="mb-4">
+                        <h4 className="font-semibold text-gray-900 mb-2">Key Achievements:</h4>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          {exp.achievements.map((ach, idx) => (
+                            <li key={idx}>{ach}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {exp.tech_used && exp.tech_used.length > 0 && (
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Technologies Used:</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {exp.tech_used.map((tech) => (
+                            <Badge key={tech} variant="secondary" className="bg-indigo-100 text-indigo-700 border-none">{tech}</Badge>
+                          ))}
                         </div>
-                      )}
-
-                      {experience.tech_used && experience.tech_used.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-foreground mb-2">Technologies Used:</h4>
-                          <div className="flex flex-wrap gap-2">
-                            {experience.tech_used.map((tech) => (
-                              <Badge key={tech} variant="secondary">
-                                {tech}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </section>
-        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );
 };
+
+const SocialButton = ({ url, icon }: { url: string; icon: JSX.Element }) => (
+  <Button variant="outline" size="icon" asChild>
+    <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors">
+      {icon}
+    </a>
+  </Button>
+);
+
+const GithubIcon = () => (
+  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M12 0C5.37 0 0 5.37 0 12c0 5.303 3.438 9.8 8.207 11.388.599.112.793-.262.793-.58v-2.164C6.144 20.09 5.473 18.63 5.473 18.63c-.546-1.38-1.333-1.75-1.333-1.75-1.09-.744.083-.73.083-.73 1.205.086 1.838 1.238 1.838 1.238 1.07 1.832 2.807 1.304 3.492 1 .107-.78.42-1.306.763-1.607-2.664-.307-5.467-1.336-5.467-5.933 0-1.31.467-2.38 1.236-3.22-.125-.303-.535-1.526.118-3.178 0 0 1.008-.322 3.3 1.23a11.485 11.485 0 013.003-.404c1.02.005 2.047.14 3.006.404 2.29-1.552 3.297-1.23 3.297-1.23.653 1.652.243 2.875.118 3.178.77.84 1.235 1.91 1.235 3.22 0 4.6-2.807 5.625-5.48 5.932.43.372.823 1.106.823 2.235v3.313c0 .32.192.695.8.58C20.565 21.8 24 17.303 24 12c0-6.63-5.373-12-12-12z" />
+  </svg>
+);
+
+const LinkedinIcon = () => (
+  <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.028-3.037-1.853-3.037-1.85 0-2.136 1.444-2.136 2.939v5.667h-3.563V9h3.561v1.561h.045c.478-.9 1.637-1.85 3.37-1.85 3.6 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.064-.926-2.064-2.065 0-1.138.92-2.063 2.064-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.018H3.557V9H7.12v11.451zM22.225 0H1.77C.79 0 0 .774 0 1.729v20.542C0 23.228.79 24 1.77 24h20.453C23.206 24 24 23.228 24 22.271V1.729C24 .774 23.206 0 22.225 0z" />
+  </svg>
+);
 
 export default About;

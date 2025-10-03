@@ -1772,7 +1772,7 @@ const Admin = () => {
             {loading ? (
               <div>Loading...</div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {filteredContacts.map((contact) => (
                   <Card key={contact.id} className={contact.status === 'new' ? 'border-primary' : ''}>
                     <CardHeader>
