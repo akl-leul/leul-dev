@@ -8,10 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send,   FolderKanban,
+import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, FolderKanban,
   PenLine,
   BadgeInfo,
-  BriefcaseBusiness, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc } from 'lucide-react';
+  BriefcaseBusiness, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc, MessageCircle, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
@@ -96,6 +96,17 @@ interface HomeContent {
   accent_color: string | null;
 }
 
+interface Comment {
+  id: number;
+  author_name: string;
+  author_email: string;
+  content: string;
+  created_at: string;
+  approved: boolean;
+  post_id: number;
+  posts?: { title: string; slug: string };
+}
+
 const Admin = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -104,6 +115,7 @@ const Admin = () => {
   const [skills, setSkills] = useState<Skill[]>([]);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [contacts, setContacts] = useState<ContactSubmission[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
   const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -113,6 +125,7 @@ const Admin = () => {
   const [skillSearch, setSkillSearch] = useState('');
   const [experienceSearch, setExperienceSearch] = useState('');
   const [contactSearch, setContactSearch] = useState('');
+  const [commentSearch, setCommentSearch] = useState('');
 
   // Date filter states
   const [projectSortBy, setProjectSortBy] = useState('latest');
@@ -120,6 +133,7 @@ const Admin = () => {
   const [skillSortBy, setSkillSortBy] = useState('latest');
   const [experienceSortBy, setExperienceSortBy] = useState('latest');
   const [contactSortBy, setContactSortBy] = useState('latest');
+  const [commentSortBy, setCommentSortBy] = useState('latest');
 
   // Filtered data
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
@@ -127,6 +141,7 @@ const Admin = () => {
   const [filteredSkills, setFilteredSkills] = useState<Skill[]>([]);
   const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>([]);
   const [filteredContacts, setFilteredContacts] = useState<ContactSubmission[]>([]);
+  const [filteredComments, setFilteredComments] = useState<Comment[]>([]);
 
   // Analytics data
   const [analytics, setAnalytics] = useState({
@@ -140,6 +155,8 @@ const Admin = () => {
     totalExperiences: 0,
     totalContacts: 0,
     newContacts: 0,
+    totalComments: 0,
+    pendingComments: 0,
   });
 
   // Form states
@@ -637,6 +654,25 @@ const Admin = () => {
     setFilteredContacts(filtered);
   }, [contacts, contactSearch, contactSortBy]);
 
+  useEffect(() => {
+    let filtered = comments.filter(comment =>
+      comment.author_name.toLowerCase().includes(commentSearch.toLowerCase()) ||
+      comment.author_email.toLowerCase().includes(commentSearch.toLowerCase()) ||
+      comment.content.toLowerCase().includes(commentSearch.toLowerCase())
+    );
+    
+    // Sort by date
+    filtered = filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      
+      if (commentSortBy === 'oldest') return dateA - dateB;
+      return dateB - dateA; // latest (default)
+    });
+    
+    setFilteredComments(filtered);
+  }, [comments, commentSearch, commentSortBy]);
+
   // Update analytics when data changes
   useEffect(() => {
     setAnalytics({
@@ -650,17 +686,20 @@ const Admin = () => {
       totalExperiences: experiences.length,
       totalContacts: contacts.length,
       newContacts: contacts.filter(c => c.status === 'new').length,
+      totalComments: comments.length,
+      pendingComments: comments.filter(c => !c.approved).length,
     });
-  }, [projects, posts, skills, experiences, contacts]);
+  }, [projects, posts, skills, experiences, contacts, comments]);
 
   const fetchData = async () => {
     try {
-      const [projectsRes, postsRes, skillsRes, experiencesRes, contactsRes, homeContentRes] = await Promise.all([
+      const [projectsRes, postsRes, skillsRes, experiencesRes, contactsRes, commentsRes, homeContentRes] = await Promise.all([
         supabase.from('projects').select('*').eq('user_id', user?.id),
         supabase.from('posts').select('*').eq('user_id', user?.id),
         supabase.from('skills').select('*').eq('user_id', user?.id),
         supabase.from('experiences').select('*').eq('user_id', user?.id),
         supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('comments').select('*, posts(title, slug)').order('created_at', { ascending: false }),
         supabase.from('home_content').select('*').limit(1).maybeSingle(),
       ]);
 
@@ -669,6 +708,7 @@ const Admin = () => {
       setSkills(skillsRes.data || []);
       setExperiences(experiencesRes.data || []);
       setContacts(contactsRes.data || []);
+      setComments(commentsRes.data || []);
       setHomeContent(homeContentRes.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -834,7 +874,7 @@ const Admin = () => {
         <h1 className="text-3xl font-bold mb-8 mt-20">Admin Dashboard</h1>
         
         <Tabs defaultValue="analytics">
-         <TabsList className="grid w-full grid-cols-8">
+         <TabsList className="grid w-full grid-cols-9">
   <TabsTrigger value="analytics">
     <BarChart3 className="w-5 h-5 inline md:mr-2" />
     <span className="hidden md:inline">Analytics</span>
@@ -863,6 +903,11 @@ const Admin = () => {
   <TabsTrigger value="experiences">
     <BriefcaseBusiness className="w-5 h-5 inline md:mr-2" />
     <span className="hidden md:inline">Experience</span>
+  </TabsTrigger>
+
+  <TabsTrigger value="comments">
+    <MessageCircle className="w-5 h-5 inline md:mr-2" />
+    <span className="hidden md:inline">Comments</span>
   </TabsTrigger>
 
   <TabsTrigger value="contacts">
@@ -1803,6 +1848,127 @@ const Admin = () => {
                 </form>
               </DialogContent>
             </Dialog>
+          </TabsContent>
+
+          <TabsContent value="comments" className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-semibold">Comments ({filteredComments.length})</h2>
+              <Badge variant="secondary">{comments.filter(c => !c.approved).length} pending</Badge>
+            </div>
+
+            <div className="flex justify-between items-center gap-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search comments..."
+                  value={commentSearch}
+                  onChange={(e) => setCommentSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={commentSortBy} onValueChange={setCommentSortBy}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="latest">Latest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {loading ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">Loading comments...</p>
+                </CardContent>
+              </Card>
+            ) : filteredComments.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <p className="text-muted-foreground">No comments found.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {filteredComments.map((comment) => (
+                  <Card key={comment.id}>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold">{comment.author_name}</span>
+                              <Badge variant={comment.approved ? "default" : "secondary"}>
+                                {comment.approved ? "Approved" : "Pending"}
+                              </Badge>
+                            </div>
+                            <p className="text-sm text-muted-foreground">{comment.author_email}</p>
+                            {comment.posts && (
+                              <p className="text-sm text-muted-foreground">
+                                On post: <span className="font-medium">{comment.posts.title}</span>
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-muted-foreground">
+                              {format(new Date(comment.created_at), 'MMM dd, yyyy')}
+                            </span>
+                          </div>
+                        </div>
+                        <p className="text-foreground">{comment.content}</p>
+                        <div className="flex justify-end">
+                          <div className="flex gap-2">
+                            {!comment.approved && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={async () => {
+                                  try {
+                                    await supabase
+                                      .from('comments')
+                                      .update({ approved: true })
+                                      .eq('id', comment.id);
+                                    toast({ title: 'Comment approved!' });
+                                    fetchData();
+                                  } catch (error) {
+                                    toast({ title: 'Error', description: 'Failed to approve', variant: 'destructive' });
+                                  }
+                                }}
+                              >
+                                <Check className="h-4 w-4 mr-1" />
+                                Approve
+                              </Button>
+                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={async () => {
+                                if (confirm('Delete this comment?')) {
+                                  try {
+                                    await supabase
+                                      .from('comments')
+                                      .delete()
+                                      .eq('id', comment.id);
+                                    toast({ title: 'Comment deleted!' });
+                                    fetchData();
+                                  } catch (error) {
+                                    toast({ title: 'Error', description: 'Failed to delete', variant: 'destructive' });
+                                  }
+                                }
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-1" />
+                              Delete
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-6">
