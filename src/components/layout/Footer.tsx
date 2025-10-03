@@ -54,12 +54,12 @@ const Footer = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand Section */}
             <div className="col-span-1 md:col-span-2">
-              <Link 
-                to="/" 
-                className="text-xl font-bold text-foreground hover:text-primary transition-colors"
-              >
-                Portfolio
-              </Link>
+                   <Link 
+  to="/" 
+  className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent font-logo tracking-wide hover:opacity-80 transition duration-300"
+>
+  Leul Dev
+</Link>
               <p className="mt-4 text-sm text-muted-foreground max-w-md">
                 A passionate developer creating digital experiences and sharing knowledge 
                 through code, design, and writing.
