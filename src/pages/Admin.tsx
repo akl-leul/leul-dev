@@ -18,7 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
- 
+ import { SquareArrowOutUpRight } from "lucide-react";
 
 
 interface Project {
@@ -1890,24 +1890,38 @@ const Admin = () => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className=" gap-4  grid md:grid-cols-2">
                 {filteredComments.map((comment) => (
                   <Card key={comment.id}>
-                    <CardContent className="p-6">
+                    <CardContent className="p-6 ">
                       <div className="space-y-4">
                         <div className="flex justify-between items-start">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">{comment.author_name}</span>
-                              <Badge variant={comment.approved ? "default" : "secondary"}>
-                                {comment.approved ? "Approved" : "Pending"}
-                              </Badge>
+                              <Badge
+  variant={comment.approved ? "default" : "secondary"}
+  className={comment.approved ? "bg-green-600" : "bg-yellow-600 text-white"}
+>
+  {comment.approved ? "  Approved" : "Pending"}
+</Badge>
+
                             </div>
                             <p className="text-sm text-muted-foreground">{comment.author_email}</p>
                             {comment.posts && (
-                              <p className="text-sm text-muted-foreground">
-                                On post: <span className="font-medium">{comment.posts.title}</span>
-                              </p>
+ 
+<p className="text-sm text-muted-foreground">
+  On post:{" "}
+  <a
+    href={`/blog/${comment.posts.slug}`}
+    className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+  >
+    
+    {comment.posts.title}<SquareArrowOutUpRight className="w-4 h-4" />
+  </a>
+</p>
+
+                              
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -1935,8 +1949,9 @@ const Admin = () => {
                                     toast({ title: 'Error', description: 'Failed to approve', variant: 'destructive' });
                                   }
                                 }}
+                                className='bg-green-600 text-white hover:bg-green-700 focus:ring-green-600 hover:text-white'
                               >
-                                <Check className="h-4 w-4 mr-1" />
+                                <Check className="h-4 w-4 mr-1 " />
                                 Approve
                               </Button>
                             )}
@@ -1957,6 +1972,7 @@ const Admin = () => {
                                   }
                                 }
                               }}
+                              className='bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 hover:text-white'
                             >
                               <X className="h-4 w-4 mr-1" />
                               Delete

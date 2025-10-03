@@ -11,7 +11,11 @@ import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, UserRoundPen, Squ
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast'; 
-import { FaXTwitter, FaLinkedin, FaFacebook } from "react-icons/fa6";
+import { FaXTwitter, FaLinkedin, FaFacebook,  FaWhatsapp,
+  FaTelegram,
+  FaReddit,
+  FaEnvelope, } from "react-icons/fa6";
+ 
 
 
 interface Post {
@@ -251,14 +255,14 @@ if (error || !post) {
 return (
 <div className="min-h-screen py-16">
 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-<div className="max-w-4xl mx-auto text-center">
+<div className="max-w-4xl mx-auto text-center ">
 <h1 className="text-4xl font-bold text-foreground mb-4">
 {error || 'Post Not Found'}
 </h1>
 <p className="text-muted-foreground mb-8">
 The blog post you're looking for doesn't exist or has been removed.
 </p>
-<Button asChild>
+<Button asChild >
 <Link to="/blog">
 <ArrowLeft className="h-4 w-4 mr-2" />
 Back to Blog
@@ -275,14 +279,15 @@ return (
 <div className="container mx-auto px-4 sm:px-6 lg:px-8">
 <div className="max-w-4xl mx-auto">
 {/* Back Button */}
-<Button variant="ghost" asChild className="mb-8">
+<Button variant="ghost" asChild className="mb-8 mt-8">
 <Link to="/blog">
 <ArrowLeft className="h-4 w-4 mr-2" />
 Back to Blog
 </Link>
 </Button>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
+
             {/* Main Content */}
             <div className="lg:col-span-2">
 
@@ -410,63 +415,117 @@ Back to Blog
           </h3>  
         
 
-<div className="flex flex-wrap gap-2">  
+
+<div className="flex flex-wrap gap-2">
   {/* Twitter/X */}
-  <Button variant="outline" size="sm" asChild>  
+  <Button variant="outline" size="sm" asChild>
     <a
-      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}  
-      target="_blank"  
+      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
+      target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2"
-    >  
-      <FaXTwitter className="h-4 w-4" />  
-    </a>  
-  </Button>  
+    >
+      <FaXTwitter className="h-4 w-4" />
+    </a>
+  </Button>
 
   {/* LinkedIn */}
-  <Button variant="outline" size="sm" asChild>  
+  <Button variant="outline" size="sm" asChild>
     <a
-      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}  
-      target="_blank"  
+      href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+      target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2"
-    >  
-      <FaLinkedin className="h-4 w-4 text-blue-600 dark:text-blue-400" />  
-    </a>  
-  </Button>  
+    >
+      <FaLinkedin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+    </a>
+  </Button>
 
   {/* Facebook */}
-  <Button variant="outline" size="sm" asChild>  
+  <Button variant="outline" size="sm" asChild>
     <a
-      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}  
-      target="_blank"  
+      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
+      target="_blank"
       rel="noopener noreferrer"
       className="flex items-center gap-2"
-    >  
-      <FaFacebook className="h-4 w-4 text-blue-500" />  
-    </a>  
-  </Button>  
+    >
+      <FaFacebook className="h-4 w-4 text-blue-500" />
+    </a>
+  </Button>
+
+  {/* WhatsApp */}
+  <Button variant="outline" size="sm" asChild>
+    <a
+      href={`https://wa.me/?text=${encodeURIComponent(post.title + ' ' + window.location.href)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2"
+    >
+      <FaWhatsapp className="h-4 w-4 text-green-500" />
+    </a>
+  </Button>
+
+  {/* Telegram */}
+  <Button variant="outline" size="sm" asChild>
+    <a
+      href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2"
+    >
+      <FaTelegram className="h-4 w-4 text-sky-500" />
+    </a>
+  </Button>
+
+  {/* Reddit */}
+  <Button variant="outline" size="sm" asChild>
+    <a
+      href={`https://www.reddit.com/submit?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(post.title)}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="flex items-center gap-2"
+    >
+      <FaReddit className="h-4 w-4 text-orange-500" />
+    </a>
+  </Button>
+
+  {/* Email */}
+  <Button variant="outline" size="sm" asChild>
+    <a
+      href={`mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(window.location.href)}`}
+      className="flex items-center gap-2"
+    >
+      <FaEnvelope className="h-4 w-4" />
+    </a>
+  </Button>
 
   {/* Copy Link */}
-  <Button  
-    variant="outline"  
-    size="sm"  
-    onClick={() => navigator.clipboard.writeText(window.location.href)}  
-  >  
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => navigator.clipboard.writeText(window.location.href)}
+  >
     <Copy className="h-4 w-4" />
-  </Button>  
+  </Button>
 
   {/* Like Button */}
-  <Button  
-    variant="outline"  
-    size="sm"  
-    onClick={handleLike}  
-    className={`flex items-center gap-2 ${liked ? 'text-red-500' : 'text-muted-foreground'} hover:text-red-500`}  
-  >  
-    {liked ? <Heart className="h-4 w-4 fill-current" /> : <Heart className="h-4 w-4" />}  
-    <span>{likesCount}</span>  
-  </Button>  
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={handleLike}
+    className={`flex items-center gap-2 ${
+      liked ? "text-red-500" : "text-muted-foreground"
+    } hover:text-red-500`}
+  >
+    {liked ? (
+      <Heart className="h-4 w-4 fill-current" />
+    ) : (
+      <Heart className="h-4 w-4" />
+    )}
+    <span>{likesCount}</span>
+  </Button>
 </div>
+
 
         </section>  
 
