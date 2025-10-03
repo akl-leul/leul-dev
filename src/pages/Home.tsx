@@ -4,8 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowRight, ExternalLink, Github, Calendar, Clock } from 'lucide-react';
+import {
+  ArrowRight,
+  ExternalLink,
+  Github,
+  Calendar,
+  Clock,
+} from 'lucide-react';
 import { format } from 'date-fns';
+import { motion, Variants } from 'framer-motion';
 
 interface Project {
   id: string;
@@ -40,23 +47,41 @@ interface HomeContent {
   accent_color: string | null;
 }
 
+// Page and element animation variants
+const pageVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 },
+};
+
+const iconAnimation = {
+  idle: {
+    rotate: [0, 5, 0, -5, 0],
+    transition: { repeat: Infinity, duration: 4, ease: 'easeInOut' },
+  },
+  hover: {
+    scale: 1.2,
+    rotate: [0, 15, -15, 0],
+    transition: { duration: 0.5 },
+  },
+};
+
 const Home = () => {
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [latestPosts, setLatestPosts] = useState<Post[]>([]);
   const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Fetch data on mount
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch featured projects
         const { data: projects } = await supabase
           .from('projects')
           .select('*')
           .eq('featured', true)
           .limit(3);
 
-        // Fetch latest blog posts
         const { data: posts } = await supabase
           .from('posts')
           .select('id, title, excerpt, slug, created_at, read_time')
@@ -64,7 +89,6 @@ const Home = () => {
           .order('created_at', { ascending: false })
           .limit(3);
 
-        // Fetch home content
         const { data: content } = await supabase
           .from('home_content')
           .select('*')
@@ -84,8 +108,8 @@ const Home = () => {
     fetchData();
   }, []);
 
+  // Canvas background animation
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -101,7 +125,6 @@ const Home = () => {
     };
     window.addEventListener('resize', handleResize);
 
-    // Create random circles
     const colors = ['#FF6B6B', '#FFD460', '#6BCB77', '#4D96FF', '#E14D2A'];
     const circles = Array.from({ length: 30 }, () => ({
       x: Math.random() * width,
@@ -114,12 +137,11 @@ const Home = () => {
 
     function animate() {
       ctx.clearRect(0, 0, width, height);
-
       circles.forEach((c) => {
         ctx.beginPath();
         const gradient = ctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.radius);
-        gradient.addColorStop(0, c.color + 'AA'); // semi-bright center
-        gradient.addColorStop(1, c.color + '00'); // fade out
+        gradient.addColorStop(0, c.color + 'AA');
+        gradient.addColorStop(1, c.color + '00');
         ctx.fillStyle = gradient;
         ctx.arc(c.x, c.y, c.radius, 0, Math.PI * 2);
         ctx.fill();
@@ -139,14 +161,24 @@ const Home = () => {
   }, []);
 
   return (
-    <main className="space-y-24">
+    <motion.main
+      initial="hidden"
+      animate="visible"
+      exit="exit"
+      variants={pageVariants}
+      transition={{ duration: 0.6 }}
+      className="space-y-20"
+    >
       {/* Hero Section */}
       <section
         className="relative min-h-screen flex items-center overflow-hidden px-4 sm:px-6 lg:px-8"
         style={{
           background: homeContent?.background_image
-            ? `url(${homeContent.background_image}), ${homeContent.background_gradient || 'linear-gradient(135deg,#3c1361,#0d1f40)'}`
-            : homeContent?.background_gradient || 'linear-gradient(135deg,#3c1361,#0d1f40)',
+            ? `url(${homeContent.background_image}), ${
+                homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'
+              }`
+            : homeContent?.background_gradient ||
+              'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))',
           backgroundRepeat: 'no-repeat, no-repeat',
           backgroundSize: 'cover, cover',
           backgroundPosition: 'center, center',
@@ -155,51 +187,68 @@ const Home = () => {
         }}
         aria-label="Hero section introducing the developer"
       >
-        {/* Animated background */}
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full opacity-20 pointer-events-none" aria-hidden="true"></canvas>
+        {/* Animated background canvas */}
+        <canvas
+          ref={canvasRef}
+          className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
+          aria-hidden="true"
+        />
 
         {/* Foreground content */}
-        <div className="relative max-w-4xl mx-auto text-center">
+        <motion.div
+          key="hero-content"
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.8 }}
+          className="relative container mx-auto max-w-4xl text-center"
+        >
           <h1
-            className="text-4xl sm:text-5xl md:text-7xl font-extrabold mb-6 leading-tight"
-            style={{ color: homeContent?.text_color || '#fff' }}
+            className="text-4xl md:text-7xl font-bold mb-6"
+            style={{ color: homeContent?.text_color || 'hsl(0, 0%, 100%)' }}
           >
             Hi, I'm{' '}
-            <span
-              className="font-logo"
+            <motion.span
               style={{
-                background: `linear-gradient(to right, ${homeContent?.primary_color || '#8b5cf6'}, ${
-                  homeContent?.secondary_color || '#14b8a6'
+                background: `linear-gradient(to right, ${homeContent?.primary_color || 'hsl(262, 83%, 58%)'}, ${
+                  homeContent?.secondary_color || 'hsl(180, 100%, 50%)'
                 })`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
+              className="font-logo"
               aria-label={homeContent?.name || 'Leul Ayfokru'}
+              initial={{ scale: 1 }}
+              whileHover={{ scale: 1.1, rotate: 3 }}
+              transition={{ type: 'spring', stiffness: 300 }}
             >
               {homeContent?.name || 'Leul Ayfokru'}
-            </span>
+            </motion.span>
           </h1>
           <p
-            className="text-lg sm:text-xl md:text-2xl max-w-xl mx-auto mb-10 text-gray-100"
-            style={{ color: homeContent?.text_color || 'rgba(255,255,255,0.85)' }}
+            className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto"
+            style={{ color: homeContent?.text_color || 'hsl(0, 0%, 100%)' }}
           >
             {homeContent?.tagline || 'Full-stack website and application developer based in Ethiopia.'}
           </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-md mx-auto">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
             <Button
               size="lg"
               asChild
               style={{
-                backgroundColor: homeContent?.primary_color || '#8b5cf6',
-                color: '#fff',
-                fontWeight: 600,
+                backgroundColor: homeContent?.primary_color || 'hsl(262, 83%, 58%)',
+                color: 'white',
               }}
               aria-label="View my projects"
             >
-              <Link to="/projects" className="flex items-center justify-center px-6 py-3 rounded-lg">
+              <Link
+                to="/projects"
+                className="flex items-center justify-center px-6 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500"
+              >
                 View My Work
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <motion.span whileHover={iconAnimation.hover} animate={iconAnimation.idle} className="ml-2 flex items-center">
+                  <ArrowRight className="h-4 w-4" />
+                </motion.span>
               </Link>
             </Button>
             <Button
@@ -207,171 +256,230 @@ const Home = () => {
               variant="outline"
               asChild
               style={{
-                borderColor: homeContent?.accent_color || '#a78bfa',
-                color: homeContent?.primary_color || '#8b5cf6',
-                fontWeight: 600,
+                borderColor: homeContent?.accent_color || 'hsl(262, 90%, 65%)',
+                color: homeContent?.primary_color || 'hsla(0, 0%, 0%, 1.00)',
               }}
               aria-label="Get in touch"
             >
-              <Link to="/contact" className="flex items-center justify-center px-6 py-3 rounded-lg">
+              <Link
+                to="/contact"
+                className="flex items-center justify-center px-6 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500"
+              >
                 Get In Touch
               </Link>
             </Button>
           </div>
-        </div>
+        </motion.div>
       </section>
 
       {/* Featured Projects Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <header className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">Featured Projects</h2>
-          <p className="text-lg text-gray-600 select-none">Some of my recent work that I'm proud of</p>
-        </header>
+      <motion.section
+        className="py-16"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={pageVariants}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Featured Projects</h2>
+            <p className="text-lg text-muted-foreground">Some of my recent work that I'm proud of</p>
+          </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 animate-pulse" aria-busy="true" aria-live="polite">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="shadow rounded-lg overflow-hidden">
-                <div className="aspect-video bg-gray-300 rounded-t-lg"></div>
-                <CardContent className="p-6 space-y4">
-                  <div className="h-5 bg-gray-300 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-300 rounded w-full"></div>
-                  <div className="flex gap-3 mt-4">
-                    <div className="h-7 bg-gray-300 rounded w-14"></div>
-                    <div className="h-7 bg-gray-300 rounded w-20"></div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {featuredProjects.map((project) => (
-              <Card
-                key={project.id}
-                className="group shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-lg overflow-hidden flex flex-col"
-                aria-label={`Project: ${project.title}`}
-              >
-                {project.image_url && (
-                  <div className="aspect-video overflow-hidden rounded-t-lg">
-                    <img
-                      src={project.image_url}
-                      alt={`${project.title} project screenshot`}
-                      className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300"
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-                <CardContent className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-semibold mb-2 text-gray-900">{project.title}</h3>
-                  <p className="text-gray-700 mb-4 line-clamp-3">{project.description}</p>
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {project.tech_stack.slice(0, 3).map((tech) => (
-                      <Badge key={tech} variant="secondary" className="text-sm font-medium">
-                        {tech}
-                      </Badge>
-                    ))}
-                    {project.tech_stack.length > 3 && (
-                      <Badge variant="outline" className="text-sm font-medium">
-                        +{project.tech_stack.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex gap-3 mt-auto flex-wrap">
-                    {project.github_url && (
-                      <Button size="sm" variant="outline" asChild aria-label={`View GitHub code for ${project.title}`}>
-                        <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                          <Github className="h-4 w-4 mr-2" />
-                          Code
-                        </a>
-                      </Button>
-                    )}
-                    {project.demo_url && (
-                      <Button size="sm" asChild aria-label={`View live demo for ${project.title}`}>
-                        <a href={project.demo_url} target="_blank" rel="noopener noreferrer" className="flex items-center">
-                          <ExternalLink className="h-4 w-4 mr-2" />
-                          Live Demo
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-live="polite">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <div className="aspect-video bg-muted rounded-t-lg"></div>
+                  <CardContent className="p-6">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2" />
+                    <div className="h-3 bg-muted rounded w-full mb-4" />
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-muted rounded w-16" />
+                      <div className="h-6 bg-muted rounded w-20" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {featuredProjects.map((project) => (
+                <motion.div
+                  key={project.id}
+                  className="group hover:shadow-lg transition-all duration-300 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileHover={{ scale: 1.04, zIndex: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.4 }}
+                  aria-label={`Project: ${project.title}`}
+                >
+                  {project.image_url && (
+                    <div className="aspect-video overflow-hidden rounded-t-lg">
+                      <img
+                        src={project.image_url}
+                        alt={`${project.title} project screenshot`}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold mb-2 text-foreground">{project.title}</h3>
+                    <p className="text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {project.tech_stack.slice(0, 3).map((tech) => (
+                        <Badge key={tech} variant="secondary">
+                          {tech}
+                        </Badge>
+                      ))}
+                      {project.tech_stack.length > 3 && (
+                        <Badge variant="outline">+{project.tech_stack.length - 3} more</Badge>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      {project.github_url && (
+                        <Button size="sm" variant="outline" asChild aria-label={`View GitHub code for ${project.title}`}>
+                          <a
+                            href={project.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center"
+                          >
+                            <motion.span whileHover={iconAnimation.hover} animate={iconAnimation.idle} className="mr-2">
+                              <Github className="h-4 w-4" />
+                            </motion.span>
+                            Code
+                          </a>
+                        </Button>
+                      )}
+                      {project.demo_url && (
+                        <Button size="sm" asChild aria-label={`View live demo for ${project.title}`}>
+                          <a
+                            href={project.demo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center"
+                          >
+                            <motion.span whileHover={iconAnimation.hover} animate={iconAnimation.idle} className="mr-2">
+                              <ExternalLink className="h-4 w-4" />
+                            </motion.span>
+                            Live Demo
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </motion.div>
+              ))}
+            </div>
+          )}
 
-        {!loading && (
-          <div className="text-center mt-16">
-            <Button variant="outline" size="lg" asChild aria-label="View all projects">
-              <Link to="/projects" className="flex items-center justify-center gap-2">
-                View All Projects
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        )}
-      </section>
+          {!loading && (
+            <div className="text-center mt-12">
+              <Button variant="outline" size="lg" asChild aria-label="View all projects">
+                <Link to="/projects" className="flex items-center justify-center gap-2">
+                  View All Projects
+                  <motion.span whileHover={{ scale: 1.3 }} transition={{ type: 'spring', stiffness: 300 }}>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </motion.span>
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      </motion.section>
 
       {/* Latest Blog Posts Section */}
-      <section className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <header className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-2">Latest Blog Posts</h2>
-          <p className="text-lg text-gray-600 select-none">Thoughts, tutorials, and insights from my development journey</p>
-        </header>
+      <motion.section
+        className="py-16 bg-muted/50"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.3 }}
+        variants={pageVariants}
+        transition={{ duration: 0.6 }}
+      >
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Latest Blog Posts</h2>
+            <p className="text-lg text-muted-foreground">
+              Thoughts, tutorials, and insights from my development journey
+            </p>
+          </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10 animate-pulse" aria-busy="true" aria-live="polite">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="shadow rounded-lg overflow-hidden">
-                <CardContent className="p-6 space-y-4">
-                  <div className="h-5 bg-gray-300 rounded w-3/4"></div>
-                  <div className="h-4 bg-gray-300 rounded w-full"></div>
-                  <div className="h-4 bg-gray-300 rounded w-2/3"></div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-            {latestPosts.map((post) => (
-              <Card
-                key={post.id}
-                className="group shadow-sm hover:shadow-lg transition-shadow duration-300 rounded-lg flex flex-col"
-                aria-label={`Blog post titled ${post.title}`}
-              >
-                <CardHeader className="p-6 pb-2">
-                  <div className="flex items-center gap-3 text-sm text-gray-500 mb-2 select-none" aria-hidden="true">
-                    <Calendar className="h-4 w-4" aria-hidden="true" />
-                    <time dateTime={post.created_at}>{format(new Date(post.created_at), 'MMM dd, yyyy')}</time>
-                    <Clock className="h-4 w-4 ml-4" aria-hidden="true" />
-                    <span>{post.read_time} min read</span>
-                  </div>
-                  <CardTitle className="group-hover:text-indigo-600 transition-colors text-lg font-semibold">
-                    <Link to={`/blog/${post.slug}`} className="block focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded">
-                      {post.title}
-                    </Link>
-                  </CardTitle>
-                  {post.excerpt && <CardDescription className="line-clamp-3 mt-2 text-gray-700">{post.excerpt}</CardDescription>}
-                </CardHeader>
-                <CardContent className="p-6 pt-0 flex-grow"></CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+          {loading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true" aria-live="polite">
+              {[1, 2, 3].map((i) => (
+                <Card key={i} className="animate-pulse">
+                  <CardContent className="p-6">
+                    <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-muted rounded w-full mb-4"></div>
+                    <div className="h-3 bg-muted rounded w-2/3"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {latestPosts.map((post) => (
+                <motion.article
+                  key={post.id}
+                  className="group hover:shadow-lg transition-all duration-300 rounded-lg"
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.3 }}
+                  transition={{ duration: 0.4 }}
+                  aria-label={`Blog post titled ${post.title}`}
+                >
+                  <CardHeader>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                      <motion.span
+                        animate={iconAnimation.idle}
+                        whileHover={iconAnimation.hover}
+                        className="flex items-center"
+                        aria-hidden="true"
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </motion.span>
+                      {format(new Date(post.created_at), 'MMM dd, yyyy')}
+                      <motion.span
+                        animate={iconAnimation.idle}
+                        whileHover={iconAnimation.hover}
+                        className="flex items-center ml-2"
+                        aria-hidden="true"
+                      >
+                        <Clock className="h-4 w-4" />
+                      </motion.span>
+                      {post.read_time} min read
+                    </div>
+                    <CardTitle className="group-hover:text-primary transition-colors">
+                      <Link to={`/blog/${post.slug}`}>{post.title}</Link>
+                    </CardTitle>
+                    {post.excerpt && <CardDescription className="line-clamp-3">{post.excerpt}</CardDescription>}
+                  </CardHeader>
+                  <CardContent>{/* future tags */}</CardContent>
+                </motion.article>
+              ))}
+            </div>
+          )}
 
-        {!loading && (
-          <div className="text-center mt-16">
-            <Button variant="outline" size="lg" asChild aria-label="Read all blog posts">
-              <Link to="/blog" className="flex items-center justify-center gap-2">
-                Read All Posts
-                <ArrowRight className="h-5 w-5" />
-              </Link>
-            </Button>
-          </div>
-        )}
-      </section>
-    </main>
+          {!loading && (
+            <div className="text-center mt-12">
+              <Button variant="outline" size="lg" asChild aria-label="Read all blog posts">
+                <Link to="/blog" className="flex items-center justify-center gap-2">
+                  Read All Posts
+                  <motion.span whileHover={{ scale: 1.3 }} transition={{ type: 'spring', stiffness: 300 }}>
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </motion.span>
+                </Link>
+              </Button>
+            </div>
+          )}
+        </div>
+      </motion.section>
+    </motion.main>
   );
 };
 
