@@ -174,7 +174,7 @@ const Home = () => {
         className="relative min-h-screen flex items-center overflow-hidden px-4 sm:px-6 lg:px-8"
         style={{
           background: homeContent?.background_image
-            ? `url(${homeContent.background_image}), ${
+            ? `url(${homeContent.background_image || 'https://images.pexels.com/photos/2847648/pexels-photo-2847648.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'}), ${
                 homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'
               }`
             : homeContent?.background_gradient ||
