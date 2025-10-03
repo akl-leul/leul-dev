@@ -3,8 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, HeartCrack, UserRoundPen, SquareArrowOutUpRight } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, UserRoundPen, SquareArrowOutUpRight, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast'; 
@@ -12,25 +15,51 @@ import { FaXTwitter, FaLinkedin, FaFacebook } from "react-icons/fa6";
 
 
 interface Post {
-id: number;
-title: string;
-content: string;
-excerpt: string | null;
-featured_image: string | null;
-published_at: string;
-read_time: number;
-views: number;
-likes_count: number;
+  id: number;
+  title: string;
+  content: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  published_at: string;
+  read_time: number;
+  views: number;
+  likes_count: number;
+  slug: string;
+}
+
+interface RelatedPost {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  featured_image: string | null;
+  published_at: string;
+  read_time: number;
+}
+
+interface Comment {
+  id: number;
+  author_name: string;
+  author_email: string;
+  content: string;
+  created_at: string;
+  approved: boolean;
 }
 
 const BlogPost = () => {
-const { slug } = useParams<{ slug: string }>();
-const [post, setPost] = useState<Post | null>(null);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState<string | null>(null);
-const [liked, setLiked] = useState(false);
-const [likesCount, setLikesCount] = useState(0);
-const { toast } = useToast();
+  const { slug } = useParams<{ slug: string }>();
+  const [post, setPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+  const [relatedPosts, setRelatedPosts] = useState<RelatedPost[]>([]);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentName, setCommentName] = useState('');
+  const [commentEmail, setCommentEmail] = useState('');
+  const [commentContent, setCommentContent] = useState('');
+  const [submittingComment, setSubmittingComment] = useState(false);
+  const { toast } = useToast();
 
 useEffect(() => {
 const fetchPost = async () => {
@@ -39,7 +68,7 @@ if (!slug) return;
 try {  
     const { data, error } = await supabase  
       .from('posts')  
-      .select('id, title, content, excerpt, featured_image, published_at, read_time, views, likes_count')  
+      .select('id, title, content, excerpt, featured_image, published_at, read_time, views, likes_count, slug')  
       .eq('slug', slug)  
       .eq('published', true)  
       .maybeSingle();  
@@ -61,7 +90,32 @@ try {
     await supabase  
       .from('posts')  
       .update({ views: data.views + 1 })  
-      .eq('id', data.id);  
+      .eq('id', data.id);
+
+    // Fetch related posts
+    const { data: related } = await supabase
+      .from('posts')
+      .select('id, title, slug, excerpt, featured_image, published_at, read_time')
+      .eq('published', true)
+      .neq('id', data.id)
+      .order('published_at', { ascending: false })
+      .limit(3);
+
+    if (related) {
+      setRelatedPosts(related);
+    }
+
+    // Fetch comments
+    const { data: commentsData } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('post_id', data.id)
+      .eq('approved', true)
+      .order('created_at', { ascending: false });
+
+    if (commentsData) {
+      setComments(commentsData);
+    }
   } catch (error) {  
     console.error('Error fetching post:', error);  
     setError('Failed to load post');  
@@ -85,45 +139,83 @@ return userId;
 };
 
 const handleLike = async () => {
-if (!post) return;
+    if (!post) return;
 
-const anonUserId = getAnonUserId();
+    const anonUserId = getAnonUserId();
 
-try {
-if (liked) {
-// Unlike
-const { error } = await supabase
-.from('post_likes')
-.delete()
-.eq('post_id', post.id)
-.eq('user_id', anonUserId);
+    try {
+      if (liked) {
+        // Unlike
+        const { error } = await supabase
+          .from('post_likes')
+          .delete()
+          .eq('post_id', post.id)
+          .eq('user_id', anonUserId);
 
-if (error) throw error;  
+        if (error) throw error;  
 
-  setLiked(false);  
-  setLikesCount(prev => Math.max(0, prev - 1));  
-  toast({ title: 'Removed like', description: 'You unliked this post.' });  
-} else {  
-  // Like  
-  const { error } = await supabase  
-    .from('post_likes')  
-    .insert({   
-      post_id: post.id,   
-      user_id: anonUserId  
-    });  
+        setLiked(false);  
+        setLikesCount(prev => Math.max(0, prev - 1));  
+        toast({ title: 'Removed like', description: 'You unliked this post.' });  
+      } else {  
+        // Like  
+        const { error } = await supabase  
+          .from('post_likes')  
+          .insert({   
+            post_id: post.id,   
+            user_id: anonUserId  
+          });  
 
-  if (error) throw error;  
+        if (error) throw error;  
 
-  setLiked(true);  
-  setLikesCount(prev => prev + 1);  
-  toast({ title: 'Liked!', description: 'You liked this post.' });  
-}
+        setLiked(true);  
+        setLikesCount(prev => prev + 1);  
+        toast({ title: 'Liked!', description: 'You liked this post.' });  
+      }
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
+    }
+  };
 
-} catch (error) {
-console.error('Error toggling like:', error);
-toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
-}
-};
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!post || !commentName.trim() || !commentEmail.trim() || !commentContent.trim()) return;
+
+    setSubmittingComment(true);
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: post.id,
+          author_name: commentName.trim(),
+          author_email: commentEmail.trim(),
+          content: commentContent.trim(),
+          user_id: null,
+          approved: false
+        });
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Comment submitted!', 
+        description: 'Your comment is awaiting approval.' 
+      });
+      
+      setCommentName('');
+      setCommentEmail('');
+      setCommentContent('');
+    } catch (error) {
+      console.error('Error submitting comment:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to submit comment.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setSubmittingComment(false);
+    }
+  };
 
 useEffect(() => {
 if (post) {
@@ -179,16 +271,20 @@ Back to Blog
 }
 
 return (
-<div className="min-h-screen py-16">
-<div className="container mx-auto px-4 sm:px-6 lg:px-8">
-<div className="max-w-4xl mx-auto">
-{/* Back Button */}
-<Button variant="ghost" asChild className="mb-8">
-<Link to="/blog">
-<ArrowLeft className="h-4 w-4 mr-2" />
-Back to Blog
-</Link>
-</Button>
+    <div className="min-h-screen py-16">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Back Button */}
+          <Button variant="ghost" asChild className="mb-8">
+            <Link to="/blog">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Blog
+            </Link>
+          </Button>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Main Content */}
+            <div className="lg:col-span-2">
 
 <article>  
         {/* Post Header */}  
@@ -374,6 +470,97 @@ Back to Blog
 
         </section>  
 
+        {/* Comments Section */}
+        <section className="mt-12">
+          <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+            <MessageCircle className="h-6 w-6" />
+            Comments ({comments.length})
+          </h3>
+
+          {/* Comment Form */}
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <h4 className="text-lg font-semibold mb-4">Leave a Comment</h4>
+              <form onSubmit={handleCommentSubmit} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="name">Name *</Label>
+                    <Input
+                      id="name"
+                      value={commentName}
+                      onChange={(e) => setCommentName(e.target.value)}
+                      placeholder="Your name"
+                      required
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email *</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={commentEmail}
+                      onChange={(e) => setCommentEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      required
+                      maxLength={255}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="comment">Comment *</Label>
+                  <Textarea
+                    id="comment"
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="Share your thoughts..."
+                    required
+                    rows={4}
+                    maxLength={1000}
+                  />
+                </div>
+                <Button type="submit" disabled={submittingComment}>
+                  {submittingComment ? 'Submitting...' : 'Submit Comment'}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          {/* Comments List */}
+          <div className="space-y-4">
+            {comments.length === 0 ? (
+              <Card>
+                <CardContent className="p-6 text-center text-muted-foreground">
+                  No comments yet. Be the first to comment!
+                </CardContent>
+              </Card>
+            ) : (
+              comments.map((comment) => (
+                <Card key={comment.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-primary font-semibold">
+                          {comment.author_name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="font-semibold">{comment.author_name}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {format(new Date(comment.created_at), 'MMM dd, yyyy')}
+                          </span>
+                        </div>
+                        <p className="text-muted-foreground">{comment.content}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </section>
+
         {/* Post Footer */}  
         <footer className="mt-12 pt-8 border-t border-border">  
           <div className="flex justify-between items-center">  
@@ -385,14 +572,59 @@ Back to Blog
             </Button>  
 
             <div className="text-sm text-muted-foreground">  
-              Published on {format(new Date(post.published_at), 'MMMM dd, yyyy')}  by Leul Ayfokru
+              Published on {format(new Date(post.published_at), 'MMMM dd, yyyy')} by Leul Ayfokru
             </div>  
           </div>  
         </footer>  
-      </article>  
-    </div>  
-  </div>  
-</div>
+      </article>
+    </div>
+
+    {/* Sidebar */}
+    <aside className="lg:col-span-1">
+      <div className="sticky top-24">
+        <Card>
+          <CardContent className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Related Posts</h3>
+            {relatedPosts.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No related posts yet.</p>
+            ) : (
+              <div className="space-y-4">
+                {relatedPosts.map((relatedPost) => (
+                  <Link
+                    key={relatedPost.id}
+                    to={`/blog/${relatedPost.slug}`}
+                    className="block group"
+                  >
+                    <div className="space-y-2">
+                      {relatedPost.featured_image && (
+                        <div className="aspect-video rounded overflow-hidden">
+                          <img
+                            src={relatedPost.featured_image}
+                            alt={relatedPost.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          />
+                        </div>
+                      )}
+                      <h4 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2">
+                        {relatedPost.title}
+                      </h4>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3 w-3" />
+                        {format(new Date(relatedPost.published_at), 'MMM dd, yyyy')}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </aside>
+  </div>
+        </div>
+      </div>
+    </div>
 
 );
 };
