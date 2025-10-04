@@ -114,10 +114,10 @@ const Blog = () => {
             <div className="md:w-[200%] h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 blur-[180px] opacity-25"></div>
           </div>
 
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-gray-900 drop-shadow-md mb-3 md:mb-4 dark:text-gray-100">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground drop-shadow-md mb-3 md:mb-4">
             Blog
           </h1>
-          <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed text-gray-900 drop-shadow-md dark:text-gray-300 px-4">
+          <p className="text-base sm:text-lg md:text-xl max-w-2xl mx-auto leading-relaxed text-muted-foreground drop-shadow-md px-4">
             Thoughts, tutorials, and insights from my{' '}
             <span className="font-semibold">development journey</span>.
           </p>
@@ -129,7 +129,7 @@ const Blog = () => {
         {/* Search and Filter */}
         <div className="mb-6 md:mb-8 flex flex-col md:flex-row md:items-center md:gap-4 space-y-3 md:space-y-0">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search posts..."
               value={searchTerm}
@@ -166,7 +166,7 @@ const Blog = () => {
         {/* Posts Grid */}
         {filteredPosts.length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center text-gray-600 text-lg">
+            <CardContent className="p-8 text-center text-muted-foreground text-lg">
               {posts.length === 0
                 ? 'No blog posts published yet. Posts will appear here once they\'re published.'
                 : 'No posts found matching your criteria.'}
@@ -208,7 +208,7 @@ const Blog = () => {
                     </CardTitle>
 
                     {post.excerpt && (
-                      <CardDescription className="line-clamp-3 text-gray-700">{post.excerpt}</CardDescription>
+                      <CardDescription className="line-clamp-3 text-muted-foreground">{post.excerpt}</CardDescription>
                     )}
                   </CardHeader>
 
@@ -291,7 +291,7 @@ const Blog = () => {
             )}
 
             {/* Results summary */}
-            <div className="mt-4 text-center text-xs sm:text-sm text-gray-500 px-4">
+            <div className="mt-4 text-center text-xs sm:text-sm text-muted-foreground px-4">
               Showing {startIndex + 1}-{Math.min(endIndex, filteredPosts.length)} of {filteredPosts.length} posts
             </div>
           </>

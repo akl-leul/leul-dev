@@ -76,34 +76,34 @@ const About = () => {
   if (loading) {
     return (
       <div className="min-h-screen py-16 flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading profile...</p>
+        <p className="text-lg text-muted-foreground">Loading profile...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-16 bg-gray-50">
+    <div className="min-h-screen py-16 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-16 mt-8">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-6">About Me</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-6">About Me</h1>
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
             Get to know more about my journey, experience, and passion for development
           </p>
         </div>
 
         {/* Profile and socials */}
         <div className="grid lg:grid-cols-3 gap-10 mb-20">
-          <Card className="bg-white rounded-lg shadow-md border border-gray-200">
+          <Card className="rounded-lg shadow-md">
             <div className="p-6 text-center">
               <img
                 src={profile.avatar_url}
                 alt={profile.name}
                 className="w-32 h-32 rounded-full mx-auto mb-4 object-cover"
               />
-              <h2 className="text-2xl font-bold text-gray-900 mb-1">{profile.name}</h2>
+              <h2 className="text-2xl font-bold text-foreground mb-1">{profile.name}</h2>
               
-              <div className="space-y-3 text-gray-600 text-sm mt-3">
+              <div className="space-y-3 text-muted-foreground text-sm mt-3">
                 <div className="flex items-center justify-center gap-2">
                   <MapPin className="h-5 w-5 text-indigo-600" />
                   <span>{profile.location}</span>
@@ -132,15 +132,15 @@ const About = () => {
 
           {/* Story */}
           <div className="lg:col-span-2">
-            <Card className="bg-white rounded-lg shadow-md border border-gray-200">
+            <Card className="rounded-lg shadow-md">
               <CardHeader>
                 <CardTitle>My Story</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 leading-relaxed mb-4">
+                <p className="text-muted-foreground leading-relaxed mb-4">
                   Full stack website and application developer
                 </p>
-                <p className="text-gray-600 leading-relaxed whitespace-pre-line">
+                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
                   I'm a passionate full-stack developer with a love for creating elegant solutions to complex problems. With several years of experience in web development, I enjoy working with modern technologies and frameworks to build scalable, user-friendly applications.
                   
                   {"\n\n"}
@@ -161,12 +161,12 @@ const About = () => {
           ) : (
             <div className="grid md:grid-cols-2 gap-6">
               {experiences.map((exp) => (
-                <Card key={exp.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
+                <Card key={exp.id} className="rounded-lg shadow-sm">
                   <CardContent className="p-6">
                     <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-900 mb-1">{exp.role}</h3>
-                        <div className="flex items-center gap-2 text-gray-600 text-sm">
+                        <h3 className="text-xl font-semibold text-foreground mb-1">{exp.role}</h3>
+                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
                           {exp.company_url ? (
                             <a
                               href={exp.company_url}
@@ -187,7 +187,7 @@ const About = () => {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-3 md:mt-0">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3 md:mt-0">
                         <Calendar className="h-5 w-5" />
                         <span>
                           {formatDate(exp.start_date)} - {exp.current || !exp.end_date ? 'Present' : formatDate(exp.end_date)}
@@ -196,13 +196,13 @@ const About = () => {
                     </div>
 
                     {exp.description && (
-                      <p className="text-gray-600 mb-4">{exp.description}</p>
+                      <p className="text-muted-foreground mb-4">{exp.description}</p>
                     )}
 
                     {exp.achievements && exp.achievements.length > 0 && (
                       <div className="mb-4">
-                        <h4 className="font-semibold text-gray-900 mb-2">Key Achievements:</h4>
-                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                        <h4 className="font-semibold text-foreground mb-2">Key Achievements:</h4>
+                        <ul className="list-disc list-inside text-muted-foreground space-y-1">
                           {exp.achievements.map((ach, idx) => (
                             <li key={idx}>{ach}</li>
                           ))}
@@ -212,7 +212,7 @@ const About = () => {
 
                     {exp.tech_used && exp.tech_used.length > 0 && (
                       <div>
-                        <h4 className="font-semibold text-gray-900 mb-2">Technologies Used:</h4>
+                        <h4 className="font-semibold text-foreground mb-2">Technologies Used:</h4>
                         <div className="flex flex-wrap gap-2">
                           {exp.tech_used.map((tech) => (
                             <Badge key={tech} variant="secondary" className="bg-indigo-100 text-indigo-700 border-none">{tech}</Badge>

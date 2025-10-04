@@ -54,14 +54,14 @@ const Contact = () => {
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <header className="text-center mb-16 mt-8">
-          <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl">
+          <h1 className="text-4xl font-extrabold text-foreground sm:text-5xl">
             Get In Touch
           </h1>
-          <p className="mt-4 max-w-xl mx-auto text-lg text-gray-600">
+          <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
             Have a project in mind or just want to chat? I'd love to hear from you!
           </p>
         </header>
@@ -69,33 +69,33 @@ const Contact = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           {/* Contact Info */}
           <section>
-            <Card className="rounded-lg shadow-md bg-white border border-gray-200">
+            <Card className="rounded-lg shadow-md">
               <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-gray-900">Contact Information</CardTitle>
-                <CardDescription className="text-gray-600">
+                <CardTitle className="text-2xl font-semibold">Contact Information</CardTitle>
+                <CardDescription>
                   Feel free to reach out through any of these channels
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-8 pt-0 pb-8">
                 <div className="flex items-center space-x-4">
-                  <Mail className="h-6 w-6 text-indigo-600" />
+                  <Mail className="h-6 w-6 text-primary" />
                   <div>
-                    <p className="font-medium text-gray-900">Email</p>
-                    <p className="text-sm text-gray-500 break-words">layfokru@gmail.com</p>
+                    <p className="font-medium text-foreground">Email</p>
+                    <p className="text-sm text-muted-foreground break-words">layfokru@gmail.com</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <Phone className="h-6 w-6 text-indigo-600" />
+                  <Phone className="h-6 w-6 text-primary" />
                   <div>
-                    <p className="font-medium text-gray-900">Phone</p>
-                    <p className="text-sm text-gray-500">+251963889227</p>
+                    <p className="font-medium text-foreground">Phone</p>
+                    <p className="text-sm text-muted-foreground">+251963889227</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
-                  <MapPin className="h-6 w-6 text-indigo-600" />
+                  <MapPin className="h-6 w-6 text-primary" />
                   <div>
-                    <p className="font-medium text-gray-900">Location</p>
-                    <p className="text-sm text-gray-500">Addis Ababa, Ethiopia</p>
+                    <p className="font-medium text-foreground">Location</p>
+                    <p className="text-sm text-muted-foreground">Addis Ababa, Ethiopia</p>
                   </div>
                 </div>
               </CardContent>
@@ -104,10 +104,10 @@ const Contact = () => {
 
           {/* Contact Form */}
           <section className="lg:col-span-2">
-            <Card className="rounded-lg shadow-lg bg-white border border-gray-200">
+            <Card className="rounded-lg shadow-lg">
               <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-gray-900">Send Me a Message</CardTitle>
-                <CardDescription className="text-gray-600">
+                <CardTitle className="text-2xl font-semibold">Send Me a Message</CardTitle>
+                <CardDescription>
                   Fill out the form below and I'll get back to you as soon as possible
                 </CardDescription>
               </CardHeader>
