@@ -11,7 +11,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, FolderKanban,
   PenLine,
   BadgeInfo,
-  BriefcaseBusiness, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc, MessageCircle, X } from 'lucide-react';
+  BriefcaseBusiness, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc, MessageCircle, X, Heart, FolderOpen } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
@@ -227,6 +228,17 @@ const Admin = () => {
   const [replySubject, setReplySubject] = useState('');
   const [replyMessage, setReplyMessage] = useState('');
   const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null);
+  
+  // Contact edit states
+  const [editContactOpen, setEditContactOpen] = useState(false);
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactStatus, setContactStatus] = useState('new');
+  
+  // Home preview state
+  const [showHomePreview, setShowHomePreview] = useState(false);
   
   // Settings form state
   const [newEmail, setNewEmail] = useState('');
@@ -758,6 +770,16 @@ const Admin = () => {
     }
   };
 
+  const deleteContact = async (id: string) => {
+    const { error } = await supabase.from('contact_submissions').delete().eq('id', id);
+    if (error) {
+      toast({ title: "Error", description: "Failed to delete message", variant: "destructive" });
+    } else {
+      toast({ title: "Success", description: "Message deleted successfully" });
+      fetchData();
+    }
+  };
+
   const handleConfirmDelete = (type: string, id: string, name: string) => {
     switch (type) {
       case 'project':
@@ -771,6 +793,9 @@ const Admin = () => {
         break;
       case 'experience':
         deleteExperience(id);
+        break;
+      case 'contact':
+        deleteContact(id);
         break;
     }
   };
@@ -849,9 +874,74 @@ const Admin = () => {
       setTextColor(homeContent.text_color || 'hsl(0, 0%, 100%)');
       setAccentColor(homeContent.accent_color || 'hsl(262, 90%, 65%)');
       setHomeImageUrl(homeContent.hero_image || '');
+      setShowHomePreview(false);
       setNewHomeContentOpen(true);
     }
   };
+
+  const editContact = (contact: ContactSubmission) => {
+    setCurrentItem(contact);
+    setEditMode(true);
+    setContactName(contact.name);
+    setContactEmail(contact.email);
+    setContactSubject(contact.subject);
+    setContactMessage(contact.message);
+    setContactStatus(contact.status);
+    setEditContactOpen(true);
+  };
+
+  const handleUpdateContact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentItem) return;
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('contact_submissions')
+        .update({
+          name: contactName,
+          email: contactEmail,
+          subject: contactSubject,
+          message: contactMessage,
+          status: contactStatus,
+        })
+        .eq('id', currentItem.id);
+
+      if (error) throw error;
+
+      toast({ title: 'Updated', description: 'Contact message has been updated successfully.' });
+      setEditContactOpen(false);
+      setEditMode(false);
+      setCurrentItem(null);
+      resetForms();
+      fetchData();
+    } catch (error: any) {
+      console.error('Failed to update contact', error);
+      toast({ title: 'Error', description: error.message || 'Failed to update contact', variant: 'destructive' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Prepare chart data
+  const contentData = [
+    { name: 'Projects', value: analytics.totalProjects, color: '#f59e0b' },
+    { name: 'Posts', value: analytics.totalPosts, color: '#0ea5e9' },
+    { name: 'Skills', value: analytics.totalSkills, color: '#8b5cf6' },
+    { name: 'Experiences', value: analytics.totalExperiences, color: '#10b981' },
+  ];
+
+  const statusData = [
+    { name: 'Published Posts', value: analytics.publishedPosts },
+    { name: 'Draft Posts', value: analytics.totalPosts - analytics.publishedPosts },
+    { name: 'Featured Projects', value: analytics.featuredProjects },
+  ];
+
+  const engagementData = [
+    { name: 'Total Likes', value: analytics.totalLikes, color: '#ef4444' },
+    { name: 'Total Views', value: analytics.totalViews, color: '#3b82f6' },
+  ];
+
+  const COLORS = ['#f59e0b', '#0ea5e9', '#8b5cf6', '#10b981'];
 
   if (!user) {
     return (
@@ -1002,71 +1092,136 @@ const Admin = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest updates across all content</CardDescription>
+                  <CardTitle>Content Overview</CardTitle>
+                  <CardDescription>Distribution of your content</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {posts.slice(0, 3).map((post) => (
-                      <div key={post.id} className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{post.title}</p>
-                          <p className="text-xs text-muted-foreground">Blog post • ❤️ {post.likes_count || 0}</p>
-                        </div>
-                      </div>
-                    ))}
-                    {projects.slice(0, 2).map((project) => (
-                      <div key={project.id} className="flex items-center gap-3">
-                        <div className="w-2 h-2 bg-secondary rounded-full"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium">{project.title}</p>
-                          <p className="text-xs text-muted-foreground">Project • {project.status}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <PieChart>
+                      <Pie
+                        data={contentData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${value}`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {contentData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>Content Statistics</CardTitle>
-                  <CardDescription>Overview of your content performance</CardDescription>
+                  <CardTitle>Engagement Metrics</CardTitle>
+                  <CardDescription>Likes and views performance</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Work Experience</span>
-                      <Badge variant="outline">{analytics.totalExperiences} entries</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Technical Skills</span>
-                      <Badge variant="outline">{skills.filter(s => s.category === 'technical').length} skills</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Featured Projects</span>
-                      <Badge variant="outline">{analytics.featuredProjects} projects</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Published Posts</span>
-                      <Badge variant="outline">{analytics.publishedPosts} posts</Badge>
-                    </div>
-                  </div>
+                  <ResponsiveContainer width="100%" height={250}>
+                    <BarChart data={engagementData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Bar dataKey="value" fill="#8b5cf6" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Content Status</CardTitle>
+                <CardDescription>Publishing and feature statistics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={statusData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <RechartsTooltip />
+                    <Legend />
+                    <Bar dataKey="value" fill="#0ea5e9" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Home Content Tab */}
           <TabsContent value="home" className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Home Page Content</h2>
-              <Button onClick={editHomeContent}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Home Content
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowHomePreview(!showHomePreview)}>
+                  <Eye className="h-4 w-4 mr-2" />
+                  {showHomePreview ? 'Hide' : 'Show'} Preview
+                </Button>
+                <Button onClick={editHomeContent}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Home Content
+                </Button>
+              </div>
             </div>
+
+            {showHomePreview && homeContent && (
+              <Card className="overflow-hidden">
+                <CardHeader>
+                  <CardTitle>Live Preview</CardTitle>
+                  <CardDescription>This is how your home page will look</CardDescription>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div 
+                    className="min-h-[400px] p-12 flex flex-col items-center justify-center text-center"
+                    style={{
+                      background: homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))',
+                      color: homeContent.text_color || 'white',
+                    }}
+                  >
+                    {homeContent.hero_image && (
+                      <img 
+                        src={homeContent.hero_image} 
+                        alt="Hero" 
+                        className="w-32 h-32 rounded-full object-cover mb-6 border-4"
+                        style={{ borderColor: homeContent.primary_color || 'white' }}
+                      />
+                    )}
+                    <h1 
+                      className="text-5xl font-bold mb-4"
+                      style={{ color: homeContent.primary_color || 'white' }}
+                    >
+                      {homeContent.name}
+                    </h1>
+                    <p className="text-2xl mb-8" style={{ color: homeContent.text_color || 'white' }}>
+                      {homeContent.tagline}
+                    </p>
+                    <div className="flex gap-4">
+                      <Button style={{ backgroundColor: homeContent.primary_color || undefined }}>
+                        View Projects
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        style={{ 
+                          borderColor: homeContent.secondary_color || undefined,
+                          color: homeContent.secondary_color || undefined 
+                        }}
+                      >
+                        Contact Me
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {homeContent ? (
               <Card>
@@ -1747,6 +1902,51 @@ const Admin = () => {
               <Badge variant="secondary">{contacts.filter(c => c.status === 'new').length} new</Badge>
             </div>
 
+            {/* Edit Contact Dialog */}
+            <Dialog open={editContactOpen} onOpenChange={setEditContactOpen}>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Edit Contact Message</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleUpdateContact} className="space-y-4">
+                  <div>
+                    <Label htmlFor="contactName">Name</Label>
+                    <Input id="contactName" value={contactName} onChange={(e) => setContactName(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="contactEmail">Email</Label>
+                    <Input id="contactEmail" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="contactSubject">Subject</Label>
+                    <Input id="contactSubject" value={contactSubject} onChange={(e) => setContactSubject(e.target.value)} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="contactMessage">Message</Label>
+                    <Textarea id="contactMessage" value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} className="min-h-[150px]" required />
+                  </div>
+                  <div>
+                    <Label htmlFor="contactStatus">Status</Label>
+                    <Select value={contactStatus} onValueChange={setContactStatus}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="new">New</SelectItem>
+                        <SelectItem value="read">Read</SelectItem>
+                        <SelectItem value="replied">Replied</SelectItem>
+                        <SelectItem value="archived">Archived</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="outline" onClick={() => { setEditContactOpen(false); setEditMode(false); }}>Cancel</Button>
+                    <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Update Message'}</Button>
+                  </div>
+                </form>
+              </DialogContent>
+            </Dialog>
+
             <div className="flex justify-between items-center gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1802,10 +2002,33 @@ const Admin = () => {
                           <p className="mt-3 text-sm text-muted-foreground">{contact.message}</p>
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => openReplyModal(contact)}>
-                            <Reply className="h-4 w-4 mr-1" />
-                            Reply
+                          <Button size="sm" variant="outline" onClick={() => editContact(contact)}>
+                            <Edit className="h-4 w-4" />
                           </Button>
+                          <Button size="sm" variant="outline" onClick={() => openReplyModal(contact)}>
+                            <Reply className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="sm" variant="destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Message</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this message from {contact.name}? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleConfirmDelete('contact', contact.id, contact.name)}>
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardHeader>
