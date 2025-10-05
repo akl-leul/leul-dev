@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
+import { usePageView } from '@/hooks/usePageView';
 
 import {
   SiJavascript, SiTypescript, SiReact, SiNextdotjs, SiNodedotjs, SiPython,
@@ -75,6 +76,7 @@ const skillIcons: Record<string, JSX.Element> = {
 };
 
 const Skills = () => {
+  usePageView('Skills & Technologies');
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -124,17 +126,17 @@ const Skills = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-lg text-gray-600">Loading skills...</p>
+        <p className="text-lg text-muted-foreground">Loading skills...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-16 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <header className="text-center mb-16 mt-8">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Skills & Technologies</h1>
-          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+          <h1 className="text-4xl font-extrabold text-foreground mb-4">Skills & Technologies</h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             A comprehensive overview of my technical skills and experience levels
           </p>
         </header>
@@ -142,18 +144,18 @@ const Skills = () => {
         <div className="space-y-20">
           {Object.entries(groupedSkills).map(([category, categorySkills]) => (
             <section key={category}>
-              <h2 className="text-2xl font-bold text-gray-900 mb-8 border-b border-gray-300 pb-2 capitalize">
+              <h2 className="text-2xl font-bold text-foreground mb-8 border-b border-border pb-2 capitalize">
                 {category} Skills
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {categorySkills.map((skill) => (
                   <Card
                     key={skill.id}
-                    className="transform transition-transform hover:scale-[1.03] hover:shadow-lg rounded-lg border border-gray-200 bg-white"
+                    className="transform transition-transform hover:scale-[1.03] hover:shadow-lg"
                   >
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center gap-3 text-lg font-semibold text-gray-900">
+                        <CardTitle className="flex items-center gap-3 text-lg font-semibold">
                           <span className="flex-shrink-0">{skillIcons[skill.name] || skillIcons.default}</span>
                           <span>{skill.name}</span>
                         </CardTitle>
@@ -169,15 +171,15 @@ const Skills = () => {
                       <div className="space-y-5">
                         <div>
                           <div className="flex justify-between items-center mb-3">
-                            <span className="text-sm font-medium text-gray-700">Proficiency</span>
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="text-sm font-medium text-muted-foreground">Proficiency</span>
+                            <span className="text-sm font-medium text-muted-foreground">
                               {getSkillLevel(skill.level)}%
                             </span>
                           </div>
                           <Progress value={getSkillLevel(skill.level)} className="h-2 rounded-lg" />
                         </div>
                         {skill.years_experience !== null && (
-                          <div className="flex justify-between items-center text-sm text-gray-700 font-medium">
+                          <div className="flex justify-between items-center text-sm text-muted-foreground font-medium">
                             <span>Experience:</span>
                             <span>
                               {skill.years_experience} {skill.years_experience === 1 ? 'year' : 'years'}

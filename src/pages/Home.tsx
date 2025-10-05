@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { usePageView } from '@/hooks/usePageView';
 import {
   ArrowRight,
   ExternalLink,
@@ -57,7 +58,7 @@ const pageVariants: Variants = {
 const iconAnimation = {
   idle: {
     rotate: [0, 5, 0, -5, 0],
-    transition: { repeat: Infinity, duration: 4, ease: 'easeInOut' },
+    transition: { repeat: Infinity, duration: 4, ease: "easeInOut" as const },
   },
   hover: {
     scale: 1.2,
@@ -67,6 +68,7 @@ const iconAnimation = {
 };
 
 const Home = () => {
+  usePageView('Home');
   const [featuredProjects, setFeaturedProjects] = useState<Project[]>([]);
   const [latestPosts, setLatestPosts] = useState<Post[]>([]);
   const [homeContent, setHomeContent] = useState<HomeContent | null>(null);

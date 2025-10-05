@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { usePageView } from '@/hooks/usePageView';
 import { Calendar, Clock, Search, Tag, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -28,6 +29,7 @@ interface Post {
 }
 
 const Blog = () => {
+  usePageView('Blog');
   const [posts, setPosts] = useState<Post[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
@@ -90,13 +92,13 @@ const Blog = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen py-16 bg-gray-50">
+      <div className="min-h-screen py-16 bg-background">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
           <div className="animate-pulse max-w-6xl mx-auto">
-            <div className="h-10 bg-gray-300 rounded w-1/3 mb-10 mx-auto" />
+            <div className="h-10 bg-muted rounded w-1/3 mb-10 mx-auto" />
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="bg-gray-200 rounded-lg h-80" />
+                <Card key={i} className="bg-muted rounded-lg h-80" />
               ))}
             </div>
           </div>
@@ -106,12 +108,12 @@ const Blog = () => {
   }
 
   return (
-    <div className="min-h-screen py-16 bg-gray-50">
+    <div className="min-h-screen py-16 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         {/* Header */}
-        <div className="relative text-center mb-20 bg-gradient-to-b from-indigo-50 via-white to-indigo-100 rounded-3xl py-24 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <div className="relative text-center mb-20 bg-gradient-to-b from-primary/5 via-background to-primary/5 rounded-3xl py-24">
           <div className="absolute inset-0 -z-10 overflow-hidden">
-            <div className="md:w-[200%] h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 blur-[180px] opacity-25"></div>
+            <div className="md:w-[200%] h-full bg-gradient-to-r from-primary/30 via-secondary/30 to-primary/30 blur-[180px] opacity-25"></div>
           </div>
 
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground drop-shadow-md mb-3 md:mb-4">
@@ -122,7 +124,7 @@ const Blog = () => {
             <span className="font-semibold">development journey</span>.
           </p>
           <div className="mt-4 md:mt-6 flex justify-center">
-            <div className="h-1 w-20 md:w-24 bg-gradient-to-r from-indigo-500 to-pink-500 rounded-full shadow-lg shadow-pink-500/30"></div>
+            <div className="h-1 w-20 md:w-24 bg-gradient-to-r from-primary to-secondary rounded-full shadow-lg"></div>
           </div>
         </div>
 
@@ -176,7 +178,7 @@ const Blog = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentPosts.map((post) => (
-                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300 rounded-lg border border-gray-200 bg-white">
+                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
                   {post.featured_image ? (
                     <div className="aspect-video overflow-hidden rounded-t-lg">
                       <img
@@ -186,13 +188,13 @@ const Blog = () => {
                       />
                     </div>
                   ) : (
-                    <div className="aspect-video bg-gray-200 rounded-t-lg flex items-center justify-center text-gray-400 text-sm">
+                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center text-muted-foreground text-sm">
                       No Image
                     </div>
                   )}
 
                   <CardHeader>
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-2">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
                         {format(new Date(post.published_at), 'MMM dd, yyyy')}
@@ -203,7 +205,7 @@ const Blog = () => {
                       </div>
                     </div>
 
-                    <CardTitle className="group-hover:text-indigo-600 transition-colors text-lg font-semibold">
+                    <CardTitle className="group-hover:text-primary transition-colors text-lg font-semibold">
                       <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                     </CardTitle>
 

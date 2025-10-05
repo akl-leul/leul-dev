@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { usePageView } from '@/hooks/usePageView';
 import { Download, MapPin, Mail, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { FaXTwitter } from "react-icons/fa6";
@@ -48,6 +49,7 @@ const defaultProfile: Profile = {
 };
 
 const About = () => {
+  usePageView('About');
   const [profile, setProfile] = useState<Profile>(defaultProfile);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,10 +155,10 @@ const About = () => {
 
         {/* Experience Section */}
         <section>
-          <h2 className="text-3xl font-bold text-gray-900 mb-8">Work Experience</h2>
+          <h2 className="text-3xl font-bold text-foreground mb-8">Work Experience</h2>
           {experiences.length === 0 ? (
             <Card>
-              <CardContent className="p-8 text-center text-gray-600">No work experience added yet.</CardContent>
+              <CardContent className="p-8 text-center text-muted-foreground">No work experience added yet.</CardContent>
             </Card>
           ) : (
             <div className="grid md:grid-cols-2 gap-6">

@@ -7,10 +7,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
+import { usePageView } from '@/hooks/usePageView';
 import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, UserRoundPen, SquareArrowOutUpRight, MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
-import { useToast } from '@/hooks/use-toast'; 
+import { useToast } from '@/hooks/use-toast';
 import { FaXTwitter, FaLinkedin, FaFacebook,  FaWhatsapp,
   FaTelegram,
   FaReddit,
@@ -52,6 +53,7 @@ interface Comment {
 
 const BlogPost = () => {
   const { slug } = useParams<{ slug: string }>();
+  usePageView();
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

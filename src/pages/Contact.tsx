@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { usePageView } from '@/hooks/usePageView';
 import { Mail, MapPin, Phone, Send } from 'lucide-react';
 
 const contactSchema = z.object({
@@ -20,6 +21,7 @@ const contactSchema = z.object({
 type ContactForm = z.infer<typeof contactSchema>;
 
 const Contact = () => {
+  usePageView('Contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 

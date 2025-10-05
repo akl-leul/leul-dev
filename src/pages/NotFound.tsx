@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Home } from 'lucide-react';
+import { usePageView } from '@/hooks/usePageView';
 
 const NotFound = () => {
+  usePageView('404 Not Found');
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center space-y-6">
