@@ -173,105 +173,132 @@ const Home = () => {
     >
       {/* Hero Section */}
       <section
-        className="relative min-h-screen flex items-center overflow-hidden px-4 sm:px-6 lg:px-8"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden"
         style={{
-          background: homeContent?.background_image
-            ? `url(${homeContent.background_image || 'https://images.pexels.com/photos/2847648/pexels-photo-2847648.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'}), ${
-                homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'
-              }`
-            : homeContent?.background_gradient ||
-              'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))',
-          backgroundRepeat: 'no-repeat, no-repeat',
-          backgroundSize: 'cover, cover',
-          backgroundPosition: 'center, center',
-          backgroundAttachment: 'fixed, fixed',
-          backgroundBlendMode: 'overlay',
+          background: homeContent?.background_gradient || 'linear-gradient(135deg, hsl(15, 100%, 60%), hsl(0, 85%, 50%))',
         }}
         aria-label="Hero section introducing the developer"
       >
         {/* Animated background canvas */}
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 w-full h-full opacity-30 pointer-events-none"
+          className="absolute inset-0 w-full h-full opacity-20 pointer-events-none"
           aria-hidden="true"
         />
 
-        {/* Foreground content */}
-        <motion.div
-          key="hero-content"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8 }}
-          className="relative container mx-auto max-w-4xl text-center"
-        >
-          <h1
-            className="text-4xl md:text-7xl font-bold mb-6"
-            style={{ color: homeContent?.text_color || 'hsl(0, 0%, 100%)' }}
-          >
-            Hi, I'm{' '}
-            <motion.span
-              style={{
-                background: `linear-gradient(to right, ${homeContent?.primary_color || 'hsl(262, 83%, 58%)'}, ${
-                  homeContent?.secondary_color || 'hsl(180, 100%, 50%)'
-                })`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-              }}
-              className="font-logo"
-              aria-label={homeContent?.name || 'Leul Ayfokru'}
-              initial={{ scale: 1 }}
-              whileHover={{ scale: 1.1, rotate: 3 }}
-              transition={{ type: 'spring', stiffness: 300 }}
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
+            {/* Left Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="space-y-6 z-10"
             >
-              {homeContent?.name || 'Leul Ayfokru'}
-            </motion.span>
-          </h1>
-          <p
-            className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto"
-            style={{ color: homeContent?.text_color || 'hsl(0, 0%, 100%)' }}
-          >
-            {homeContent?.tagline || 'Full-stack website and application developer based in Ethiopia.'}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <Button
-              size="lg"
-              asChild
-              style={{
-                backgroundColor: homeContent?.primary_color || 'hsl(262, 83%, 58%)',
-                color: 'white',
-              }}
-              aria-label="View my projects"
-            >
-              <Link
-                to="/projects"
-                className="flex items-center justify-center px-6 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500"
+              <p
+                className="text-lg md:text-xl font-medium"
+                style={{ color: homeContent?.text_color || 'rgba(255, 255, 255, 0.9)' }}
               >
-                View My Work
-                <motion.span whileHover={iconAnimation.hover} animate={iconAnimation.idle} className="ml-2 flex items-center">
-                  <ArrowRight className="h-4 w-4" />
+                Hi, I'm {homeContent?.name || 'Leul Ayfokru'}
+              </p>
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none">
+                <motion.span
+                  className="block"
+                  style={{ color: homeContent?.text_color || '#fff' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  Let's Create
                 </motion.span>
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              asChild
-              style={{
-                borderColor: homeContent?.accent_color || 'hsl(262, 90%, 65%)',
-                color: homeContent?.primary_color || 'hsla(0, 0%, 0%, 1.00)',
-              }}
-              aria-label="Get in touch"
-            >
-              <Link
-                to="/contact"
-                className="flex items-center justify-center px-6 py-3 rounded-lg focus:outline-none focus:ring-4 focus:ring-indigo-500"
+                <motion.span
+                  className="block"
+                  style={{ color: homeContent?.text_color || '#fff' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  Portraits That
+                </motion.span>
+                <motion.span
+                  className="block"
+                  style={{ color: homeContent?.text_color || '#fff' }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8 }}
+                >
+                  Tell Your Story
+                </motion.span>
+              </h1>
+              <motion.p
+                className="text-base md:text-lg max-w-md"
+                style={{ color: homeContent?.text_color || 'rgba(255, 255, 255, 0.85)' }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1 }}
               >
-                Get In Touch
-              </Link>
-            </Button>
+                {homeContent?.tagline || "Through my lens, I transform fleeting moments into timeless visuals. Whether it's portrait, lifestyle, or commercial photography, I create images that connect, inspire, and leave a lasting impression."}
+              </motion.p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+              >
+                <Button
+                  size="lg"
+                  asChild
+                  className="bg-white text-gray-900 hover:bg-gray-100 rounded-full px-8"
+                >
+                  <Link to="/projects" className="flex items-center gap-2">
+                    See my works
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </motion.div>
+            </motion.div>
+
+            {/* Right Content - Image with text overlay */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, duration: 0.8 }}
+              className="relative h-[600px] lg:h-[700px]"
+            >
+              {/* Large artistic text behind image */}
+              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+                <motion.h2
+                  className="text-[180px] md:text-[240px] lg:text-[300px] font-bold opacity-10 select-none"
+                  style={{
+                    color: homeContent?.text_color || '#fff',
+                    letterSpacing: '-0.05em',
+                    lineHeight: 0.8,
+                  }}
+                  initial={{ scale: 1.2, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 0.15 }}
+                  transition={{ delay: 0.6, duration: 1 }}
+                >
+                  design
+                </motion.h2>
+              </div>
+              
+              {/* Profile image */}
+              {homeContent?.hero_image && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center"
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.8, duration: 0.8 }}
+                >
+                  <img
+                    src={homeContent.hero_image}
+                    alt="Profile"
+                    className="w-full h-full object-contain filter drop-shadow-2xl"
+                  />
+                </motion.div>
+              )}
+            </motion.div>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Featured Projects Section */}

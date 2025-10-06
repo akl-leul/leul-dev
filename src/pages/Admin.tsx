@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,7 +18,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { format } from 'date-fns';
- import { SquareArrowOutUpRight } from "lucide-react";
+import { SquareArrowOutUpRight } from "lucide-react";
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 
 
 interface Project {
@@ -111,6 +113,7 @@ interface Comment {
 const Admin = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('analytics');
   const [projects, setProjects] = useState<Project[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -959,59 +962,24 @@ const Admin = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 mt-20">Admin Dashboard</h1>
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full">
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
         
-        <Tabs defaultValue="analytics">
-         <TabsList className="grid w-full grid-cols-9">
-  <TabsTrigger value="analytics">
-    <BarChart3 className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Analytics</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="home">
-    <span className="text-lg">🏠</span>
-    <span className="hidden md:inline ml-2">Home</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="projects">
-    <FolderKanban className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Projects</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="posts">
-    <PenLine className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Blog Posts</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="skills">
-    <BadgeInfo className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Skills</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="experiences">
-    <BriefcaseBusiness className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Experience</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="comments">
-    <MessageCircle className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Comments</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="contacts">
-    <Mail className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Messages</span>
-  </TabsTrigger>
-
-  <TabsTrigger value="settings">
-    <Settings className="w-5 h-5 inline md:mr-2" />
-    <span className="hidden md:inline">Settings</span>
-  </TabsTrigger>
-</TabsList>
-
-          <TabsContent value="analytics" className="space-y-6">
+        <main className="flex-1 p-6">
+          <div className="mb-6 flex items-center gap-4">
+            <SidebarTrigger />
+            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          </div>
+          
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              <AnalyticsDashboard analytics={analytics} />
+            </div>
+          )}
+          
+          {activeTab === 'home' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Analytics Overview</h2>
               <Badge variant="secondary">
@@ -1155,11 +1123,11 @@ const Admin = () => {
                 </ResponsiveContainer>
               </CardContent>
             </Card>
-          </TabsContent>
-
-          {/* Home Content Tab */}
-          <TabsContent value="home" className="space-y-6">
-            <div className="flex justify-between items-center">
+          )}
+          
+          {activeTab === 'home' && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Home Page Content</h2>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setShowHomePreview(!showHomePreview)}>
@@ -1295,9 +1263,10 @@ const Admin = () => {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
-
-          <TabsContent value="projects" className="space-y-6">
+          )}
+          
+          {activeTab === 'projects' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Projects ({filteredProjects.length})</h2>
               <Dialog open={newProjectOpen} onOpenChange={(open) => { setNewProjectOpen(open); if (!open) resetForms(); }}>
@@ -1451,9 +1420,11 @@ const Admin = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="posts" className="space-y-6">
+          {activeTab === 'posts' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Blog Posts ({filteredPosts.length})</h2>
               <Dialog open={newPostOpen} onOpenChange={(open) => { setNewPostOpen(open); if (!open) resetForms(); }}>
@@ -1587,9 +1558,11 @@ const Admin = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="skills" className="space-y-6">
+            </div>
+          )}
+          
+          {activeTab === 'skills' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Skills ({filteredSkills.length})</h2>
               <Dialog open={newSkillOpen} onOpenChange={(open) => { setNewSkillOpen(open); if (!open) resetForms(); }}>
@@ -1726,9 +1699,11 @@ const Admin = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="experiences" className="space-y-6">
+            </div>
+          )}
+          
+          {activeTab === 'experiences' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Work Experience ({filteredExperiences.length})</h2>
               <Dialog open={newExperienceOpen} onOpenChange={(open) => { setNewExperienceOpen(open); if (!open) resetForms(); }}>
@@ -1895,8 +1870,11 @@ const Admin = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
-          <TabsContent value="contacts" className="space-y-6">
+            </div>
+          )}
+          
+          {activeTab === 'contacts' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Contact Messages ({filteredContacts.length})</h2>
               <Badge variant="secondary">{contacts.filter(c => c.status === 'new').length} new</Badge>
@@ -2071,9 +2049,11 @@ const Admin = () => {
                 </form>
               </DialogContent>
             </Dialog>
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="comments" className="space-y-6">
+          {activeTab === 'comments' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Comments ({filteredComments.length})</h2>
               <Badge variant="secondary">{comments.filter(c => !c.approved).length} pending</Badge>
@@ -2208,9 +2188,11 @@ const Admin = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
+            </div>
+          )}
 
-          <TabsContent value="settings" className="space-y-6">
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Account Settings</h2>
             </div>
@@ -2270,10 +2252,12 @@ const Admin = () => {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+        </main>
+      </div>
 
-        {/* Home Content Dialog */}
+      {/* Dialogs remain accessible across all tabs */}
+      {/* Home Content Dialog */}
         <Dialog open={newHomeContentOpen} onOpenChange={(open) => { setNewHomeContentOpen(open); if (!open) resetForms(); }}>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -2394,12 +2378,12 @@ const Admin = () => {
                   {loading ? 'Saving...' : (homeContent ? 'Update' : 'Create')}
                 </Button>
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </div>
-  );
-};
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </SidebarProvider>
+    );
+  };
 
 export default Admin;
