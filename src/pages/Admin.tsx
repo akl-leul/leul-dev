@@ -980,153 +980,6 @@ const Admin = () => {
           
           {activeTab === 'home' && (
             <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Analytics Overview</h2>
-              <Badge variant="secondary">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Dashboard
-              </Badge>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-amber-100 via-orange-100 to-orange-200 dark:from-orange-900 dark:to-amber-800
-">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Total Projects</p>
-                      <p className="text-2xl font-bold">{analytics.totalProjects}</p>
-                    </div>
-                    <FileText className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {analytics.featuredProjects} featured
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-sky-50 via-sky-100 to-sky-200 dark:from-sky-900 dark:to-sky-800
-">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Blog Posts</p>
-                      <p className="text-2xl font-bold">{analytics.totalPosts}</p>
-                    </div>
-                    <Edit className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {analytics.publishedPosts} published
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-violet-100 via-indigo-100 to-indigo-200 dark:from-indigo-900 dark:to-violet-900
-">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Skills</p>
-                      <p className="text-2xl font-bold">{analytics.totalSkills}</p>
-                    </div>
-                    <TrendingUp className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    across {skills.reduce((acc, skill) => {
-                      if (!acc.includes(skill.category)) acc.push(skill.category);
-                      return acc;
-                    }, [] as string[]).length} categories
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:scale-105 transition-transform duration-300 bg-gradient-to-br from-zinc-100 via-zinc-50 to-amber-100 dark:from-zinc-900 dark:via-zinc-800 dark:to-yellow-900
-">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Contact Messages</p>
-                      <p className="text-2xl font-bold">{analytics.totalContacts}</p>
-                    </div>
-                    <Mail className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    {analytics.newContacts} unread
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Content Overview</CardTitle>
-                  <CardDescription>Distribution of your content</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={contentData}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({ name, value }) => `${name}: ${value}`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        {contentData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Engagement Metrics</CardTitle>
-                  <CardDescription>Likes and views performance</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={engagementData}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <RechartsTooltip />
-                      <Bar dataKey="value" fill="#8b5cf6" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </CardContent>
-              </Card>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Content Status</CardTitle>
-                <CardDescription>Publishing and feature statistics</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={250}>
-                  <BarChart data={statusData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <RechartsTooltip />
-                    <Legend />
-                    <Bar dataKey="value" fill="#0ea5e9" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          )}
-          
-          {activeTab === 'home' && (
-            <div className="space-y-6">
               <div className="flex justify-between items-center">
               <h2 className="text-2xl font-semibold">Home Page Content</h2>
               <div className="flex gap-2">
@@ -1263,6 +1116,7 @@ const Admin = () => {
                 </CardContent>
               </Card>
             )}
+            </div>
           )}
           
           {activeTab === 'projects' && (
@@ -2252,13 +2106,14 @@ const Admin = () => {
                 </CardContent>
               </Card>
             </div>
+            </div>
           )}
         </main>
       </div>
 
       {/* Dialogs remain accessible across all tabs */}
       {/* Home Content Dialog */}
-        <Dialog open={newHomeContentOpen} onOpenChange={(open) => { setNewHomeContentOpen(open); if (!open) resetForms(); }}>
+      <Dialog open={newHomeContentOpen} onOpenChange={(open) => { setNewHomeContentOpen(open); if (!open) resetForms(); }}>
           <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{homeContent ? 'Edit Home Content' : 'Create Home Content'}</DialogTitle>
@@ -2378,10 +2233,9 @@ const Admin = () => {
                   {loading ? 'Saving...' : (homeContent ? 'Update' : 'Create')}
                 </Button>
               </div>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </SidebarProvider>
     );
   };
