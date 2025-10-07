@@ -409,6 +409,81 @@ export type Database = {
         }
         Relationships: []
       }
+      features: {
+        Row: {
+          active: boolean | null
+          category: string | null
+          created_at: string | null
+          description: string
+          display_order: number | null
+          icon: string | null
+          id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      help_articles: {
+        Row: {
+          active: boolean | null
+          category: string | null
+          content: string
+          created_at: string | null
+          helpful_count: number | null
+          id: string
+          tags: Json | null
+          title: string
+          updated_at: string | null
+          views: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          category?: string | null
+          content: string
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          tags?: Json | null
+          title: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          category?: string | null
+          content?: string
+          created_at?: string | null
+          helpful_count?: number | null
+          id?: string
+          tags?: Json | null
+          title?: string
+          updated_at?: string | null
+          views?: number | null
+        }
+        Relationships: []
+      }
       home_content: {
         Row: {
           accent_color: string | null
@@ -492,6 +567,92 @@ export type Database = {
           minimum_stock?: number
           supplier?: string | null
           unit?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      job_applications: {
+        Row: {
+          cover_letter: string | null
+          created_at: string | null
+          email: string
+          full_name: string
+          id: string
+          job_id: string | null
+          phone: string | null
+          resume_url: string | null
+          status: string | null
+        }
+        Insert: {
+          cover_letter?: string | null
+          created_at?: string | null
+          email: string
+          full_name: string
+          id?: string
+          job_id?: string | null
+          phone?: string | null
+          resume_url?: string | null
+          status?: string | null
+        }
+        Update: {
+          cover_letter?: string | null
+          created_at?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          job_id?: string | null
+          phone?: string | null
+          resume_url?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_postings: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          department: string
+          description: string
+          id: string
+          location: string
+          requirements: Json | null
+          responsibilities: Json | null
+          title: string
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          department: string
+          description: string
+          id?: string
+          location: string
+          requirements?: Json | null
+          responsibilities?: Json | null
+          title: string
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          department?: string
+          description?: string
+          id?: string
+          location?: string
+          requirements?: Json | null
+          responsibilities?: Json | null
+          title?: string
+          type?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -778,6 +939,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pricing_plans: {
+        Row: {
+          active: boolean | null
+          billing_period: string | null
+          created_at: string | null
+          description: string | null
+          display_order: number | null
+          features: Json | null
+          id: string
+          is_popular: boolean | null
+          name: string
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          billing_period?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_popular?: boolean | null
+          name: string
+          price: number
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          billing_period?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_order?: number | null
+          features?: Json | null
+          id?: string
+          is_popular?: boolean | null
+          name?: string
+          price?: number
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -1077,6 +1280,75 @@ export type Database = {
           updated_at?: string
           user_id?: string
           years_experience?: number | null
+        }
+        Relationships: []
+      }
+      status_incidents: {
+        Row: {
+          affected_services: Json | null
+          created_at: string | null
+          description: string
+          id: string
+          resolved_at: string | null
+          severity: string | null
+          started_at: string | null
+          status: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_services?: Json | null
+          created_at?: string | null
+          description: string
+          id?: string
+          resolved_at?: string | null
+          severity?: string | null
+          started_at?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_services?: Json | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          resolved_at?: string | null
+          severity?: string | null
+          started_at?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_status: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          last_checked: string | null
+          service_name: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          last_checked?: string | null
+          service_name: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          last_checked?: string | null
+          service_name?: string
+          status?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }

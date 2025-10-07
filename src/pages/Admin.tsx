@@ -22,6 +22,7 @@ import { SquareArrowOutUpRight } from "lucide-react";
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
+import { ImageCropUpload } from '@/components/admin/ImageCropUpload';
 
 
 interface Project {
@@ -224,7 +225,6 @@ const Admin = () => {
   const [secondaryColor, setSecondaryColor] = useState('hsl(180, 100%, 50%)');
   const [textColor, setTextColor] = useState('hsl(0, 0%, 100%)');
   const [accentColor, setAccentColor] = useState('hsl(262, 90%, 65%)');
-  const [homeImageFile, setHomeImageFile] = useState<File | null>(null);
   const [homeImageUrl, setHomeImageUrl] = useState('');
   
   // Reply form state
@@ -275,7 +275,7 @@ const Admin = () => {
     // Reset home content form
     setHomeName(''); setHomeTagline(''); setBackgroundImage(''); setBackgroundGradient('linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'); 
     setPrimaryColor('hsl(262, 83%, 58%)'); setSecondaryColor('hsl(180, 100%, 50%)'); setTextColor('hsl(0, 0%, 100%)'); 
-    setAccentColor('hsl(262, 90%, 65%)'); setHomeImageFile(null); setHomeImageUrl('');
+    setAccentColor('hsl(262, 90%, 65%)'); setHomeImageUrl('');
     
     // Reset reply form
     setReplySubject(''); setReplyMessage('');
@@ -317,11 +317,6 @@ const Admin = () => {
   const handleProjectFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setProjectImageFile(file);
-  };
-
-  const handleHomeImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setHomeImageFile(file);
   };
 
   // CRUD Functions
@@ -501,15 +496,10 @@ const Admin = () => {
     if (!user) return;
     setLoading(true);
     try {
-      let imageUrl = homeImageUrl;
-      if (homeImageFile) {
-        imageUrl = await uploadImage(homeImageFile, 'project-images') || '';
-      }
-
       const contentData = {
         name: homeName,
         tagline: homeTagline,
-        hero_image: imageUrl || null,
+        hero_image: homeImageUrl || null,
         background_image: backgroundImage || null,
         background_gradient: backgroundGradient || null,
         primary_color: primaryColor || null,
@@ -1059,12 +1049,28 @@ const Admin = () => {
                     <Label className="font-semibold">Tagline</Label>
                     <p className="text-muted-foreground mt-1">{homeContent.tagline}</p>
                   </div>
-                  {homeContent.hero_image && (
-                    <div>
-                      <Label className="font-semibold">Hero Image</Label>
-                      <img src={homeContent.hero_image} alt="Hero" className="mt-2 max-w-md rounded-lg border" />
-                    </div>
-                  )}
+                  <div>
+                    <ImageCropUpload
+                      currentImageUrl={homeContent.hero_image || undefined}
+                      onImageUpdate={async (url) => {
+                        if (!homeContent?.id) return;
+                        try {
+                          const { error } = await supabase
+                            .from('home_content')
+                            .update({ hero_image: url })
+                            .eq('id', homeContent.id);
+                          if (error) throw error;
+                          fetchData();
+                          toast({ title: 'Success', description: 'Hero image updated successfully' });
+                        } catch (error: any) {
+                          toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                        }
+                      }}
+                      bucketName="home-images"
+                      label="Hero Image"
+                      aspectRatio={1}
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label className="font-semibold">Primary Color</Label>
@@ -2208,18 +2214,13 @@ const Admin = () => {
               </div>
               
               <div>
-                <Label htmlFor="homeImage">Hero Image (optional)</Label>
-                <Input
-                  id="homeImage"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleHomeImageChange}
+                <ImageCropUpload
+                  currentImageUrl={homeImageUrl}
+                  onImageUpdate={(url) => setHomeImageUrl(url || '')}
+                  bucketName="home-images"
+                  label="Hero Image (optional)"
+                  aspectRatio={1}
                 />
-                {homeImageUrl && (
-                  <div className="mt-2">
-                    <img src={homeImageUrl} alt="Preview" className="max-w-sm rounded border" />
-                  </div>
-                )}
               </div>
               
               <div className="flex justify-end gap-2">
