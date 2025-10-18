@@ -953,8 +953,8 @@ const Admin = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full">
-        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex min-h-screen w-full mt-16">
+        <AdminSidebar   activeTab={activeTab} onTabChange={setActiveTab}/>
         
         <main className="flex-1 p-6">
           <div className="mb-6 flex items-center gap-4">

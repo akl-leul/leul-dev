@@ -31,7 +31,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   ];
 
   return (
-    <Sidebar>
+    <Sidebar className="pt-16">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Analytics</SidebarGroupLabel>

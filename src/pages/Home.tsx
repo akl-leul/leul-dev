@@ -173,7 +173,7 @@ const Home = () => {
     >
       {/* Hero Section */}
       <section
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
+        className="relative min-h-screen flex items-center justify-center overflow-hidden "
         style={{
           background: homeContent?.background_gradient || 'linear-gradient(135deg, hsl(15, 100%, 60%), hsl(0, 85%, 50%))',
         }}
@@ -186,8 +186,8 @@ const Home = () => {
           aria-hidden="true"
         />
 
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8  mt-24">
+          <div className="grid lg:grid-cols-2 gap-6 items-center">
             {/* Left Content */}
             <motion.div
               initial={{ opacity: 0, x: -40 }}
@@ -230,15 +230,7 @@ const Home = () => {
                   Tell Your Story
                 </motion.span>
               </h1>
-              <motion.p
-                className="text-base md:text-lg max-w-md"
-                style={{ color: homeContent?.text_color || 'rgba(255, 255, 255, 0.85)' }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1 }}
-              >
-                {homeContent?.tagline || "Through my lens, I transform fleeting moments into timeless visuals. Whether it's portrait, lifestyle, or commercial photography, I create images that connect, inspire, and leave a lasting impression."}
-              </motion.p>
+               
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -277,7 +269,7 @@ const Home = () => {
                   animate={{ scale: 1, opacity: 0.15 }}
                   transition={{ delay: 0.6, duration: 1 }}
                 >
-                  design
+                 Code
                 </motion.h2>
               </div>
               
