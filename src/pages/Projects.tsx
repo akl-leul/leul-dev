@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
-import { usePageView } from '@/hooks/usePageView';
-import { ExternalLink, Github, Search, Star } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { usePageView } from "@/hooks/usePageView";
+import { ExternalLink, Github, Search, Star } from "lucide-react";
 import {
   Pagination,
   PaginationContent,
@@ -13,7 +13,7 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
+} from "@/components/ui/pagination";
 
 interface Project {
   id: string;
@@ -30,12 +30,12 @@ interface Project {
 }
 
 const Projects = () => {
-  usePageView('Projects');
+  usePageView("Projects");
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTech, setSelectedTech] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTech, setSelectedTech] = useState<string>("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 6;
@@ -47,11 +47,14 @@ const Projects = () => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const { data } = await supabase.from('projects').select('*').order('created_at', { ascending: false });
+        const { data } = await supabase
+          .from("projects")
+          .select("*")
+          .order("created_at", { ascending: false });
         setProjects(data || []);
         setFilteredProjects(data || []);
       } catch (error) {
-        console.error('Error fetching projects:', error);
+        console.error("Error fetching projects:", error);
       } finally {
         setLoading(false);
       }
@@ -66,15 +69,15 @@ const Projects = () => {
       filtered = filtered.filter(
         (project) =>
           project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          project.description.toLowerCase().includes(searchTerm.toLowerCase())
+          project.description.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
     if (selectedTech) {
       filtered = filtered.filter((project) =>
         project.tech_stack.some((tech) =>
-          tech.toLowerCase().includes(selectedTech.toLowerCase())
-        )
+          tech.toLowerCase().includes(selectedTech.toLowerCase()),
+        ),
       );
     }
 
@@ -82,7 +85,9 @@ const Projects = () => {
     setCurrentPage(1);
   }, [projects, searchTerm, selectedTech]);
 
-  const allTechnologies = Array.from(new Set(projects.flatMap((project) => project.tech_stack))).sort();
+  const allTechnologies = Array.from(
+    new Set(projects.flatMap((project) => project.tech_stack)),
+  ).sort();
 
   if (loading) {
     return (
@@ -106,9 +111,12 @@ const Projects = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-6xl">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 mt-8">My Projects</h1>
+          <h1 className="text-4xl md:text-5xl font-extrabold text-foreground mb-4 mt-8">
+            My Projects
+          </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            A collection of projects I've worked on, showcasing various technologies and skills
+            A collection of projects I've worked on, showcasing various
+            technologies and skills
           </p>
         </div>
 
@@ -126,8 +134,8 @@ const Projects = () => {
 
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={selectedTech === '' ? 'default' : 'outline'}
-              onClick={() => setSelectedTech('')}
+              variant={selectedTech === "" ? "default" : "outline"}
+              onClick={() => setSelectedTech("")}
               size="sm"
             >
               All
@@ -135,8 +143,10 @@ const Projects = () => {
             {allTechnologies.slice(0, 5).map((tech) => (
               <Button
                 key={tech}
-                variant={selectedTech === tech ? 'default' : 'outline'}
-                onClick={() => setSelectedTech(selectedTech === tech ? '' : tech)}
+                variant={selectedTech === tech ? "default" : "outline"}
+                onClick={() =>
+                  setSelectedTech(selectedTech === tech ? "" : tech)
+                }
                 size="sm"
               >
                 {tech}
@@ -181,7 +191,13 @@ const Projects = () => {
                           <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />
                         )}
                       </CardTitle>
-                      <Badge variant={project.status === 'completed' ? 'default' : 'secondary'}>
+                      <Badge
+                        variant={
+                          project.status === "completed"
+                            ? "default"
+                            : "secondary"
+                        }
+                      >
                         {project.status}
                       </Badge>
                     </div>
@@ -194,7 +210,11 @@ const Projects = () => {
 
                     <div className="flex flex-wrap gap-2">
                       {project.tech_stack.slice(0, 4).map((tech) => (
-                        <Badge key={tech} variant="secondary" className="text-xs">
+                        <Badge
+                          key={tech}
+                          variant="secondary"
+                          className="text-xs"
+                        >
                           {tech}
                         </Badge>
                       ))}
@@ -207,8 +227,18 @@ const Projects = () => {
 
                     <div className="flex gap-2 pt-2">
                       {project.github_url && (
-                        <Button size="sm" variant="outline" asChild className="flex-1">
-                          <a href={project.github_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          asChild
+                          className="flex-1"
+                        >
+                          <a
+                            href={project.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2"
+                          >
                             <Github className="h-4 w-4" />
                             Code
                           </a>
@@ -216,7 +246,12 @@ const Projects = () => {
                       )}
                       {project.demo_url && (
                         <Button size="sm" asChild className="flex-1">
-                          <a href={project.demo_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2">
+                          <a
+                            href={project.demo_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2"
+                          >
                             <ExternalLink className="h-4 w-4" />
                             Live Demo
                           </a>
@@ -239,33 +274,44 @@ const Projects = () => {
                           e.preventDefault();
                           if (currentPage > 1) setCurrentPage(currentPage - 1);
                         }}
-                        className={currentPage === 1 ? 'opacity-50 pointer-events-none' : ''}
+                        className={
+                          currentPage === 1
+                            ? "opacity-50 pointer-events-none"
+                            : ""
+                        }
                       />
                     </PaginationItem>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <PaginationItem key={page}>
-                        <PaginationLink
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(page);
-                          }}
-                          isActive={currentPage === page}
-                        >
-                          {page}
-                        </PaginationLink>
-                      </PaginationItem>
-                    ))}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                      (page) => (
+                        <PaginationItem key={page}>
+                          <PaginationLink
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              setCurrentPage(page);
+                            }}
+                            isActive={currentPage === page}
+                          >
+                            {page}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ),
+                    )}
 
                     <PaginationItem>
                       <PaginationNext
                         href="#"
                         onClick={(e) => {
                           e.preventDefault();
-                          if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+                          if (currentPage < totalPages)
+                            setCurrentPage(currentPage + 1);
                         }}
-                        className={currentPage === totalPages ? 'opacity-50 pointer-events-none' : ''}
+                        className={
+                          currentPage === totalPages
+                            ? "opacity-50 pointer-events-none"
+                            : ""
+                        }
                       />
                     </PaginationItem>
                   </PaginationContent>
@@ -274,7 +320,9 @@ const Projects = () => {
             )}
 
             <div className="mt-4 text-center text-sm text-muted-foreground">
-              Showing {startIndex + 1}-{Math.min(endIndex, filteredProjects.length)} of {filteredProjects.length} projects
+              Showing {startIndex + 1}-
+              {Math.min(endIndex, filteredProjects.length)} of{" "}
+              {filteredProjects.length} projects
             </div>
           </>
         )}

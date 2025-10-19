@@ -1,29 +1,97 @@
-import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
-import { Trash2, Edit, Plus, Reply, Settings, Upload, Eye, Mail, MapPin, Phone, Send, FolderKanban,
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Trash2,
+  Edit,
+  Plus,
+  Reply,
+  Settings,
+  Upload,
+  Eye,
+  Mail,
+  MapPin,
+  Phone,
+  Send,
+  FolderKanban,
   PenLine,
   BadgeInfo,
-  BriefcaseBusiness, Check, Clock, Search, BarChart3, TrendingUp, Users, FileText, Filter, SortAsc, SortDesc, MessageCircle, X, Heart, FolderOpen } from 'lucide-react';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { format } from 'date-fns';
+  BriefcaseBusiness,
+  Check,
+  Clock,
+  Search,
+  BarChart3,
+  TrendingUp,
+  Users,
+  FileText,
+  Filter,
+  SortAsc,
+  SortDesc,
+  MessageCircle,
+  X,
+  Heart,
+  FolderOpen,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { format } from "date-fns";
 import { SquareArrowOutUpRight } from "lucide-react";
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { AdminSidebar } from '@/components/admin/AdminSidebar';
-import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
-import { ImageCropUpload } from '@/components/admin/ImageCropUpload';
-
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
+import { ImageCropUpload } from "@/components/admin/ImageCropUpload";
 
 interface Project {
   id: string;
@@ -102,19 +170,60 @@ interface HomeContent {
 
 interface Comment {
   id: number;
+
   author_name: string;
+
   author_email: string;
+
   content: string;
+
   created_at: string;
+
   approved: boolean;
+
   post_id: number;
+
+  likes_count?: number;
+  replies_count?: number;
   posts?: { title: string; slug: string };
+}
+
+interface ProjectFeedback {
+  id: string;
+  project_id: string;
+  user_id?: string | null;
+  author_name: string;
+  author_email?: string | null;
+  rating?: number | null;
+  content: string;
+  approved: boolean;
+  approved_at?: string | null;
+  approved_by?: string | null;
+  response_message?: string | null;
+  responded_at?: string | null;
+  responded_by?: string | null;
+  created_at: string;
+  updated_at?: string | null;
+}
+
+interface AdminProfile {
+  id?: string;
+  name?: string;
+  bio?: string;
+  location?: string;
+  email?: string;
+  website?: string;
+  github_url?: string;
+  linkedin_url?: string;
+  twitter_url?: string;
+  resume_url?: string;
+  avatar_url?: string;
 }
 
 const Admin = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [activeTab, setActiveTab] = useState("analytics");
   const [projects, setProjects] = useState<Project[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
@@ -123,29 +232,41 @@ const Admin = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [feedbacks, setFeedbacks] = useState<ProjectFeedback[]>([]);
+  const [activeFeedback, setActiveFeedback] = useState<ProjectFeedback | null>(
+    null,
+  );
+  const [feedbackResponse, setFeedbackResponse] = useState("");
+  const [feedbackResponseOpen, setFeedbackResponseOpen] = useState(false);
+  const [profile, setProfile] = useState<AdminProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Search states
-  const [projectSearch, setProjectSearch] = useState('');
-  const [postSearch, setPostSearch] = useState('');
-  const [skillSearch, setSkillSearch] = useState('');
-  const [experienceSearch, setExperienceSearch] = useState('');
-  const [contactSearch, setContactSearch] = useState('');
-  const [commentSearch, setCommentSearch] = useState('');
+  const [projectSearch, setProjectSearch] = useState("");
+  const [postSearch, setPostSearch] = useState("");
+  const [skillSearch, setSkillSearch] = useState("");
+  const [experienceSearch, setExperienceSearch] = useState("");
+  const [contactSearch, setContactSearch] = useState("");
+  const [commentSearch, setCommentSearch] = useState("");
 
   // Date filter states
-  const [projectSortBy, setProjectSortBy] = useState('latest');
-  const [postSortBy, setPostSortBy] = useState('latest');
-  const [skillSortBy, setSkillSortBy] = useState('latest');
-  const [experienceSortBy, setExperienceSortBy] = useState('latest');
-  const [contactSortBy, setContactSortBy] = useState('latest');
-  const [commentSortBy, setCommentSortBy] = useState('latest');
+  const [projectSortBy, setProjectSortBy] = useState("latest");
+  const [postSortBy, setPostSortBy] = useState("latest");
+  const [skillSortBy, setSkillSortBy] = useState("latest");
+  const [experienceSortBy, setExperienceSortBy] = useState("latest");
+  const [contactSortBy, setContactSortBy] = useState("latest");
+  const [commentSortBy, setCommentSortBy] = useState("latest");
 
   // Filtered data
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [filteredSkills, setFilteredSkills] = useState<Skill[]>([]);
-  const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>([]);
-  const [filteredContacts, setFilteredContacts] = useState<ContactSubmission[]>([]);
+  const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>(
+    [],
+  );
+  const [filteredContacts, setFilteredContacts] = useState<ContactSubmission[]>(
+    [],
+  );
   const [filteredComments, setFilteredComments] = useState<Comment[]>([]);
 
   // Analytics data
@@ -174,137 +295,184 @@ const Admin = () => {
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentItem, setCurrentItem] = useState<any>(null);
-  
+
   // Post form state
-  const [title, setTitle] = useState('');
-  const [slug, setSlug] = useState('');
-  const [excerpt, setExcerpt] = useState('');
-  const [content, setContent] = useState('');
+  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
+  const [excerpt, setExcerpt] = useState("");
+  const [content, setContent] = useState("");
   const [published, setPublished] = useState(false);
   const [readTime, setReadTime] = useState(5);
   const [featuredImageFile, setFeaturedImageFile] = useState<File | null>(null);
-  const [featuredImageUrl, setFeaturedImageUrl] = useState('');
-  
+  const [featuredImageUrl, setFeaturedImageUrl] = useState("");
+
   // Project form state
-  const [projectTitle, setProjectTitle] = useState('');
-  const [projectDescription, setProjectDescription] = useState('');
-  const [projectContent, setProjectContent] = useState('');
+  const [projectTitle, setProjectTitle] = useState("");
+  const [projectDescription, setProjectDescription] = useState("");
+  const [projectContent, setProjectContent] = useState("");
   const [projectImageFile, setProjectImageFile] = useState<File | null>(null);
-  const [projectImageUrl, setProjectImageUrl] = useState('');
-  const [projectTechStack, setProjectTechStack] = useState('');
-  const [projectGithubUrl, setProjectGithubUrl] = useState('');
-  const [projectDemoUrl, setProjectDemoUrl] = useState('');
+  const [projectImageUrl, setProjectImageUrl] = useState("");
+  const [projectTechStack, setProjectTechStack] = useState("");
+  const [projectGithubUrl, setProjectGithubUrl] = useState("");
+  const [projectDemoUrl, setProjectDemoUrl] = useState("");
   const [projectFeatured, setProjectFeatured] = useState(false);
-  const [projectStatus, setProjectStatus] = useState('completed');
-  
+  const [projectStatus, setProjectStatus] = useState("completed");
+
   // Skill form state
-  const [skillName, setSkillName] = useState('');
-  const [skillLevel, setSkillLevel] = useState('intermediate');
-  const [skillCategory, setSkillCategory] = useState('technical');
+  const [skillName, setSkillName] = useState("");
+  const [skillLevel, setSkillLevel] = useState("intermediate");
+  const [skillCategory, setSkillCategory] = useState("technical");
   const [skillYears, setSkillYears] = useState(1);
-  const [skillIcon, setSkillIcon] = useState('');
-  
+  const [skillIcon, setSkillIcon] = useState("");
+
   // Experience form state
-  const [expRole, setExpRole] = useState('');
-  const [expCompany, setExpCompany] = useState('');
-  const [expCompanyUrl, setExpCompanyUrl] = useState('');
-  const [expLocation, setExpLocation] = useState('');
-  const [expDescription, setExpDescription] = useState('');
-  const [expStartDate, setExpStartDate] = useState('');
-  const [expEndDate, setExpEndDate] = useState('');
+  const [expRole, setExpRole] = useState("");
+  const [expCompany, setExpCompany] = useState("");
+  const [expCompanyUrl, setExpCompanyUrl] = useState("");
+  const [expLocation, setExpLocation] = useState("");
+  const [expDescription, setExpDescription] = useState("");
+  const [expStartDate, setExpStartDate] = useState("");
+  const [expEndDate, setExpEndDate] = useState("");
   const [expCurrent, setExpCurrent] = useState(false);
-  const [expAchievements, setExpAchievements] = useState('');
-  const [expTechUsed, setExpTechUsed] = useState('');
-  
+  const [expAchievements, setExpAchievements] = useState("");
+  const [expTechUsed, setExpTechUsed] = useState("");
+
   // Home content form state
-  const [homeName, setHomeName] = useState('');
-  const [homeTagline, setHomeTagline] = useState('');
-  const [backgroundImage, setBackgroundImage] = useState('');
-  const [backgroundGradient, setBackgroundGradient] = useState('linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))');
-  const [primaryColor, setPrimaryColor] = useState('hsl(262, 83%, 58%)');
-  const [secondaryColor, setSecondaryColor] = useState('hsl(180, 100%, 50%)');
-  const [textColor, setTextColor] = useState('hsl(0, 0%, 100%)');
-  const [accentColor, setAccentColor] = useState('hsl(262, 90%, 65%)');
-  const [homeImageUrl, setHomeImageUrl] = useState('');
-  
+  const [homeName, setHomeName] = useState("");
+  const [homeTagline, setHomeTagline] = useState("");
+  const [backgroundImage, setBackgroundImage] = useState("");
+  const [backgroundGradient, setBackgroundGradient] = useState(
+    "linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))",
+  );
+  const [primaryColor, setPrimaryColor] = useState("hsl(262, 83%, 58%)");
+  const [secondaryColor, setSecondaryColor] = useState("hsl(180, 100%, 50%)");
+  const [textColor, setTextColor] = useState("hsl(0, 0%, 100%)");
+  const [accentColor, setAccentColor] = useState("hsl(262, 90%, 65%)");
+  const [homeImageUrl, setHomeImageUrl] = useState("");
+
   // Reply form state
-  const [replySubject, setReplySubject] = useState('');
-  const [replyMessage, setReplyMessage] = useState('');
-  const [selectedContact, setSelectedContact] = useState<ContactSubmission | null>(null);
-  
+  const [replySubject, setReplySubject] = useState("");
+  const [replyMessage, setReplyMessage] = useState("");
+  const [selectedContact, setSelectedContact] =
+    useState<ContactSubmission | null>(null);
+
   // Contact edit states
   const [editContactOpen, setEditContactOpen] = useState(false);
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
-  const [contactSubject, setContactSubject] = useState('');
-  const [contactMessage, setContactMessage] = useState('');
-  const [contactStatus, setContactStatus] = useState('new');
-  
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactSubject, setContactSubject] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactStatus, setContactStatus] = useState("new");
+
   // Home preview state
   const [showHomePreview, setShowHomePreview] = useState(false);
-  
+
   // Settings form state
-  const [newEmail, setNewEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const slugify = (str: string) =>
     str
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
 
   const resetForms = () => {
     // Reset post form
-    setTitle(''); setSlug(''); setExcerpt(''); setContent(''); setPublished(false); setReadTime(5);
-    setFeaturedImageFile(null); setFeaturedImageUrl('');
-    
+    setTitle("");
+    setSlug("");
+    setExcerpt("");
+    setContent("");
+    setPublished(false);
+    setReadTime(5);
+    setFeaturedImageFile(null);
+    setFeaturedImageUrl("");
+
     // Reset project form
-    setProjectTitle(''); setProjectDescription(''); setProjectContent(''); setProjectImageFile(null); setProjectImageUrl('');
-    setProjectTechStack(''); setProjectGithubUrl(''); setProjectDemoUrl(''); setProjectFeatured(false); setProjectStatus('completed');
-    
+    setProjectTitle("");
+    setProjectDescription("");
+    setProjectContent("");
+    setProjectImageFile(null);
+    setProjectImageUrl("");
+    setProjectTechStack("");
+    setProjectGithubUrl("");
+    setProjectDemoUrl("");
+    setProjectFeatured(false);
+    setProjectStatus("completed");
+
     // Reset skill form
-    setSkillName(''); setSkillLevel('intermediate'); setSkillCategory('technical'); setSkillYears(1); setSkillIcon('');
-    
+    setSkillName("");
+    setSkillLevel("intermediate");
+    setSkillCategory("technical");
+    setSkillYears(1);
+    setSkillIcon("");
+
     // Reset experience form
-    setExpRole(''); setExpCompany(''); setExpCompanyUrl(''); setExpLocation(''); setExpDescription('');
-    setExpStartDate(''); setExpEndDate(''); setExpCurrent(false); setExpAchievements(''); setExpTechUsed('');
-    
+    setExpRole("");
+    setExpCompany("");
+    setExpCompanyUrl("");
+    setExpLocation("");
+    setExpDescription("");
+    setExpStartDate("");
+    setExpEndDate("");
+    setExpCurrent(false);
+    setExpAchievements("");
+    setExpTechUsed("");
+
     // Reset home content form
-    setHomeName(''); setHomeTagline(''); setBackgroundImage(''); setBackgroundGradient('linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))'); 
-    setPrimaryColor('hsl(262, 83%, 58%)'); setSecondaryColor('hsl(180, 100%, 50%)'); setTextColor('hsl(0, 0%, 100%)'); 
-    setAccentColor('hsl(262, 90%, 65%)'); setHomeImageUrl('');
-    
+    setHomeName("");
+    setHomeTagline("");
+    setBackgroundImage("");
+    setBackgroundGradient(
+      "linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))",
+    );
+    setPrimaryColor("hsl(262, 83%, 58%)");
+    setSecondaryColor("hsl(180, 100%, 50%)");
+    setTextColor("hsl(0, 0%, 100%)");
+    setAccentColor("hsl(262, 90%, 65%)");
+    setHomeImageUrl("");
+
     // Reset reply form
-    setReplySubject(''); setReplyMessage('');
-    
+    setReplySubject("");
+    setReplyMessage("");
+
     // Reset settings form
-    setNewEmail(''); setNewPassword(''); setConfirmPassword('');
-    
-    setEditMode(false); setCurrentItem(null);
+    setNewEmail("");
+    setNewPassword("");
+    setConfirmPassword("");
+
+    setEditMode(false);
+    setCurrentItem(null);
   };
 
-  const uploadImage = async (file: File, bucket: string): Promise<string | null> => {
+  const uploadImage = async (
+    file: File,
+    bucket: string,
+  ): Promise<string | null> => {
     if (!user || !file) return null;
-    
+
     try {
-      const fileExt = file.name.split('.').pop();
+      const fileExt = file.name.split(".").pop();
       const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase
-        .storage
+
+      const { error: uploadError } = await supabase.storage
         .from(bucket)
         .upload(fileName, file);
-        
+
       if (uploadError) throw uploadError;
-      
+
       const { data } = supabase.storage.from(bucket).getPublicUrl(fileName);
       return data.publicUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast({ title: 'Error', description: 'Failed to upload image', variant: 'destructive' });
+      console.error("Error uploading image:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
       return null;
     }
   };
@@ -327,31 +495,50 @@ const Admin = () => {
     try {
       let imageUrl = featuredImageUrl;
       if (featuredImageFile) {
-        imageUrl = await uploadImage(featuredImageFile, 'blog-images') || '';
+        imageUrl = (await uploadImage(featuredImageFile, "blog-images")) || "";
       }
 
       const postData = {
-        title, slug, excerpt, content, featured_image: imageUrl || null,
-        published, published_at: published ? new Date().toISOString() : null,
-        read_time: readTime, user_id: user.id,
+        title,
+        slug,
+        excerpt,
+        content,
+        featured_image: imageUrl || null,
+        published,
+        published_at: published ? new Date().toISOString() : null,
+        read_time: readTime,
+        user_id: user.id,
       };
 
       if (editMode && currentItem) {
-        const { error } = await supabase.from('posts').update(postData).eq('id', currentItem.id);
+        const { error } = await supabase
+          .from("posts")
+          .update(postData)
+          .eq("id", currentItem.id);
         if (error) throw error;
-        toast({ title: 'Post updated', description: 'Your post has been updated successfully.' });
+        toast({
+          title: "Post updated",
+          description: "Your post has been updated successfully.",
+        });
       } else {
-        const { error } = await supabase.from('posts').insert(postData);
+        const { error } = await supabase.from("posts").insert(postData);
         if (error) throw error;
-        toast({ title: 'Post created', description: 'Your post has been created successfully.' });
+        toast({
+          title: "Post created",
+          description: "Your post has been created successfully.",
+        });
       }
 
       setNewPostOpen(false);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to save post', error);
-      toast({ title: 'Error', description: error.message || 'Failed to save post', variant: 'destructive' });
+      console.error("Failed to save post", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save post",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -364,32 +551,52 @@ const Admin = () => {
     try {
       let imageUrl = projectImageUrl;
       if (projectImageFile) {
-        imageUrl = await uploadImage(projectImageFile, 'project-images') || '';
+        imageUrl =
+          (await uploadImage(projectImageFile, "project-images")) || "";
       }
 
       const projectData = {
-        title: projectTitle, description: projectDescription, content: projectContent,
-        image_url: imageUrl || null, tech_stack: projectTechStack.split(',').map(t => t.trim()),
-        github_url: projectGithubUrl || null, demo_url: projectDemoUrl || null,
-        featured: projectFeatured, status: projectStatus, user_id: user.id,
+        title: projectTitle,
+        description: projectDescription,
+        content: projectContent,
+        image_url: imageUrl || null,
+        tech_stack: projectTechStack.split(",").map((t) => t.trim()),
+        github_url: projectGithubUrl || null,
+        demo_url: projectDemoUrl || null,
+        featured: projectFeatured,
+        status: projectStatus,
+        user_id: user.id,
       };
 
       if (editMode && currentItem) {
-        const { error } = await supabase.from('projects').update(projectData).eq('id', currentItem.id);
+        const { error } = await supabase
+          .from("projects")
+          .update(projectData)
+          .eq("id", currentItem.id);
         if (error) throw error;
-        toast({ title: 'Project updated', description: 'Your project has been updated successfully.' });
+        toast({
+          title: "Project updated",
+          description: "Your project has been updated successfully.",
+        });
       } else {
-        const { error } = await supabase.from('projects').insert(projectData);
+        const { error } = await supabase.from("projects").insert(projectData);
         if (error) throw error;
-        toast({ title: 'Project created', description: 'Your project has been created successfully.' });
+        toast({
+          title: "Project created",
+          description: "Your project has been created successfully.",
+        });
       }
 
       setNewProjectOpen(false);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to save project', error);
-      toast({ title: 'Error', description: error.message || 'Failed to save project', variant: 'destructive' });
+      console.error("Failed to save project", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save project",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -401,26 +608,43 @@ const Admin = () => {
     setLoading(true);
     try {
       const skillData = {
-        name: skillName, level: skillLevel, category: skillCategory,
-        years_experience: skillYears, icon: skillIcon || null, user_id: user.id,
+        name: skillName,
+        level: skillLevel,
+        category: skillCategory,
+        years_experience: skillYears,
+        icon: skillIcon || null,
+        user_id: user.id,
       };
 
       if (editMode && currentItem) {
-        const { error } = await supabase.from('skills').update(skillData).eq('id', currentItem.id);
+        const { error } = await supabase
+          .from("skills")
+          .update(skillData)
+          .eq("id", currentItem.id);
         if (error) throw error;
-        toast({ title: 'Skill updated', description: 'Your skill has been updated successfully.' });
+        toast({
+          title: "Skill updated",
+          description: "Your skill has been updated successfully.",
+        });
       } else {
-        const { error } = await supabase.from('skills').insert(skillData);
+        const { error } = await supabase.from("skills").insert(skillData);
         if (error) throw error;
-        toast({ title: 'Skill created', description: 'Your skill has been created successfully.' });
+        toast({
+          title: "Skill created",
+          description: "Your skill has been created successfully.",
+        });
       }
 
       setNewSkillOpen(false);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to save skill', error);
-      toast({ title: 'Error', description: error.message || 'Failed to save skill', variant: 'destructive' });
+      console.error("Failed to save skill", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save skill",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -432,31 +656,52 @@ const Admin = () => {
     setLoading(true);
     try {
       const experienceData = {
-        role: expRole, company: expCompany, company_url: expCompanyUrl || null,
-        location: expLocation || null, description: expDescription || null,
-        start_date: expStartDate, end_date: expCurrent ? null : (expEndDate || null),
+        role: expRole,
+        company: expCompany,
+        company_url: expCompanyUrl || null,
+        location: expLocation || null,
+        description: expDescription || null,
+        start_date: expStartDate,
+        end_date: expCurrent ? null : expEndDate || null,
         current: expCurrent,
-        achievements: expAchievements ? expAchievements.split('\n') : null,
-        tech_used: expTechUsed ? expTechUsed.split(',').map(t => t.trim()) : null,
+        achievements: expAchievements ? expAchievements.split("\n") : null,
+        tech_used: expTechUsed
+          ? expTechUsed.split(",").map((t) => t.trim())
+          : null,
         user_id: user.id,
       };
 
       if (editMode && currentItem) {
-        const { error } = await supabase.from('experiences').update(experienceData).eq('id', currentItem.id);
+        const { error } = await supabase
+          .from("experiences")
+          .update(experienceData)
+          .eq("id", currentItem.id);
         if (error) throw error;
-        toast({ title: 'Experience updated', description: 'Your experience has been updated successfully.' });
+        toast({
+          title: "Experience updated",
+          description: "Your experience has been updated successfully.",
+        });
       } else {
-        const { error } = await supabase.from('experiences').insert(experienceData);
+        const { error } = await supabase
+          .from("experiences")
+          .insert(experienceData);
         if (error) throw error;
-        toast({ title: 'Experience created', description: 'Your experience has been created successfully.' });
+        toast({
+          title: "Experience created",
+          description: "Your experience has been created successfully.",
+        });
       }
 
       setNewExperienceOpen(false);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to save experience', error);
-      toast({ title: 'Error', description: error.message || 'Failed to save experience', variant: 'destructive' });
+      console.error("Failed to save experience", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save experience",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -467,7 +712,7 @@ const Admin = () => {
     if (!selectedContact) return;
     setLoading(true);
     try {
-      const { error } = await supabase.functions.invoke('send-email-reply', {
+      const { error } = await supabase.functions.invoke("send-email-reply", {
         body: {
           contactId: selectedContact.id,
           replySubject: replySubject,
@@ -479,13 +724,20 @@ const Admin = () => {
 
       if (error) throw error;
 
-      toast({ title: 'Reply sent', description: 'Your reply has been sent successfully.' });
+      toast({
+        title: "Reply sent",
+        description: "Your reply has been sent successfully.",
+      });
       setReplyModalOpen(false);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to send reply', error);
-      toast({ title: 'Error', description: error.message || 'Failed to send reply', variant: 'destructive' });
+      console.error("Failed to send reply", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send reply",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -510,23 +762,35 @@ const Admin = () => {
 
       if (homeContent) {
         const { error } = await supabase
-          .from('home_content')
+          .from("home_content")
           .update(contentData)
-          .eq('id', homeContent.id);
+          .eq("id", homeContent.id);
         if (error) throw error;
-        toast({ title: 'Updated', description: 'Home content has been updated successfully.' });
+        toast({
+          title: "Updated",
+          description: "Home content has been updated successfully.",
+        });
       } else {
-        const { error } = await supabase.from('home_content').insert(contentData);
+        const { error } = await supabase
+          .from("home_content")
+          .insert(contentData);
         if (error) throw error;
-        toast({ title: 'Created', description: 'Home content has been created successfully.' });
+        toast({
+          title: "Created",
+          description: "Home content has been created successfully.",
+        });
       }
 
       setNewHomeContentOpen(false);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to save home content', error);
-      toast({ title: 'Error', description: error.message || 'Failed to save home content', variant: 'destructive' });
+      console.error("Failed to save home content", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save home content",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -535,12 +799,16 @@ const Admin = () => {
   const handleUpdateSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    
+
     if (newPassword && newPassword !== confirmPassword) {
-      toast({ title: 'Error', description: 'Passwords do not match', variant: 'destructive' });
+      toast({
+        title: "Error",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
       return;
     }
-    
+
     setLoading(true);
     try {
       const updates: any = {};
@@ -550,12 +818,19 @@ const Admin = () => {
       const { error } = await supabase.auth.updateUser(updates);
       if (error) throw error;
 
-      toast({ title: 'Settings updated', description: 'Your account settings have been updated successfully.' });
+      toast({
+        title: "Settings updated",
+        description: "Your account settings have been updated successfully.",
+      });
       setSettingsModalOpen(false);
       resetForms();
     } catch (error: any) {
-      console.error('Failed to update settings', error);
-      toast({ title: 'Error', description: error.message || 'Failed to update settings', variant: 'destructive' });
+      console.error("Failed to update settings", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update settings",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -565,147 +840,221 @@ const Admin = () => {
     if (user) {
       fetchData();
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Filter effects
   useEffect(() => {
-    let filtered = projects.filter(project =>
-      project.title.toLowerCase().includes(projectSearch.toLowerCase()) ||
-      project.description.toLowerCase().includes(projectSearch.toLowerCase())
+    let filtered = projects.filter(
+      (project) =>
+        project.title.toLowerCase().includes(projectSearch.toLowerCase()) ||
+        project.description.toLowerCase().includes(projectSearch.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at || '').getTime();
-      const dateB = new Date(b.created_at || '').getTime();
-      
-      if (projectSortBy === 'oldest') return dateA - dateB;
+      const dateA = new Date(a.created_at || "").getTime();
+      const dateB = new Date(b.created_at || "").getTime();
+
+      if (projectSortBy === "oldest") return dateA - dateB;
       return dateB - dateA; // latest (default)
     });
-    
+
     setFilteredProjects(filtered);
   }, [projects, projectSearch, projectSortBy]);
 
   useEffect(() => {
-    let filtered = posts.filter(post =>
-      post.title.toLowerCase().includes(postSearch.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(postSearch.toLowerCase())
+    let filtered = posts.filter(
+      (post) =>
+        post.title.toLowerCase().includes(postSearch.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(postSearch.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at || '').getTime();
-      const dateB = new Date(b.created_at || '').getTime();
-      
-      if (postSortBy === 'oldest') return dateA - dateB;
+      const dateA = new Date(a.created_at || "").getTime();
+      const dateB = new Date(b.created_at || "").getTime();
+
+      if (postSortBy === "oldest") return dateA - dateB;
       return dateB - dateA; // latest (default)
     });
-    
+
     setFilteredPosts(filtered);
   }, [posts, postSearch, postSortBy]);
 
   useEffect(() => {
-    let filtered = skills.filter(skill =>
-      skill.name.toLowerCase().includes(skillSearch.toLowerCase()) ||
-      skill.category.toLowerCase().includes(skillSearch.toLowerCase())
+    let filtered = skills.filter(
+      (skill) =>
+        skill.name.toLowerCase().includes(skillSearch.toLowerCase()) ||
+        skill.category.toLowerCase().includes(skillSearch.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at || '').getTime();
-      const dateB = new Date(b.created_at || '').getTime();
-      
-      if (skillSortBy === 'oldest') return dateA - dateB;
+      const dateA = new Date(a.created_at || "").getTime();
+      const dateB = new Date(b.created_at || "").getTime();
+
+      if (skillSortBy === "oldest") return dateA - dateB;
       return dateB - dateA; // latest (default)
     });
-    
+
     setFilteredSkills(filtered);
   }, [skills, skillSearch, skillSortBy]);
 
   useEffect(() => {
-    let filtered = experiences.filter(exp =>
-      exp.role.toLowerCase().includes(experienceSearch.toLowerCase()) ||
-      exp.company.toLowerCase().includes(experienceSearch.toLowerCase())
+    let filtered = experiences.filter(
+      (exp) =>
+        exp.role.toLowerCase().includes(experienceSearch.toLowerCase()) ||
+        exp.company.toLowerCase().includes(experienceSearch.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
-      const dateA = new Date(a.created_at || '').getTime();
-      const dateB = new Date(b.created_at || '').getTime();
-      
-      if (experienceSortBy === 'oldest') return dateA - dateB;
+      const dateA = new Date(a.created_at || "").getTime();
+      const dateB = new Date(b.created_at || "").getTime();
+
+      if (experienceSortBy === "oldest") return dateA - dateB;
       return dateB - dateA; // latest (default)
     });
-    
+
     setFilteredExperiences(filtered);
   }, [experiences, experienceSearch, experienceSortBy]);
 
   useEffect(() => {
-    let filtered = contacts.filter(contact =>
-      contact.name.toLowerCase().includes(contactSearch.toLowerCase()) ||
-      contact.email.toLowerCase().includes(contactSearch.toLowerCase()) ||
-      contact.subject.toLowerCase().includes(contactSearch.toLowerCase())
+    let filtered = contacts.filter(
+      (contact) =>
+        contact.name.toLowerCase().includes(contactSearch.toLowerCase()) ||
+        contact.email.toLowerCase().includes(contactSearch.toLowerCase()) ||
+        contact.subject.toLowerCase().includes(contactSearch.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
-      
-      if (contactSortBy === 'oldest') return dateA - dateB;
+
+      if (contactSortBy === "oldest") return dateA - dateB;
       return dateB - dateA; // latest (default)
     });
-    
+
     setFilteredContacts(filtered);
   }, [contacts, contactSearch, contactSortBy]);
 
   useEffect(() => {
-    let filtered = comments.filter(comment =>
-      comment.author_name.toLowerCase().includes(commentSearch.toLowerCase()) ||
-      comment.author_email.toLowerCase().includes(commentSearch.toLowerCase()) ||
-      comment.content.toLowerCase().includes(commentSearch.toLowerCase())
+    let filtered = comments.filter(
+      (comment) =>
+        comment.author_name
+          .toLowerCase()
+          .includes(commentSearch.toLowerCase()) ||
+        comment.author_email
+          .toLowerCase()
+          .includes(commentSearch.toLowerCase()) ||
+        comment.content.toLowerCase().includes(commentSearch.toLowerCase()),
     );
-    
+
     // Sort by date
     filtered = filtered.sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
-      
-      if (commentSortBy === 'oldest') return dateA - dateB;
+
+      if (commentSortBy === "oldest") return dateA - dateB;
       return dateB - dateA; // latest (default)
     });
-    
+
     setFilteredComments(filtered);
   }, [comments, commentSearch, commentSortBy]);
 
-  // Update analytics when data changes
   useEffect(() => {
-    setAnalytics({
+    const targetAnalytics = {
       totalProjects: projects.length,
-      featuredProjects: projects.filter(p => p.featured).length,
+
+      featuredProjects: projects.filter((p) => p.featured).length,
+
       totalPosts: posts.length,
-      publishedPosts: posts.filter(p => p.published).length,
+
+      publishedPosts: posts.filter((p) => p.published).length,
+
       totalViews: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0),
+
       totalLikes: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0),
+
       totalSkills: skills.length,
+
       totalExperiences: experiences.length,
+
       totalContacts: contacts.length,
-      newContacts: contacts.filter(c => c.status === 'new').length,
+
+      newContacts: contacts.filter((c) => c.status === "new").length,
+
       totalComments: comments.length,
-      pendingComments: comments.filter(c => !c.approved).length,
-    });
+
+      pendingComments: comments.filter((c) => !c.approved).length,
+    };
+    const duration = 1000;
+    const start = performance.now();
+    const animate = (now: number) => {
+      const t = Math.min(1, (now - start) / duration);
+      const ease = t * (2 - t);
+      setAnalytics({
+        totalProjects: Math.round(targetAnalytics.totalProjects * ease),
+        featuredProjects: Math.round(targetAnalytics.featuredProjects * ease),
+        totalPosts: Math.round(targetAnalytics.totalPosts * ease),
+        publishedPosts: Math.round(targetAnalytics.publishedPosts * ease),
+        totalViews: Math.round(targetAnalytics.totalViews * ease),
+        totalLikes: Math.round(targetAnalytics.totalLikes * ease),
+        totalSkills: Math.round(targetAnalytics.totalSkills * ease),
+        totalExperiences: Math.round(targetAnalytics.totalExperiences * ease),
+        totalContacts: Math.round(targetAnalytics.totalContacts * ease),
+        newContacts: Math.round(targetAnalytics.newContacts * ease),
+        totalComments: Math.round(targetAnalytics.totalComments * ease),
+        pendingComments: Math.round(targetAnalytics.pendingComments * ease),
+      });
+      if (t < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
   }, [projects, posts, skills, experiences, contacts, comments]);
 
   const fetchData = async () => {
     try {
-      const [projectsRes, postsRes, skillsRes, experiencesRes, contactsRes, commentsRes, homeContentRes] = await Promise.all([
-        supabase.from('projects').select('*').eq('user_id', user?.id),
-        supabase.from('posts').select('*').eq('user_id', user?.id),
-        supabase.from('skills').select('*').eq('user_id', user?.id),
-        supabase.from('experiences').select('*').eq('user_id', user?.id),
-        supabase.from('contact_submissions').select('*').order('created_at', { ascending: false }),
-        supabase.from('comments').select('*, posts(title, slug)').order('created_at', { ascending: false }),
-        supabase.from('home_content').select('*').limit(1).maybeSingle(),
+      const [
+        projectsRes,
+        postsRes,
+        skillsRes,
+        experiencesRes,
+        contactsRes,
+        commentsRes,
+        homeContentRes,
+        feedbackRes,
+        profileRes,
+      ] = await Promise.all([
+        supabase.from("projects").select("*").eq("user_id", user?.id),
+
+        supabase.from("posts").select("*").eq("user_id", user?.id),
+
+        supabase.from("skills").select("*").eq("user_id", user?.id),
+
+        supabase.from("experiences").select("*").eq("user_id", user?.id),
+
+        supabase
+          .from("contact_submissions")
+          .select("*")
+          .order("created_at", { ascending: false }),
+
+        supabase
+          .from("comments")
+          .select("*, posts(title, slug)")
+          .order("created_at", { ascending: false }),
+
+        supabase.from("home_content").select("*").limit(1).maybeSingle(),
+
+        (supabase as any)
+
+          .from("project_feedbacks")
+
+          .select("*")
+          .order("created_at", { ascending: false }),
+        supabase.from("profiles").select("*").limit(1).maybeSingle(),
       ]);
 
       setProjects(projectsRes.data || []);
@@ -715,8 +1064,10 @@ const Admin = () => {
       setContacts(contactsRes.data || []);
       setComments(commentsRes.data || []);
       setHomeContent(homeContentRes.data);
+      setFeedbacks(feedbackRes.data || []);
+      setProfile(profileRes.data || null);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      console.error("Error fetching data:", error);
     } finally {
       setLoading(false);
     }
@@ -724,9 +1075,13 @@ const Admin = () => {
 
   // Delete functions
   const deleteProject = async (id: string) => {
-    const { error } = await supabase.from('projects').delete().eq('id', id);
+    const { error } = await supabase.from("projects").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error", description: "Failed to delete project", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete project",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Success", description: "Project deleted successfully" });
       fetchData();
@@ -734,9 +1089,13 @@ const Admin = () => {
   };
 
   const deletePost = async (id: number) => {
-    const { error } = await supabase.from('posts').delete().eq('id', id);
+    const { error } = await supabase.from("posts").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error", description: "Failed to delete post", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete post",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Success", description: "Post deleted successfully" });
       fetchData();
@@ -744,9 +1103,13 @@ const Admin = () => {
   };
 
   const deleteSkill = async (id: string) => {
-    const { error } = await supabase.from('skills').delete().eq('id', id);
+    const { error } = await supabase.from("skills").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error", description: "Failed to delete skill", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete skill",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Success", description: "Skill deleted successfully" });
       fetchData();
@@ -754,19 +1117,33 @@ const Admin = () => {
   };
 
   const deleteExperience = async (id: string) => {
-    const { error } = await supabase.from('experiences').delete().eq('id', id);
+    const { error } = await supabase.from("experiences").delete().eq("id", id);
     if (error) {
-      toast({ title: "Error", description: "Failed to delete experience", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete experience",
+        variant: "destructive",
+      });
     } else {
-      toast({ title: "Success", description: "Experience deleted successfully" });
+      toast({
+        title: "Success",
+        description: "Experience deleted successfully",
+      });
       fetchData();
     }
   };
 
   const deleteContact = async (id: string) => {
-    const { error } = await supabase.from('contact_submissions').delete().eq('id', id);
+    const { error } = await supabase
+      .from("contact_submissions")
+      .delete()
+      .eq("id", id);
     if (error) {
-      toast({ title: "Error", description: "Failed to delete message", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to delete message",
+        variant: "destructive",
+      });
     } else {
       toast({ title: "Success", description: "Message deleted successfully" });
       fetchData();
@@ -775,19 +1152,19 @@ const Admin = () => {
 
   const handleConfirmDelete = (type: string, id: string, name: string) => {
     switch (type) {
-      case 'project':
+      case "project":
         deleteProject(id);
         break;
-      case 'post':
+      case "post":
         deletePost(Number(id));
         break;
-      case 'skill':
+      case "skill":
         deleteSkill(id);
         break;
-      case 'experience':
+      case "experience":
         deleteExperience(id);
         break;
-      case 'contact':
+      case "contact":
         deleteContact(id);
         break;
     }
@@ -803,7 +1180,7 @@ const Admin = () => {
     setContent(post.content);
     setPublished(post.published);
     setReadTime(post.read_time);
-    setFeaturedImageUrl(post.featured_image || '');
+    setFeaturedImageUrl(post.featured_image || "");
     setNewPostOpen(true);
   };
 
@@ -812,11 +1189,11 @@ const Admin = () => {
     setEditMode(true);
     setProjectTitle(project.title);
     setProjectDescription(project.description);
-    setProjectContent(project.content || '');
-    setProjectImageUrl(project.image_url || '');
-    setProjectTechStack(project.tech_stack?.join(', ') || '');
-    setProjectGithubUrl(project.github_url || '');
-    setProjectDemoUrl(project.demo_url || '');
+    setProjectContent(project.content || "");
+    setProjectImageUrl(project.image_url || "");
+    setProjectTechStack(project.tech_stack?.join(", ") || "");
+    setProjectGithubUrl(project.github_url || "");
+    setProjectDemoUrl(project.demo_url || "");
     setProjectFeatured(project.featured);
     setProjectStatus(project.status);
     setNewProjectOpen(true);
@@ -829,7 +1206,7 @@ const Admin = () => {
     setSkillLevel(skill.level);
     setSkillCategory(skill.category);
     setSkillYears(skill.years_experience || 1);
-    setSkillIcon(skill.icon || '');
+    setSkillIcon(skill.icon || "");
     setNewSkillOpen(true);
   };
 
@@ -838,21 +1215,21 @@ const Admin = () => {
     setEditMode(true);
     setExpRole(experience.role);
     setExpCompany(experience.company);
-    setExpCompanyUrl(experience.company_url || '');
-    setExpLocation(experience.location || '');
-    setExpDescription(experience.description || '');
+    setExpCompanyUrl(experience.company_url || "");
+    setExpLocation(experience.location || "");
+    setExpDescription(experience.description || "");
     setExpStartDate(experience.start_date);
-    setExpEndDate(experience.end_date || '');
+    setExpEndDate(experience.end_date || "");
     setExpCurrent(experience.current);
-    setExpAchievements(experience.achievements?.join('\n') || '');
-    setExpTechUsed(experience.tech_used?.join(', ') || '');
+    setExpAchievements(experience.achievements?.join("\n") || "");
+    setExpTechUsed(experience.tech_used?.join(", ") || "");
     setNewExperienceOpen(true);
   };
 
   const openReplyModal = (contact: ContactSubmission) => {
     setSelectedContact(contact);
     setReplySubject(contact.subject);
-    setReplyMessage('');
+    setReplyMessage("");
     setReplyModalOpen(true);
   };
 
@@ -860,13 +1237,16 @@ const Admin = () => {
     if (homeContent) {
       setHomeName(homeContent.name);
       setHomeTagline(homeContent.tagline);
-      setBackgroundImage(homeContent.background_image || '');
-      setBackgroundGradient(homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))');
-      setPrimaryColor(homeContent.primary_color || 'hsl(262, 83%, 58%)');
-      setSecondaryColor(homeContent.secondary_color || 'hsl(180, 100%, 50%)');
-      setTextColor(homeContent.text_color || 'hsl(0, 0%, 100%)');
-      setAccentColor(homeContent.accent_color || 'hsl(262, 90%, 65%)');
-      setHomeImageUrl(homeContent.hero_image || '');
+      setBackgroundImage(homeContent.background_image || "");
+      setBackgroundGradient(
+        homeContent.background_gradient ||
+          "linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))",
+      );
+      setPrimaryColor(homeContent.primary_color || "hsl(262, 83%, 58%)");
+      setSecondaryColor(homeContent.secondary_color || "hsl(180, 100%, 50%)");
+      setTextColor(homeContent.text_color || "hsl(0, 0%, 100%)");
+      setAccentColor(homeContent.accent_color || "hsl(262, 90%, 65%)");
+      setHomeImageUrl(homeContent.hero_image || "");
       setShowHomePreview(false);
       setNewHomeContentOpen(true);
     }
@@ -889,7 +1269,7 @@ const Admin = () => {
     setLoading(true);
     try {
       const { error } = await supabase
-        .from('contact_submissions')
+        .from("contact_submissions")
         .update({
           name: contactName,
           email: contactEmail,
@@ -897,19 +1277,26 @@ const Admin = () => {
           message: contactMessage,
           status: contactStatus,
         })
-        .eq('id', currentItem.id);
+        .eq("id", currentItem.id);
 
       if (error) throw error;
 
-      toast({ title: 'Updated', description: 'Contact message has been updated successfully.' });
+      toast({
+        title: "Updated",
+        description: "Contact message has been updated successfully.",
+      });
       setEditContactOpen(false);
       setEditMode(false);
       setCurrentItem(null);
       resetForms();
       fetchData();
     } catch (error: any) {
-      console.error('Failed to update contact', error);
-      toast({ title: 'Error', description: error.message || 'Failed to update contact', variant: 'destructive' });
+      console.error("Failed to update contact", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update contact",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -917,24 +1304,31 @@ const Admin = () => {
 
   // Prepare chart data
   const contentData = [
-    { name: 'Projects', value: analytics.totalProjects, color: '#f59e0b' },
-    { name: 'Posts', value: analytics.totalPosts, color: '#0ea5e9' },
-    { name: 'Skills', value: analytics.totalSkills, color: '#8b5cf6' },
-    { name: 'Experiences', value: analytics.totalExperiences, color: '#10b981' },
+    { name: "Projects", value: analytics.totalProjects, color: "#f59e0b" },
+    { name: "Posts", value: analytics.totalPosts, color: "#0ea5e9" },
+    { name: "Skills", value: analytics.totalSkills, color: "#8b5cf6" },
+    {
+      name: "Experiences",
+      value: analytics.totalExperiences,
+      color: "#10b981",
+    },
   ];
 
   const statusData = [
-    { name: 'Published Posts', value: analytics.publishedPosts },
-    { name: 'Draft Posts', value: analytics.totalPosts - analytics.publishedPosts },
-    { name: 'Featured Projects', value: analytics.featuredProjects },
+    { name: "Published Posts", value: analytics.publishedPosts },
+    {
+      name: "Draft Posts",
+      value: analytics.totalPosts - analytics.publishedPosts,
+    },
+    { name: "Featured Projects", value: analytics.featuredProjects },
   ];
 
   const engagementData = [
-    { name: 'Total Likes', value: analytics.totalLikes, color: '#ef4444' },
-    { name: 'Total Views', value: analytics.totalViews, color: '#3b82f6' },
+    { name: "Total Likes", value: analytics.totalLikes, color: "#ef4444" },
+    { name: "Total Views", value: analytics.totalViews, color: "#3b82f6" },
   ];
 
-  const COLORS = ['#f59e0b', '#0ea5e9', '#8b5cf6', '#10b981'];
+  const COLORS = ["#f59e0b", "#0ea5e9", "#8b5cf6", "#10b981"];
 
   if (!user) {
     return (
@@ -954,1164 +1348,2257 @@ const Admin = () => {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full mt-16">
-        <AdminSidebar   activeTab={activeTab} onTabChange={setActiveTab}/>
-        
+        <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+
         <main className="flex-1 p-6">
           <div className="mb-6 flex items-center gap-4">
             <SidebarTrigger />
-            <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Admin Dashboard
+            </h1>
           </div>
-          
-          {activeTab === 'analytics' && (
+
+          {activeTab === "analytics" && (
             <div className="space-y-6">
               <AnalyticsDashboard analytics={analytics} />
             </div>
           )}
-          
-          {activeTab === 'home' && (
+
+          {activeTab === "home" && (
             <div className="space-y-6">
               <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Home Page Content</h2>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => setShowHomePreview(!showHomePreview)}>
-                  <Eye className="h-4 w-4 mr-2" />
-                  {showHomePreview ? 'Hide' : 'Show'} Preview
-                </Button>
-                <Button onClick={editHomeContent}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Home Content
-                </Button>
-              </div>
-            </div>
-
-            {showHomePreview && homeContent && (
-              <Card className="overflow-hidden">
-                <CardHeader>
-                  <CardTitle>Live Preview</CardTitle>
-                  <CardDescription>This is how your home page will look</CardDescription>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div 
-                    className="min-h-[400px] p-12 flex flex-col items-center justify-center text-center"
-                    style={{
-                      background: homeContent.background_gradient || 'linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))',
-                      color: homeContent.text_color || 'white',
-                    }}
+                <h2 className="text-2xl font-semibold">Home Page Content</h2>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowHomePreview(!showHomePreview)}
                   >
-                    {homeContent.hero_image && (
-                      <img 
-                        src={homeContent.hero_image} 
-                        alt="Hero" 
-                        className="w-32 h-32 rounded-full object-cover mb-6 border-4"
-                        style={{ borderColor: homeContent.primary_color || 'white' }}
-                      />
-                    )}
-                    <h1 
-                      className="text-5xl font-bold mb-4"
-                      style={{ color: homeContent.primary_color || 'white' }}
+                    <Eye className="h-4 w-4 mr-2" />
+                    {showHomePreview ? "Hide" : "Show"} Preview
+                  </Button>
+                  <Button onClick={editHomeContent}>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Edit Home Content
+                  </Button>
+                </div>
+              </div>
+
+              {showHomePreview && homeContent && (
+                <Card className="overflow-hidden">
+                  <CardHeader>
+                    <CardTitle>Live Preview</CardTitle>
+                    <CardDescription>
+                      This is how your home page will look
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div
+                      className="min-h-[400px] p-12 flex flex-col items-center justify-center text-center"
+                      style={{
+                        background:
+                          homeContent.background_gradient ||
+                          "linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))",
+                        color: homeContent.text_color || "white",
+                      }}
                     >
-                      {homeContent.name}
-                    </h1>
-                    <p className="text-2xl mb-8" style={{ color: homeContent.text_color || 'white' }}>
-                      {homeContent.tagline}
+                      {homeContent.hero_image && (
+                        <img
+                          src={homeContent.hero_image}
+                          alt="Hero"
+                          className="w-32 h-32 rounded-full object-cover mb-6 border-4"
+                          style={{
+                            borderColor: homeContent.primary_color || "white",
+                          }}
+                        />
+                      )}
+                      <h1
+                        className="text-5xl font-bold mb-4"
+                        style={{ color: homeContent.primary_color || "white" }}
+                      >
+                        {homeContent.name}
+                      </h1>
+                      <p
+                        className="text-2xl mb-8"
+                        style={{ color: homeContent.text_color || "white" }}
+                      >
+                        {homeContent.tagline}
+                      </p>
+                      <div className="flex gap-4">
+                        <Button
+                          style={{
+                            backgroundColor:
+                              homeContent.primary_color || undefined,
+                          }}
+                        >
+                          View Projects
+                        </Button>
+                        <Button
+                          variant="outline"
+                          style={{
+                            borderColor:
+                              homeContent.secondary_color || undefined,
+                            color: homeContent.secondary_color || undefined,
+                          }}
+                        >
+                          Contact Me
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {homeContent ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current Home Page Content</CardTitle>
+                    <CardDescription>
+                      Manage the hero section displayed on the home page
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label className="font-semibold">Name</Label>
+                      <p className="text-lg mt-1">{homeContent.name}</p>
+                    </div>
+                    <div>
+                      <Label className="font-semibold">Tagline</Label>
+                      <p className="text-muted-foreground mt-1">
+                        {homeContent.tagline}
+                      </p>
+                    </div>
+                    <div>
+                      <ImageCropUpload
+                        currentImageUrl={homeContent.hero_image || undefined}
+                        onImageUpdate={async (url) => {
+                          if (!homeContent?.id) return;
+                          try {
+                            const { error } = await supabase
+                              .from("home_content")
+                              .update({ hero_image: url })
+                              .eq("id", homeContent.id);
+                            if (error) throw error;
+                            fetchData();
+                            toast({
+                              title: "Success",
+                              description: "Hero image updated successfully",
+                            });
+                          } catch (error: any) {
+                            toast({
+                              title: "Error",
+                              description: error.message,
+                              variant: "destructive",
+                            });
+                          }
+                        }}
+                        bucketName="home-images"
+                        label="Hero Image"
+                        aspectRatio={1}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="font-semibold">Primary Color</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{
+                              background: homeContent.primary_color || "",
+                            }}
+                          ></div>
+                          <span className="text-sm text-muted-foreground">
+                            {homeContent.primary_color}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="font-semibold">Secondary Color</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{
+                              background: homeContent.secondary_color || "",
+                            }}
+                          ></div>
+                          <span className="text-sm text-muted-foreground">
+                            {homeContent.secondary_color}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="font-semibold">Text Color</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{ background: homeContent.text_color || "" }}
+                          ></div>
+                          <span className="text-sm text-muted-foreground">
+                            {homeContent.text_color}
+                          </span>
+                        </div>
+                      </div>
+                      <div>
+                        <Label className="font-semibold">Accent Color</Label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <div
+                            className="w-8 h-8 rounded border"
+                            style={{
+                              background: homeContent.accent_color || "",
+                            }}
+                          ></div>
+                          <span className="text-sm text-muted-foreground">
+                            {homeContent.accent_color}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    {homeContent.background_gradient && (
+                      <div>
+                        <Label className="font-semibold">
+                          Background Gradient
+                        </Label>
+                        <div
+                          className="mt-1 p-4 rounded border"
+                          style={{
+                            background: homeContent.background_gradient,
+                          }}
+                        >
+                          <p className="text-xs text-muted-foreground">
+                            {homeContent.background_gradient}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-muted-foreground mb-4">
+                      No home content found. Click the button above to create
+                      one.
                     </p>
-                    <div className="flex gap-4">
-                      <Button style={{ backgroundColor: homeContent.primary_color || undefined }}>
-                        View Projects
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        style={{ 
-                          borderColor: homeContent.secondary_color || undefined,
-                          color: homeContent.secondary_color || undefined 
+                    <Button onClick={() => setNewHomeContentOpen(true)}>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Create Home Content
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {activeTab === "projects" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Projects ({filteredProjects.length})
+                </h2>
+                <Dialog
+                  open={newProjectOpen}
+                  onOpenChange={(open) => {
+                    setNewProjectOpen(open);
+                    if (!open) resetForms();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Project
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editMode ? "Edit Project" : "Create New Project"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateProject} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="projectTitle">Title</Label>
+                          <Input
+                            id="projectTitle"
+                            value={projectTitle}
+                            onChange={(e) => setProjectTitle(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="projectStatus">Status</Label>
+                          <Select
+                            value={projectStatus}
+                            onValueChange={setProjectStatus}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="completed">
+                                Completed
+                              </SelectItem>
+                              <SelectItem value="in-progress">
+                                In Progress
+                              </SelectItem>
+                              <SelectItem value="planned">Planned</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="projectDescription">Description</Label>
+                        <Textarea
+                          id="projectDescription"
+                          value={projectDescription}
+                          onChange={(e) =>
+                            setProjectDescription(e.target.value)
+                          }
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="projectContent">
+                          Content (Optional)
+                        </Label>
+                        <Textarea
+                          id="projectContent"
+                          value={projectContent}
+                          onChange={(e) => setProjectContent(e.target.value)}
+                          className="min-h-[120px]"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="projectTechStack">
+                            Tech Stack (comma separated)
+                          </Label>
+                          <Input
+                            id="projectTechStack"
+                            value={projectTechStack}
+                            onChange={(e) =>
+                              setProjectTechStack(e.target.value)
+                            }
+                            placeholder="React, Node.js, MongoDB"
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-4 pt-6">
+                          <Label htmlFor="projectFeatured">
+                            Featured Project
+                          </Label>
+                          <Switch
+                            id="projectFeatured"
+                            checked={projectFeatured}
+                            onCheckedChange={setProjectFeatured}
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="projectGithubUrl">GitHub URL</Label>
+                          <Input
+                            id="projectGithubUrl"
+                            value={projectGithubUrl}
+                            onChange={(e) =>
+                              setProjectGithubUrl(e.target.value)
+                            }
+                            placeholder="https://github.com/..."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="projectDemoUrl">Demo URL</Label>
+                          <Input
+                            id="projectDemoUrl"
+                            value={projectDemoUrl}
+                            onChange={(e) => setProjectDemoUrl(e.target.value)}
+                            placeholder="https://..."
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Project Image</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProjectFileChange}
+                        />
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Or paste an image URL
+                        </div>
+                        <Input
+                          placeholder="https://..."
+                          value={projectImageUrl}
+                          onChange={(e) => setProjectImageUrl(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setNewProjectOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                          {loading
+                            ? "Saving..."
+                            : editMode
+                              ? "Update Project"
+                              : "Create Project"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="flex justify-between items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search projects..."
+                    value={projectSearch}
+                    onChange={(e) => setProjectSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={projectSortBy} onValueChange={setProjectSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {filteredProjects.map((project) => (
+                    <Card key={project.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <CardTitle className="flex items-center gap-2">
+                              {project.title}
+                              {project.featured && <Badge>Featured</Badge>}
+                              <Badge variant="secondary">
+                                {project.status}
+                              </Badge>
+                            </CardTitle>
+                            <CardDescription>
+                              {project.description}
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => editProject(project)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Project
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "
+                                    {project.title}"? This action cannot be
+                                    undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleConfirmDelete(
+                                        "project",
+                                        project.id,
+                                        project.title,
+                                      )
+                                    }
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {project.tech_stack?.map((tech) => (
+                            <Badge key={tech} variant="secondary">
+                              {tech}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "posts" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Blog Posts ({filteredPosts.length})
+                </h2>
+                <Dialog
+                  open={newPostOpen}
+                  onOpenChange={(open) => {
+                    setNewPostOpen(open);
+                    if (!open) resetForms();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      New Post
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editMode ? "Edit Post" : "Create New Post"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreatePost} className="space-y-4">
+                      <div>
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                          id="title"
+                          value={title}
+                          onChange={(e) => {
+                            setTitle(e.target.value);
+                            setSlug(slugify(e.target.value));
+                          }}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="slug">Slug</Label>
+                        <Input
+                          id="slug"
+                          value={slug}
+                          onChange={(e) => setSlug(slugify(e.target.value))}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="excerpt">Excerpt</Label>
+                        <Textarea
+                          id="excerpt"
+                          value={excerpt}
+                          onChange={(e) => setExcerpt(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="content">Content (Markdown)</Label>
+                        <Textarea
+                          id="content"
+                          value={content}
+                          onChange={(e) => setContent(e.target.value)}
+                          className="min-h-[160px]"
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="read_time">Read time (min)</Label>
+                          <Input
+                            id="read_time"
+                            type="number"
+                            min={1}
+                            value={readTime}
+                            onChange={(e) =>
+                              setReadTime(Number(e.target.value))
+                            }
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-4 pt-6">
+                          <Label htmlFor="published">Publish now</Label>
+                          <Switch
+                            id="published"
+                            checked={published}
+                            onCheckedChange={setPublished}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label>Featured image</Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                        />
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Or paste an image URL
+                        </div>
+                        <Input
+                          placeholder="https://..."
+                          value={featuredImageUrl}
+                          onChange={(e) => setFeaturedImageUrl(e.target.value)}
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setNewPostOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                          {loading
+                            ? "Saving..."
+                            : editMode
+                              ? "Update Post"
+                              : "Create Post"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="flex justify-between items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search blog posts..."
+                    value={postSearch}
+                    onChange={(e) => setPostSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={postSortBy} onValueChange={setPostSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {filteredPosts.map((post) => (
+                    <Card key={post.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              {post.title}
+                              {post.published ? (
+                                <Badge>Published</Badge>
+                              ) : (
+                                <Badge variant="secondary">Draft</Badge>
+                              )}
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-4 mt-2">
+                              <span>{post.excerpt}</span>
+                              <span className="text-sm">
+                                ❤️ {post.likes_count || 0}
+                              </span>
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => editPost(post)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Post
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "
+                                    {post.title}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                                    onClick={() =>
+                                      handleConfirmDelete(
+                                        "post",
+                                        post.id.toString(),
+                                        post.title,
+                                      )
+                                    }
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "skills" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Skills ({filteredSkills.length})
+                </h2>
+                <Dialog
+                  open={newSkillOpen}
+                  onOpenChange={(open) => {
+                    setNewSkillOpen(open);
+                    if (!open) resetForms();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Skill
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editMode ? "Edit Skill" : "Create New Skill"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form onSubmit={handleCreateSkill} className="space-y-4">
+                      <div>
+                        <Label htmlFor="skillName">Skill Name</Label>
+                        <Input
+                          id="skillName"
+                          value={skillName}
+                          onChange={(e) => setSkillName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="skillLevel">Level</Label>
+                          <Select
+                            value={skillLevel}
+                            onValueChange={setSkillLevel}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="beginner">Beginner</SelectItem>
+                              <SelectItem value="intermediate">
+                                Intermediate
+                              </SelectItem>
+                              <SelectItem value="advanced">Advanced</SelectItem>
+                              <SelectItem value="expert">Expert</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label htmlFor="skillCategory">Category</Label>
+                          <Select
+                            value={skillCategory}
+                            onValueChange={setSkillCategory}
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="technical">
+                                Technical
+                              </SelectItem>
+                              <SelectItem value="design">Design</SelectItem>
+                              <SelectItem value="soft">Soft Skills</SelectItem>
+                              <SelectItem value="language">Language</SelectItem>
+                              <SelectItem value="Backend/ORM/Database">
+                                Backend/ORM/Database
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="skillYears">Years Experience</Label>
+                          <Input
+                            id="skillYears"
+                            type="number"
+                            min={0}
+                            value={skillYears}
+                            onChange={(e) =>
+                              setSkillYears(Number(e.target.value))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="skillIcon">Icon (optional)</Label>
+                          <Input
+                            id="skillIcon"
+                            value={skillIcon}
+                            onChange={(e) => setSkillIcon(e.target.value)}
+                            placeholder="react, javascript, etc."
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setNewSkillOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                          {loading
+                            ? "Saving..."
+                            : editMode
+                              ? "Update Skill"
+                              : "Create Skill"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="flex justify-between items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search skills..."
+                    value={skillSearch}
+                    onChange={(e) => setSkillSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={skillSortBy} onValueChange={setSkillSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredSkills.map((skill) => (
+                    <Card key={skill.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <CardTitle className="flex items-center gap-2">
+                              {skill.icon && <span>{skill.icon}</span>}
+                              {skill.name}
+                              <Badge variant="outline">{skill.level}</Badge>
+                            </CardTitle>
+                            <CardDescription>
+                              {skill.category} • {skill.years_experience || 0}{" "}
+                              years
+                            </CardDescription>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => editSkill(skill)}
+                            >
+                              <Edit className="h-3 w-3" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Skill
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "
+                                    {skill.name}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleConfirmDelete(
+                                        "skill",
+                                        skill.id,
+                                        skill.name,
+                                      )
+                                    }
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "experiences" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Work Experience ({filteredExperiences.length})
+                </h2>
+                <Dialog
+                  open={newExperienceOpen}
+                  onOpenChange={(open) => {
+                    setNewExperienceOpen(open);
+                    if (!open) resetForms();
+                  }}
+                >
+                  <DialogTrigger asChild>
+                    <Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Experience
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {editMode ? "Edit Experience" : "Add New Experience"}
+                      </DialogTitle>
+                    </DialogHeader>
+                    <form
+                      onSubmit={handleCreateExperience}
+                      className="space-y-4"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="expRole">Job Title</Label>
+                          <Input
+                            id="expRole"
+                            value={expRole}
+                            onChange={(e) => setExpRole(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="expCompany">Company</Label>
+                          <Input
+                            id="expCompany"
+                            value={expCompany}
+                            onChange={(e) => setExpCompany(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="expCompanyUrl">
+                            Company URL (optional)
+                          </Label>
+                          <Input
+                            id="expCompanyUrl"
+                            value={expCompanyUrl}
+                            onChange={(e) => setExpCompanyUrl(e.target.value)}
+                            placeholder="https://..."
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="expLocation">
+                            Location (optional)
+                          </Label>
+                          <Input
+                            id="expLocation"
+                            value={expLocation}
+                            onChange={(e) => setExpLocation(e.target.value)}
+                            placeholder="San Francisco, CA"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="expDescription">Description</Label>
+                        <Textarea
+                          id="expDescription"
+                          value={expDescription}
+                          onChange={(e) => setExpDescription(e.target.value)}
+                          className="min-h-[100px]"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <Label htmlFor="expStartDate">Start Date</Label>
+                          <Input
+                            id="expStartDate"
+                            type="date"
+                            value={expStartDate}
+                            onChange={(e) => setExpStartDate(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="expEndDate">End Date</Label>
+                          <Input
+                            id="expEndDate"
+                            type="date"
+                            value={expEndDate}
+                            onChange={(e) => setExpEndDate(e.target.value)}
+                            disabled={expCurrent}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between gap-4 pt-6">
+                          <Label htmlFor="expCurrent">Current Role</Label>
+                          <Switch
+                            id="expCurrent"
+                            checked={expCurrent}
+                            onCheckedChange={setExpCurrent}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <Label htmlFor="expAchievements">
+                          Key Achievements (one per line)
+                        </Label>
+                        <Textarea
+                          id="expAchievements"
+                          value={expAchievements}
+                          onChange={(e) => setExpAchievements(e.target.value)}
+                          placeholder="Increased performance by 40%..."
+                          className="min-h-[80px]"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="expTechUsed">
+                          Technologies Used (comma separated)
+                        </Label>
+                        <Input
+                          id="expTechUsed"
+                          value={expTechUsed}
+                          onChange={(e) => setExpTechUsed(e.target.value)}
+                          placeholder="React, Node.js, PostgreSQL"
+                        />
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setNewExperienceOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={loading}>
+                          {loading
+                            ? "Saving..."
+                            : editMode
+                              ? "Update Experience"
+                              : "Create Experience"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              </div>
+
+              <div className="flex justify-between items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search experiences..."
+                    value={experienceSearch}
+                    onChange={(e) => setExperienceSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select
+                  value={experienceSortBy}
+                  onValueChange={setExperienceSortBy}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {filteredExperiences.map((exp) => (
+                    <Card key={exp.id}>
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <CardTitle className="flex items-center gap-2">
+                              {exp.role} at {exp.company}
+                              {exp.current && <Badge>Current</Badge>}
+                            </CardTitle>
+                            <CardDescription>
+                              {exp.location && `${exp.location} • `}
+                              {format(
+                                new Date(exp.start_date),
+                                "MMM yyyy",
+                              )} -{" "}
+                              {exp.current
+                                ? "Present"
+                                : exp.end_date
+                                  ? format(new Date(exp.end_date), "MMM yyyy")
+                                  : "Present"}
+                            </CardDescription>
+                            {exp.description && (
+                              <p className="mt-2 text-sm text-muted-foreground">
+                                {exp.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => editExperience(exp)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Experience
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{exp.role}{" "}
+                                    at {exp.company}"? This action cannot be
+                                    undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleConfirmDelete(
+                                        "experience",
+                                        exp.id,
+                                        `${exp.role} at ${exp.company}`,
+                                      )
+                                    }
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      {(exp.tech_used || exp.achievements) && (
+                        <CardContent>
+                          {exp.tech_used && (
+                            <div className="mb-3">
+                              <h4 className="text-sm font-medium mb-2">
+                                Technologies:
+                              </h4>
+                              <div className="flex flex-wrap gap-1">
+                                {exp.tech_used.map((tech) => (
+                                  <Badge
+                                    key={tech}
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {tech}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {exp.achievements && (
+                            <div>
+                              <h4 className="text-sm font-medium mb-2">
+                                Key Achievements:
+                              </h4>
+                              <ul className="text-sm text-muted-foreground space-y-1">
+                                {exp.achievements.map((achievement, idx) => (
+                                  <li key={idx}>• {achievement}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </CardContent>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "contacts" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Contact Messages ({filteredContacts.length})
+                </h2>
+                <Badge variant="secondary">
+                  {contacts.filter((c) => c.status === "new").length} new
+                </Badge>
+              </div>
+
+              {/* Edit Contact Dialog */}
+              <Dialog open={editContactOpen} onOpenChange={setEditContactOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Edit Contact Message</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleUpdateContact} className="space-y-4">
+                    <div>
+                      <Label htmlFor="contactName">Name</Label>
+                      <Input
+                        id="contactName"
+                        value={contactName}
+                        onChange={(e) => setContactName(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contactEmail">Email</Label>
+                      <Input
+                        id="contactEmail"
+                        type="email"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contactSubject">Subject</Label>
+                      <Input
+                        id="contactSubject"
+                        value={contactSubject}
+                        onChange={(e) => setContactSubject(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contactMessage">Message</Label>
+                      <Textarea
+                        id="contactMessage"
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        className="min-h-[150px]"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="contactStatus">Status</Label>
+                      <Select
+                        value={contactStatus}
+                        onValueChange={setContactStatus}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">New</SelectItem>
+                          <SelectItem value="read">Read</SelectItem>
+                          <SelectItem value="replied">Replied</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          setEditContactOpen(false);
+                          setEditMode(false);
                         }}
                       >
-                        Contact Me
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={loading}>
+                        {loading ? "Saving..." : "Update Message"}
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {homeContent ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Current Home Page Content</CardTitle>
-                  <CardDescription>Manage the hero section displayed on the home page</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <Label className="font-semibold">Name</Label>
-                    <p className="text-lg mt-1">{homeContent.name}</p>
-                  </div>
-                  <div>
-                    <Label className="font-semibold">Tagline</Label>
-                    <p className="text-muted-foreground mt-1">{homeContent.tagline}</p>
-                  </div>
-                  <div>
-                    <ImageCropUpload
-                      currentImageUrl={homeContent.hero_image || undefined}
-                      onImageUpdate={async (url) => {
-                        if (!homeContent?.id) return;
-                        try {
-                          const { error } = await supabase
-                            .from('home_content')
-                            .update({ hero_image: url })
-                            .eq('id', homeContent.id);
-                          if (error) throw error;
-                          fetchData();
-                          toast({ title: 'Success', description: 'Hero image updated successfully' });
-                        } catch (error: any) {
-                          toast({ title: 'Error', description: error.message, variant: 'destructive' });
-                        }
-                      }}
-                      bucketName="home-images"
-                      label="Hero Image"
-                      aspectRatio={1}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="font-semibold">Primary Color</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.primary_color || '' }}></div>
-                        <span className="text-sm text-muted-foreground">{homeContent.primary_color}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="font-semibold">Secondary Color</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.secondary_color || '' }}></div>
-                        <span className="text-sm text-muted-foreground">{homeContent.secondary_color}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="font-semibold">Text Color</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.text_color || '' }}></div>
-                        <span className="text-sm text-muted-foreground">{homeContent.text_color}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Label className="font-semibold">Accent Color</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="w-8 h-8 rounded border" style={{ background: homeContent.accent_color || '' }}></div>
-                        <span className="text-sm text-muted-foreground">{homeContent.accent_color}</span>
-                      </div>
-                    </div>
-                  </div>
-                  {homeContent.background_gradient && (
-                    <div>
-                      <Label className="font-semibold">Background Gradient</Label>
-                      <div className="mt-1 p-4 rounded border" style={{ background: homeContent.background_gradient }}>
-                        <p className="text-xs text-muted-foreground">{homeContent.background_gradient}</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            ) : (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground mb-4">No home content found. Click the button above to create one.</p>
-                  <Button onClick={() => setNewHomeContentOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create Home Content
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-            </div>
-          )}
-          
-          {activeTab === 'projects' && (
-            <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Projects ({filteredProjects.length})</h2>
-              <Dialog open={newProjectOpen} onOpenChange={(open) => { setNewProjectOpen(open); if (!open) resetForms(); }}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Project
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editMode ? 'Edit Project' : 'Create New Project'}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateProject} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="projectTitle">Title</Label>
-                        <Input id="projectTitle" value={projectTitle} onChange={(e) => setProjectTitle(e.target.value)} required />
-                      </div>
-                      <div>
-                        <Label htmlFor="projectStatus">Status</Label>
-                        <Select value={projectStatus} onValueChange={setProjectStatus}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="completed">Completed</SelectItem>
-                            <SelectItem value="in-progress">In Progress</SelectItem>
-                            <SelectItem value="planned">Planned</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="projectDescription">Description</Label>
-                      <Textarea id="projectDescription" value={projectDescription} onChange={(e) => setProjectDescription(e.target.value)} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="projectContent">Content (Optional)</Label>
-                      <Textarea id="projectContent" value={projectContent} onChange={(e) => setProjectContent(e.target.value)} className="min-h-[120px]" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="projectTechStack">Tech Stack (comma separated)</Label>
-                        <Input id="projectTechStack" value={projectTechStack} onChange={(e) => setProjectTechStack(e.target.value)} placeholder="React, Node.js, MongoDB" />
-                      </div>
-                      <div className="flex items-center justify-between gap-4 pt-6">
-                        <Label htmlFor="projectFeatured">Featured Project</Label>
-                        <Switch id="projectFeatured" checked={projectFeatured} onCheckedChange={setProjectFeatured} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="projectGithubUrl">GitHub URL</Label>
-                        <Input id="projectGithubUrl" value={projectGithubUrl} onChange={(e) => setProjectGithubUrl(e.target.value)} placeholder="https://github.com/..." />
-                      </div>
-                      <div>
-                        <Label htmlFor="projectDemoUrl">Demo URL</Label>
-                        <Input id="projectDemoUrl" value={projectDemoUrl} onChange={(e) => setProjectDemoUrl(e.target.value)} placeholder="https://..." />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Project Image</Label>
-                      <Input type="file" accept="image/*" onChange={handleProjectFileChange} />
-                      <div className="text-xs text-muted-foreground mt-1">Or paste an image URL</div>
-                      <Input placeholder="https://..." value={projectImageUrl} onChange={(e) => setProjectImageUrl(e.target.value)} />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button type="button" variant="outline" onClick={() => setNewProjectOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={loading}>{loading ? 'Saving...' : (editMode ? 'Update Project' : 'Create Project')}</Button>
-                    </div>
                   </form>
                 </DialogContent>
               </Dialog>
-            </div>
 
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search projects..."
-                  value={projectSearch}
-                  onChange={(e) => setProjectSearch(e.target.value)}
-                  className="pl-10"
-                />
+              <div className="flex justify-between items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search contacts..."
+                    value={contactSearch}
+                    onChange={(e) => setContactSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={contactSortBy} onValueChange={setContactSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <Filter className="h-4 w-4 mr-2" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <Select value={projectSortBy} onValueChange={setProjectSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {filteredProjects.map((project) => (
-                  <Card key={project.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="flex items-center gap-2">
-                            {project.title}
-                            {project.featured && <Badge>Featured</Badge>}
-                            <Badge variant="secondary">{project.status}</Badge>
-                          </CardTitle>
-                          <CardDescription>{project.description}</CardDescription>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => editProject(project)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Project</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{project.title}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleConfirmDelete('project', project.id, project.title)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tech_stack?.map((tech) => (
-                          <Badge key={tech} variant="secondary">{tech}</Badge>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-            </div>
-          )}
 
-          {activeTab === 'posts' && (
-            <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Blog Posts ({filteredPosts.length})</h2>
-              <Dialog open={newPostOpen} onOpenChange={(open) => { setNewPostOpen(open); if (!open) resetForms(); }}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Post
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editMode ? 'Edit Post' : 'Create New Post'}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreatePost} className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Title</Label>
-                      <Input id="title" value={title} onChange={(e) => { setTitle(e.target.value); setSlug(slugify(e.target.value)); }} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="slug">Slug</Label>
-                      <Input id="slug" value={slug} onChange={(e) => setSlug(slugify(e.target.value))} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="excerpt">Excerpt</Label>
-                      <Textarea id="excerpt" value={excerpt} onChange={(e) => setExcerpt(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label htmlFor="content">Content (Markdown)</Label>
-                      <Textarea id="content" value={content} onChange={(e) => setContent(e.target.value)} className="min-h-[160px]" required />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="read_time">Read time (min)</Label>
-                        <Input id="read_time" type="number" min={1} value={readTime} onChange={(e) => setReadTime(Number(e.target.value))} />
-                      </div>
-                      <div className="flex items-center justify-between gap-4 pt-6">
-                        <Label htmlFor="published">Publish now</Label>
-                        <Switch id="published" checked={published} onCheckedChange={setPublished} />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Featured image</Label>
-                      <Input type="file" accept="image/*" onChange={handleFileChange} />
-                      <div className="text-xs text-muted-foreground mt-1">Or paste an image URL</div>
-                      <Input placeholder="https://..." value={featuredImageUrl} onChange={(e) => setFeaturedImageUrl(e.target.value)} />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button type="button" variant="outline" onClick={() => setNewPostOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={loading}>{loading ? 'Saving...' : (editMode ? 'Update Post' : 'Create Post')}</Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search blog posts..."
-                  value={postSearch}
-                  onChange={(e) => setPostSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={postSortBy} onValueChange={setPostSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {filteredPosts.map((post) => (
-                  <Card key={post.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            {post.title}
-                            {post.published ? (
-                              <Badge>Published</Badge>
-                            ) : (
-                              <Badge variant="secondary">Draft</Badge>
-                            )}
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-4 mt-2">
-                            <span>{post.excerpt}</span>
-                            <span className="text-sm">❤️ {post.likes_count || 0}</span>
-                          </CardDescription>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => editPost(post)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Post</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{post.title}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                className='bg-red-600 hover:bg-red-700 focus:ring-red-600'
-                                onClick={() => handleConfirmDelete('post', post.id.toString(), post.title)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
-            </div>
-          )}
-          
-          {activeTab === 'skills' && (
-            <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Skills ({filteredSkills.length})</h2>
-              <Dialog open={newSkillOpen} onOpenChange={(open) => { setNewSkillOpen(open); if (!open) resetForms(); }}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Skill
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>{editMode ? 'Edit Skill' : 'Create New Skill'}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateSkill} className="space-y-4">
-                    <div>
-                      <Label htmlFor="skillName">Skill Name</Label>
-                      <Input id="skillName" value={skillName} onChange={(e) => setSkillName(e.target.value)} required />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="skillLevel">Level</Label>
-                        <Select value={skillLevel} onValueChange={setSkillLevel}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="beginner">Beginner</SelectItem>
-                            <SelectItem value="intermediate">Intermediate</SelectItem>
-                            <SelectItem value="advanced">Advanced</SelectItem>
-                            <SelectItem value="expert">Expert</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="skillCategory">Category</Label>
-                        <Select value={skillCategory} onValueChange={setSkillCategory}>
-                          <SelectTrigger><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="technical">Technical</SelectItem>
-                            <SelectItem value="design">Design</SelectItem>
-                            <SelectItem value="soft">Soft Skills</SelectItem>
-                            <SelectItem value="language">Language</SelectItem>
-<SelectItem value="Backend/ORM/Database" >Backend/ORM/Database</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="skillYears">Years Experience</Label>
-                        <Input id="skillYears" type="number" min={0} value={skillYears} onChange={(e) => setSkillYears(Number(e.target.value))} />
-                      </div>
-                      <div>
-                        <Label htmlFor="skillIcon">Icon (optional)</Label>
-                        <Input id="skillIcon" value={skillIcon} onChange={(e) => setSkillIcon(e.target.value)} placeholder="react, javascript, etc." />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button type="button" variant="outline" onClick={() => setNewSkillOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={loading}>{loading ? 'Saving...' : (editMode ? 'Update Skill' : 'Create Skill')}</Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search skills..."
-                  value={skillSearch}
-                  onChange={(e) => setSkillSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={skillSortBy} onValueChange={setSkillSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredSkills.map((skill) => (
-                  <Card key={skill.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            {skill.icon && <span>{skill.icon}</span>}
-                            {skill.name}
-                            <Badge variant="outline">{skill.level}</Badge>
-                          </CardTitle>
-                          <CardDescription>
-                            {skill.category} • {skill.years_experience || 0} years
-                          </CardDescription>
-                        </div>
-                        <div className="flex gap-1">
-                          <Button size="sm" variant="outline" onClick={() => editSkill(skill)}>
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive">
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Skill</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{skill.name}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleConfirmDelete('skill', skill.id, skill.name)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-              </div>
-            )}
-            </div>
-          )}
-          
-          {activeTab === 'experiences' && (
-            <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Work Experience ({filteredExperiences.length})</h2>
-              <Dialog open={newExperienceOpen} onOpenChange={(open) => { setNewExperienceOpen(open); if (!open) resetForms(); }}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Experience
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle>{editMode ? 'Edit Experience' : 'Add New Experience'}</DialogTitle>
-                  </DialogHeader>
-                  <form onSubmit={handleCreateExperience} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="expRole">Job Title</Label>
-                        <Input id="expRole" value={expRole} onChange={(e) => setExpRole(e.target.value)} required />
-                      </div>
-                      <div>
-                        <Label htmlFor="expCompany">Company</Label>
-                        <Input id="expCompany" value={expCompany} onChange={(e) => setExpCompany(e.target.value)} required />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="expCompanyUrl">Company URL (optional)</Label>
-                        <Input id="expCompanyUrl" value={expCompanyUrl} onChange={(e) => setExpCompanyUrl(e.target.value)} placeholder="https://..." />
-                      </div>
-                      <div>
-                        <Label htmlFor="expLocation">Location (optional)</Label>
-                        <Input id="expLocation" value={expLocation} onChange={(e) => setExpLocation(e.target.value)} placeholder="San Francisco, CA" />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="expDescription">Description</Label>
-                      <Textarea id="expDescription" value={expDescription} onChange={(e) => setExpDescription(e.target.value)} className="min-h-[100px]" />
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label htmlFor="expStartDate">Start Date</Label>
-                        <Input id="expStartDate" type="date" value={expStartDate} onChange={(e) => setExpStartDate(e.target.value)} required />
-                      </div>
-                      <div>
-                        <Label htmlFor="expEndDate">End Date</Label>
-                        <Input id="expEndDate" type="date" value={expEndDate} onChange={(e) => setExpEndDate(e.target.value)} disabled={expCurrent} />
-                      </div>
-                      <div className="flex items-center justify-between gap-4 pt-6">
-                        <Label htmlFor="expCurrent">Current Role</Label>
-                        <Switch id="expCurrent" checked={expCurrent} onCheckedChange={setExpCurrent} />
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="expAchievements">Key Achievements (one per line)</Label>
-                      <Textarea id="expAchievements" value={expAchievements} onChange={(e) => setExpAchievements(e.target.value)} placeholder="Increased performance by 40%..." className="min-h-[80px]" />
-                    </div>
-                    <div>
-                      <Label htmlFor="expTechUsed">Technologies Used (comma separated)</Label>
-                      <Input id="expTechUsed" value={expTechUsed} onChange={(e) => setExpTechUsed(e.target.value)} placeholder="React, Node.js, PostgreSQL" />
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2">
-                      <Button type="button" variant="outline" onClick={() => setNewExperienceOpen(false)}>Cancel</Button>
-                      <Button type="submit" disabled={loading}>{loading ? 'Saving...' : (editMode ? 'Update Experience' : 'Create Experience')}</Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
-            </div>
-
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search experiences..."
-                  value={experienceSearch}
-                  onChange={(e) => setExperienceSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={experienceSortBy} onValueChange={setExperienceSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {filteredExperiences.map((exp) => (
-                  <Card key={exp.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="flex items-center gap-2">
-                            {exp.role} at {exp.company}
-                            {exp.current && <Badge>Current</Badge>}
-                          </CardTitle>
-                          <CardDescription>
-                            {exp.location && `${exp.location} • `}
-                            {format(new Date(exp.start_date), 'MMM yyyy')} - {exp.current ? 'Present' : (exp.end_date ? format(new Date(exp.end_date), 'MMM yyyy') : 'Present')}
-                          </CardDescription>
-                          {exp.description && <p className="mt-2 text-sm text-muted-foreground">{exp.description}</p>}
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => editExperience(exp)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Experience</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{exp.role} at {exp.company}"? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleConfirmDelete('experience', exp.id, `${exp.role} at ${exp.company}`)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    {(exp.tech_used || exp.achievements) && (
-                      <CardContent>
-                        {exp.tech_used && (
-                          <div className="mb-3">
-                            <h4 className="text-sm font-medium mb-2">Technologies:</h4>
-                            <div className="flex flex-wrap gap-1">
-                              {exp.tech_used.map((tech) => (
-                                <Badge key={tech} variant="secondary" className="text-xs">{tech}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {exp.achievements && (
-                          <div>
-                            <h4 className="text-sm font-medium mb-2">Key Achievements:</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1">
-                              {exp.achievements.map((achievement, idx) => (
-                                <li key={idx}>• {achievement}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            )}
-            </div>
-          )}
-          
-          {activeTab === 'contacts' && (
-            <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Contact Messages ({filteredContacts.length})</h2>
-              <Badge variant="secondary">{contacts.filter(c => c.status === 'new').length} new</Badge>
-            </div>
-
-            {/* Edit Contact Dialog */}
-            <Dialog open={editContactOpen} onOpenChange={setEditContactOpen}>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Edit Contact Message</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleUpdateContact} className="space-y-4">
-                  <div>
-                    <Label htmlFor="contactName">Name</Label>
-                    <Input id="contactName" value={contactName} onChange={(e) => setContactName(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="contactEmail">Email</Label>
-                    <Input id="contactEmail" type="email" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="contactSubject">Subject</Label>
-                    <Input id="contactSubject" value={contactSubject} onChange={(e) => setContactSubject(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="contactMessage">Message</Label>
-                    <Textarea id="contactMessage" value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} className="min-h-[150px]" required />
-                  </div>
-                  <div>
-                    <Label htmlFor="contactStatus">Status</Label>
-                    <Select value={contactStatus} onValueChange={setContactStatus}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="new">New</SelectItem>
-                        <SelectItem value="read">Read</SelectItem>
-                        <SelectItem value="replied">Replied</SelectItem>
-                        <SelectItem value="archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => { setEditContactOpen(false); setEditMode(false); }}>Cancel</Button>
-                    <Button type="submit" disabled={loading}>{loading ? 'Saving...' : 'Update Message'}</Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search contacts..."
-                  value={contactSearch}
-                  onChange={(e) => setContactSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={contactSortBy} onValueChange={setContactSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <Filter className="h-4 w-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {loading ? (
-              <div>Loading...</div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {filteredContacts.map((contact) => (
-                  <Card key={contact.id} className={contact.status === 'new' ? 'border-primary' : ''}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <CardTitle className="flex items-center gap-2">
-                            <Mail className="h-4 w-4" />
-                            {contact.subject}
-                            <Badge variant={contact.status === 'new' ? 'default' : contact.status === 'replied' ? 'secondary' : 'outline'}>
-                              {contact.status}
-                            </Badge>
-                          </CardTitle>
-                          <CardDescription className="flex items-center gap-4 mt-2">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {contact.name}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Mail className="h-3 w-3" />
-                              {contact.email}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {format(new Date(contact.created_at), 'MMM dd, yyyy')}
-                            </span>
-                          </CardDescription>
-                          <p className="mt-3 text-sm text-muted-foreground">{contact.message}</p>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => editContact(contact)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => openReplyModal(contact)}>
-                            <Reply className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="sm" variant="destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Message</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete this message from {contact.name}? This action cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => handleConfirmDelete('contact', contact.id, contact.name)}>
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      </div>
-                    </CardHeader>
-                  </Card>
-                ))}
-                
-                {filteredContacts.length === 0 && (
-                  <Card>
-                    <CardContent className="p-8 text-center">
-                      <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">No contact messages yet.</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
-            
-            {/* Reply Modal */}
-            <Dialog open={replyModalOpen} onOpenChange={setReplyModalOpen}>
-              <DialogContent className="sm:max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Reply to {selectedContact?.name}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSendReply} className="space-y-4">
-                  <div>
-                    <Label htmlFor="replySubject">Subject</Label>
-                    <Input id="replySubject" value={replySubject} onChange={(e) => setReplySubject(e.target.value)} required />
-                  </div>
-                  <div>
-                    <Label htmlFor="replyMessage">Your Reply</Label>
-                    <Textarea id="replyMessage" value={replyMessage} onChange={(e) => setReplyMessage(e.target.value)} className="min-h-[200px]" required placeholder="Write your reply here..." />
-                  </div>
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setReplyModalOpen(false)}>Cancel</Button>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Sending...' : 'Send Reply'}
-                      <Send className="h-4 w-4 ml-2" />
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
-            </div>
-          )}
-
-          {activeTab === 'comments' && (
-            <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Comments ({filteredComments.length})</h2>
-              <Badge variant="secondary">{comments.filter(c => !c.approved).length} pending</Badge>
-            </div>
-
-            <div className="flex justify-between items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search comments..."
-                  value={commentSearch}
-                  onChange={(e) => setCommentSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={commentSortBy} onValueChange={setCommentSortBy}>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="latest">Latest First</SelectItem>
-                  <SelectItem value="oldest">Oldest First</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {loading ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground">Loading comments...</p>
-                </CardContent>
-              </Card>
-            ) : filteredComments.length === 0 ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <p className="text-muted-foreground">No comments found.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className=" gap-4  grid md:grid-cols-2">
-                {filteredComments.map((comment) => (
-                  <Card key={comment.id}>
-                    <CardContent className="p-6 ">
-                      <div className="space-y-4">
+              {loading ? (
+                <div>Loading...</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {filteredContacts.map((contact) => (
+                    <Card
+                      key={contact.id}
+                      className={
+                        contact.status === "new" ? "border-primary" : ""
+                      }
+                    >
+                      <CardHeader>
                         <div className="flex justify-between items-start">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold">{comment.author_name}</span>
+                          <div className="flex-1">
+                            <CardTitle className="flex items-center gap-2">
+                              <Mail className="h-4 w-4" />
+                              {contact.subject}
                               <Badge
-  variant={comment.approved ? "default" : "secondary"}
-  className={comment.approved ? "bg-green-600" : "bg-yellow-600 text-white"}
->
-  {comment.approved ? "  Approved" : "Pending"}
-</Badge>
-
-                            </div>
-                            <p className="text-sm text-muted-foreground">{comment.author_email}</p>
-                            {comment.posts && (
- 
-<p className="text-sm text-muted-foreground">
-  On post:{" "}
-  <a
-    href={`/blog/${comment.posts.slug}`}
-    className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-  >
-    
-    {comment.posts.title}<SquareArrowOutUpRight className="w-4 h-4" />
-  </a>
-</p>
-
-                              
-                            )}
+                                variant={
+                                  contact.status === "new"
+                                    ? "default"
+                                    : contact.status === "replied"
+                                      ? "secondary"
+                                      : "outline"
+                                }
+                              >
+                                {contact.status}
+                              </Badge>
+                            </CardTitle>
+                            <CardDescription className="flex items-center gap-4 mt-2">
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {contact.name}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Mail className="h-3 w-3" />
+                                {contact.email}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {format(
+                                  new Date(contact.created_at),
+                                  "MMM dd, yyyy",
+                                )}
+                              </span>
+                            </CardDescription>
+                            <p className="mt-3 text-sm text-muted-foreground">
+                              {contact.message}
+                            </p>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                              {format(new Date(comment.created_at), 'MMM dd, yyyy')}
-                            </span>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => editContact(contact)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openReplyModal(contact)}
+                            >
+                              <Reply className="h-4 w-4" />
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button size="sm" variant="destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete Message
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete this message
+                                    from {contact.name}? This action cannot be
+                                    undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() =>
+                                      handleConfirmDelete(
+                                        "contact",
+                                        contact.id,
+                                        contact.name,
+                                      )
+                                    }
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </div>
-                        <p className="text-foreground">{comment.content}</p>
-                        <div className="flex justify-end">
-                          <div className="flex gap-2">
-                            {!comment.approved && (
+                      </CardHeader>
+                    </Card>
+                  ))}
+
+                  {filteredContacts.length === 0 && (
+                    <Card>
+                      <CardContent className="p-8 text-center">
+                        <Mail className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground">
+                          No contact messages yet.
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {/* Reply Modal */}
+              <Dialog open={replyModalOpen} onOpenChange={setReplyModalOpen}>
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Reply to {selectedContact?.name}</DialogTitle>
+                  </DialogHeader>
+                  <form onSubmit={handleSendReply} className="space-y-4">
+                    <div>
+                      <Label htmlFor="replySubject">Subject</Label>
+                      <Input
+                        id="replySubject"
+                        value={replySubject}
+                        onChange={(e) => setReplySubject(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="replyMessage">Your Reply</Label>
+                      <Textarea
+                        id="replyMessage"
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                        className="min-h-[200px]"
+                        required
+                        placeholder="Write your reply here..."
+                      />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setReplyModalOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button type="submit" disabled={loading}>
+                        {loading ? "Sending..." : "Send Reply"}
+                        <Send className="h-4 w-4 ml-2" />
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
+          )}
+
+          {activeTab === "comments" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Comments ({filteredComments.length})
+                </h2>
+                <Badge variant="secondary">
+                  {comments.filter((c) => !c.approved).length} pending
+                </Badge>
+              </div>
+
+              <div className="flex justify-between items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search comments..."
+                    value={commentSearch}
+                    onChange={(e) => setCommentSearch(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={commentSortBy} onValueChange={setCommentSortBy}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="latest">Latest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {loading ? (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-muted-foreground">Loading comments...</p>
+                  </CardContent>
+                </Card>
+              ) : filteredComments.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center">
+                    <p className="text-muted-foreground">No comments found.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className=" gap-4  grid md:grid-cols-2">
+                  {filteredComments.map((comment) => (
+                    <Card key={comment.id}>
+                      <CardContent className="p-6 ">
+                        <div className="space-y-4">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold">
+                                  {comment.author_name}
+                                </span>
+                                <Badge
+                                  variant={
+                                    comment.approved ? "default" : "secondary"
+                                  }
+                                  className={
+                                    comment.approved
+                                      ? "bg-green-600"
+                                      : "bg-yellow-600 text-white"
+                                  }
+                                >
+                                  {comment.approved ? "  Approved" : "Pending"}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {comment.author_email}
+                              </p>
+                              {comment.posts && (
+                                <p className="text-sm text-muted-foreground">
+                                  On post:{" "}
+                                  <a
+                                    href={`/blog/${comment.posts.slug}`}
+                                    className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                                  >
+                                    {comment.posts.title}
+                                    <SquareArrowOutUpRight className="w-4 h-4" />
+                                  </a>
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">
+                                {format(
+                                  new Date(comment.created_at),
+                                  "MMM dd, yyyy",
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-foreground">{comment.content}</p>
+                          <div className="flex justify-end">
+                            <div className="flex gap-2">
+                              {!comment.approved && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={async () => {
+                                    try {
+                                      await supabase
+                                        .from("comments")
+                                        .update({ approved: true })
+                                        .eq("id", comment.id);
+                                      toast({ title: "Comment approved!" });
+                                      fetchData();
+                                    } catch (error) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Failed to approve",
+                                        variant: "destructive",
+                                      });
+                                    }
+                                  }}
+                                  className="bg-green-600 text-white hover:bg-green-700 focus:ring-green-600 hover:text-white"
+                                >
+                                  <Check className="h-4 w-4 mr-1 " />
+                                  Approve
+                                </Button>
+                              )}
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={async () => {
-                                  try {
-                                    await supabase
-                                      .from('comments')
-                                      .update({ approved: true })
-                                      .eq('id', comment.id);
-                                    toast({ title: 'Comment approved!' });
-                                    fetchData();
-                                  } catch (error) {
-                                    toast({ title: 'Error', description: 'Failed to approve', variant: 'destructive' });
+                                  if (confirm("Delete this comment?")) {
+                                    try {
+                                      await supabase
+                                        .from("comments")
+                                        .delete()
+                                        .eq("id", comment.id);
+                                      toast({ title: "Comment deleted!" });
+                                      fetchData();
+                                    } catch (error) {
+                                      toast({
+                                        title: "Error",
+                                        description: "Failed to delete",
+                                        variant: "destructive",
+                                      });
+                                    }
                                   }
                                 }}
-                                className='bg-green-600 text-white hover:bg-green-700 focus:ring-green-600 hover:text-white'
+                                className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 hover:text-white"
                               >
-                                <Check className="h-4 w-4 mr-1 " />
-                                Approve
+                                <X className="h-4 w-4 mr-1" />
+                                Delete
                               </Button>
-                            )}
+                            </div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === "feedback" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">
+                  Project Feedback ({feedbacks.length})
+                </h2>
+              </div>
+              {feedbacks.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center text-muted-foreground">
+                    No feedback yet.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {feedbacks.map((fb) => (
+                    <Card key={fb.id}>
+                      <CardContent className="p-6 space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className="font-semibold">
+                              {fb.author_name}{" "}
+                              {fb.rating ? `· ${"★".repeat(fb.rating)}` : ""}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {format(new Date(fb.created_at), "MMM dd, yyyy")}
+                            </div>
+                          </div>
+                          <Badge
+                            variant={fb.approved ? "default" : "secondary"}
+                            className={
+                              fb.approved
+                                ? "bg-green-600"
+                                : "bg-yellow-600 text-white"
+                            }
+                          >
+                            {fb.approved ? "Approved" : "Pending"}
+                          </Badge>
+                        </div>
+                        <p className="text-muted-foreground whitespace-pre-wrap">
+                          {fb.content}
+                        </p>
+                        {fb.response_message && (
+                          <div className="rounded bg-muted p-3 text-sm">
+                            <div className="font-medium mb-1">Response</div>
+                            <div>{fb.response_message}</div>
+                          </div>
+                        )}
+                        <div className="flex gap-2">
+                          {!fb.approved && (
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={async () => {
-                                if (confirm('Delete this comment?')) {
-                                  try {
-                                    await supabase
-                                      .from('comments')
-                                      .delete()
-                                      .eq('id', comment.id);
-                                    toast({ title: 'Comment deleted!' });
-                                    fetchData();
-                                  } catch (error) {
-                                    toast({ title: 'Error', description: 'Failed to delete', variant: 'destructive' });
-                                  }
+                                const { error } = await supabase
+                                  .from("project_feedbacks")
+                                  .update({
+                                    approved: true,
+                                    approved_at: new Date().toISOString(),
+                                  })
+                                  .eq("id", fb.id);
+                                if (error) {
+                                  toast({
+                                    title: "Error",
+                                    description: "Failed to approve feedback",
+                                    variant: "destructive",
+                                  });
+                                } else {
+                                  setFeedbacks((prev) =>
+                                    prev.map((x) =>
+                                      x.id === fb.id
+                                        ? { ...x, approved: true }
+                                        : x,
+                                    ),
+                                  );
+                                  toast({ title: "Feedback approved" });
                                 }
                               }}
-                              className='bg-red-600 text-white hover:bg-red-700 focus:ring-red-600 hover:text-white'
                             >
-                              <X className="h-4 w-4 mr-1" />
-                              Delete
+                              <Check className="h-4 w-4 mr-1" /> Approve
                             </Button>
-                          </div>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setActiveFeedback(fb);
+                              setFeedbackResponse(fb.response_message || "");
+                              setFeedbackResponseOpen(true);
+                            }}
+                          >
+                            <Reply className="h-4 w-4 mr-1" /> Respond
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              const { error } = await supabase
+                                .from("project_feedbacks")
+                                .delete()
+                                .eq("id", fb.id);
+                              if (error) {
+                                toast({
+                                  title: "Error",
+                                  description: "Failed to delete feedback",
+                                  variant: "destructive",
+                                });
+                              } else {
+                                setFeedbacks((prev) =>
+                                  prev.filter((x) => x.id !== fb.id),
+                                );
+                                toast({ title: "Feedback deleted" });
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Delete
+                          </Button>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              <Dialog
+                open={feedbackResponseOpen}
+                onOpenChange={setFeedbackResponseOpen}
+              >
+                <DialogContent className="sm:max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Respond to {activeFeedback?.author_name}
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <Label htmlFor="feedbackResponse">Response</Label>
+                    <Textarea
+                      id="feedbackResponse"
+                      className="min-h-[160px]"
+                      value={feedbackResponse}
+                      onChange={(e) => setFeedbackResponse(e.target.value)}
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => setFeedbackResponseOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          if (!activeFeedback) return;
+                          const { error } = await supabase
+                            .from("project_feedbacks")
+                            .update({
+                              response_message: feedbackResponse,
+                              responded_at: new Date().toISOString(),
+                            })
+                            .eq("id", activeFeedback.id);
+                          if (error) {
+                            toast({
+                              title: "Error",
+                              description: "Failed to save response",
+                              variant: "destructive",
+                            });
+                          } else {
+                            setFeedbacks((prev) =>
+                              prev.map((x) =>
+                                x.id === activeFeedback.id
+                                  ? { ...x, response_message: feedbackResponse }
+                                  : x,
+                              ),
+                            );
+                            toast({ title: "Response saved" });
+                            setFeedbackResponseOpen(false);
+                          }
+                        }}
+                      >
+                        Save Response
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           )}
 
-          {activeTab === 'settings' && (
+          {activeTab === "about" && (
             <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-semibold">Account Settings</h2>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">About Page</h2>
+              </div>
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Settings className="h-5 w-5" />
-                    Update Account Information
-                  </CardTitle>
-                  <CardDescription>Change your email address and password</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <form onSubmit={handleUpdateSettings} className="space-y-4">
-                    <div>
-                      <Label htmlFor="newEmail">New Email Address (optional)</Label>
-                      <Input id="newEmail" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Enter new email" />
-                    </div>
+                <CardContent className="p-6">
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!profile) return;
+                      const id = (profile as any).id;
+                      const payload = {
+                        name: profile.name || "",
+                        bio: profile.bio || "",
+                        location: profile.location || "",
+                        email: profile.email || "",
+                        website: profile.website || "",
+                        github_url: profile.github_url || "",
+                        linkedin_url: profile.linkedin_url || "",
+                        twitter_url: profile.twitter_url || "",
+                        resume_url: profile.resume_url || "",
+                        avatar_url: profile.avatar_url || "",
+                      };
+                      setProfileLoading(true);
+                      try {
+                        if (id) {
+                          const { error } = await supabase
+                            .from("profiles")
+                            .update(payload)
+                            .eq("id", id);
+                          if (error) throw error;
+                        } else {
+                          const { error } = await supabase
+                            .from("profiles")
+                            .insert(payload);
+                          if (error) throw error;
+                        }
+                        toast({
+                          title: "Saved",
+                          description: "About profile updated.",
+                        });
+                      } catch (err) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to save profile",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setProfileLoading(false);
+                      }
+                    }}
+                    className="space-y-4"
+                  >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor="newPassword">New Password (optional)</Label>
-                        <Input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" />
+                        <Label htmlFor="about_name">Name</Label>
+                        <Input
+                          id="about_name"
+                          value={profile?.name || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              name: e.target.value,
+                            }))
+                          }
+                        />
                       </div>
                       <div>
-                        <Label htmlFor="confirmPassword">Confirm Password</Label>
-                        <Input id="confirmPassword" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm new password" />
+                        <Label htmlFor="about_email">Email</Label>
+                        <Input
+                          id="about_email"
+                          value={profile?.email || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              email: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="about_location">Location</Label>
+                        <Input
+                          id="about_location"
+                          value={profile?.location || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              location: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="about_website">Website</Label>
+                        <Input
+                          id="about_website"
+                          value={profile?.website || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              website: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="about_github">GitHub URL</Label>
+                        <Input
+                          id="about_github"
+                          value={profile?.github_url || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              github_url: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="about_linkedin">LinkedIn URL</Label>
+                        <Input
+                          id="about_linkedin"
+                          value={profile?.linkedin_url || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              linkedin_url: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="about_twitter">Twitter/X URL</Label>
+                        <Input
+                          id="about_twitter"
+                          value={profile?.twitter_url || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              twitter_url: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="about_resume">Resume URL</Label>
+                        <Input
+                          id="about_resume"
+                          value={profile?.resume_url || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              resume_url: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="about_avatar">Avatar URL</Label>
+                        <Input
+                          id="about_avatar"
+                          value={profile?.avatar_url || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              avatar_url: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="about_bio">Bio</Label>
+                        <Textarea
+                          id="about_bio"
+                          className="min-h-[120px]"
+                          value={profile?.bio || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              bio: e.target.value,
+                            }))
+                          }
+                        />
                       </div>
                     </div>
-                    <Button type="submit" disabled={loading}>
-                      {loading ? 'Updating...' : 'Update Settings'}
-                    </Button>
+                    <div className="flex justify-end">
+                      <Button type="submit" disabled={profileLoading}>
+                        {profileLoading ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
-              
+            </div>
+          )}
+
+          {activeTab === "contact" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Contact Page</h2>
+              </div>
               <Card>
-                <CardHeader>
-                  <CardTitle>Current User Information</CardTitle>
-                  <CardDescription>Your current account details</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Email:</span>
-                    <span className="text-sm text-muted-foreground">{user?.email}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">User ID:</span>
-                    <span className="text-sm text-muted-foreground">{user?.id}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Created:</span>
-                    <span className="text-sm text-muted-foreground">
-                      {user?.created_at ? format(new Date(user.created_at), 'MMM dd, yyyy') : 'N/A'}
-                    </span>
-                  </div>
+                <CardContent className="p-6">
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!profile) return;
+                      const id = (profile as any).id;
+                      const payload = {
+                        email: profile.email || "",
+                        location: profile.location || "",
+                        website: profile.website || "",
+                      };
+                      setProfileLoading(true);
+                      try {
+                        if (id) {
+                          const { error } = await supabase
+                            .from("profiles")
+                            .update(payload)
+                            .eq("id", id);
+                          if (error) throw error;
+                        } else {
+                          const { error } = await supabase
+                            .from("profiles")
+                            .insert(payload);
+                          if (error) throw error;
+                        }
+                        toast({
+                          title: "Saved",
+                          description: "Contact info updated.",
+                        });
+                      } catch (err) {
+                        toast({
+                          title: "Error",
+                          description: "Failed to save contact info",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setProfileLoading(false);
+                      }
+                    }}
+                    className="space-y-4"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="contact_email">Email</Label>
+                        <Input
+                          id="contact_email"
+                          value={profile?.email || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              email: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="contact_location">Location</Label>
+                        <Input
+                          id="contact_location"
+                          value={profile?.location || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              location: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                      <div className="md:col-span-2">
+                        <Label htmlFor="contact_website">Website</Label>
+                        <Input
+                          id="contact_website"
+                          value={profile?.website || ""}
+                          onChange={(e) =>
+                            setProfile((p: any) => ({
+                              ...(p || {}),
+                              website: e.target.value,
+                            }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end">
+                      <Button type="submit" disabled={profileLoading}>
+                        {profileLoading ? "Saving..." : "Save"}
+                      </Button>
+                    </div>
+                  </form>
                 </CardContent>
               </Card>
             </div>
+          )}
+
+          {activeTab === "settings" && (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-semibold">Account Settings</h2>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Settings className="h-5 w-5" />
+                      Update Account Information
+                    </CardTitle>
+                    <CardDescription>
+                      Change your email address and password
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <form onSubmit={handleUpdateSettings} className="space-y-4">
+                      <div>
+                        <Label htmlFor="newEmail">
+                          New Email Address (optional)
+                        </Label>
+                        <Input
+                          id="newEmail"
+                          type="email"
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                          placeholder="Enter new email"
+                        />
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="newPassword">
+                            New Password (optional)
+                          </Label>
+                          <Input
+                            id="newPassword"
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            placeholder="Enter new password"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="confirmPassword">
+                            Confirm Password
+                          </Label>
+                          <Input
+                            id="confirmPassword"
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="Confirm new password"
+                          />
+                        </div>
+                      </div>
+                      <Button type="submit" disabled={loading}>
+                        {loading ? "Updating..." : "Update Settings"}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current User Information</CardTitle>
+                    <CardDescription>
+                      Your current account details
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Email:</span>
+                      <span className="text-sm text-muted-foreground">
+                        {user?.email}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">User ID:</span>
+                      <span className="text-sm text-muted-foreground">
+                        {user?.id}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Created:</span>
+                      <span className="text-sm text-muted-foreground">
+                        {user?.created_at
+                          ? format(new Date(user.created_at), "MMM dd, yyyy")
+                          : "N/A"}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
           )}
         </main>
@@ -2119,126 +3606,155 @@ const Admin = () => {
 
       {/* Dialogs remain accessible across all tabs */}
       {/* Home Content Dialog */}
-      <Dialog open={newHomeContentOpen} onOpenChange={(open) => { setNewHomeContentOpen(open); if (!open) resetForms(); }}>
-          <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{homeContent ? 'Edit Home Content' : 'Create Home Content'}</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={handleUpdateHomeContent} className="space-y-4">
+      <Dialog
+        open={newHomeContentOpen}
+        onOpenChange={(open) => {
+          setNewHomeContentOpen(open);
+          if (!open) resetForms();
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>
+              {homeContent ? "Edit Home Content" : "Create Home Content"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateHomeContent} className="space-y-4">
+            <div>
+              <Label htmlFor="homeName">Name *</Label>
+              <Input
+                id="homeName"
+                value={homeName}
+                onChange={(e) => setHomeName(e.target.value)}
+                placeholder="Your Name"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="homeTagline">Tagline *</Label>
+              <Textarea
+                id="homeTagline"
+                value={homeTagline}
+                onChange={(e) => setHomeTagline(e.target.value)}
+                placeholder="A short tagline about yourself"
+                className="min-h-[80px]"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="homeName">Name *</Label>
+                <Label htmlFor="primaryColor">Primary Color</Label>
                 <Input
-                  id="homeName"
-                  value={homeName}
-                  onChange={(e) => setHomeName(e.target.value)}
-                  placeholder="Your Name"
-                  required
+                  id="primaryColor"
+                  value={primaryColor}
+                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  placeholder="hsl(262, 83%, 58%)"
                 />
+                <div
+                  className="mt-2 w-full h-10 rounded border"
+                  style={{ background: primaryColor }}
+                ></div>
               </div>
-              
               <div>
-                <Label htmlFor="homeTagline">Tagline *</Label>
-                <Textarea
-                  id="homeTagline"
-                  value={homeTagline}
-                  onChange={(e) => setHomeTagline(e.target.value)}
-                  placeholder="A short tagline about yourself"
-                  className="min-h-[80px]"
-                  required
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="primaryColor">Primary Color</Label>
-                  <Input
-                    id="primaryColor"
-                    value={primaryColor}
-                    onChange={(e) => setPrimaryColor(e.target.value)}
-                    placeholder="hsl(262, 83%, 58%)"
-                  />
-                  <div className="mt-2 w-full h-10 rounded border" style={{ background: primaryColor }}></div>
-                </div>
-                <div>
-                  <Label htmlFor="secondaryColor">Secondary Color</Label>
-                  <Input
-                    id="secondaryColor"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    placeholder="hsl(180, 100%, 50%)"
-                  />
-                  <div className="mt-2 w-full h-10 rounded border" style={{ background: secondaryColor }}></div>
-                </div>
-                <div>
-                  <Label htmlFor="textColor">Text Color</Label>
-                  <Input
-                    id="textColor"
-                    value={textColor}
-                    onChange={(e) => setTextColor(e.target.value)}
-                    placeholder="hsl(0, 0%, 100%)"
-                  />
-                  <div className="mt-2 w-full h-10 rounded border" style={{ background: textColor }}></div>
-                </div>
-                <div>
-                  <Label htmlFor="accentColor">Accent Color</Label>
-                  <Input
-                    id="accentColor"
-                    value={accentColor}
-                    onChange={(e) => setAccentColor(e.target.value)}
-                    placeholder="hsl(262, 90%, 65%)"
-                  />
-                  <div className="mt-2 w-full h-10 rounded border" style={{ background: accentColor }}></div>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="backgroundGradient">Background Gradient</Label>
-                <Textarea
-                  id="backgroundGradient"
-                  value={backgroundGradient}
-                  onChange={(e) => setBackgroundGradient(e.target.value)}
-                  placeholder="linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))"
-                  className="min-h-[60px]"
-                />
-                <div className="mt-2 w-full h-20 rounded border" style={{ background: backgroundGradient }}></div>
-              </div>
-              
-              <div>
-                <Label htmlFor="backgroundImage">Background Image URL (optional)</Label>
+                <Label htmlFor="secondaryColor">Secondary Color</Label>
                 <Input
-                  id="backgroundImage"
-                  value={backgroundImage}
-                  onChange={(e) => setBackgroundImage(e.target.value)}
-                  placeholder="https://example.com/background.jpg"
+                  id="secondaryColor"
+                  value={secondaryColor}
+                  onChange={(e) => setSecondaryColor(e.target.value)}
+                  placeholder="hsl(180, 100%, 50%)"
                 />
+                <div
+                  className="mt-2 w-full h-10 rounded border"
+                  style={{ background: secondaryColor }}
+                ></div>
               </div>
-              
               <div>
-                <ImageCropUpload
-                  currentImageUrl={homeImageUrl}
-                  onImageUpdate={(url) => setHomeImageUrl(url || '')}
-                  bucketName="home-images"
-                  label="Hero Image (optional)"
-                  aspectRatio={1}
+                <Label htmlFor="textColor">Text Color</Label>
+                <Input
+                  id="textColor"
+                  value={textColor}
+                  onChange={(e) => setTextColor(e.target.value)}
+                  placeholder="hsl(0, 0%, 100%)"
                 />
+                <div
+                  className="mt-2 w-full h-10 rounded border"
+                  style={{ background: textColor }}
+                ></div>
               </div>
-              
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => {
+              <div>
+                <Label htmlFor="accentColor">Accent Color</Label>
+                <Input
+                  id="accentColor"
+                  value={accentColor}
+                  onChange={(e) => setAccentColor(e.target.value)}
+                  placeholder="hsl(262, 90%, 65%)"
+                />
+                <div
+                  className="mt-2 w-full h-10 rounded border"
+                  style={{ background: accentColor }}
+                ></div>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="backgroundGradient">Background Gradient</Label>
+              <Textarea
+                id="backgroundGradient"
+                value={backgroundGradient}
+                onChange={(e) => setBackgroundGradient(e.target.value)}
+                placeholder="linear-gradient(135deg, hsl(250, 70%, 15%), hsl(220, 70%, 10%))"
+                className="min-h-[60px]"
+              />
+              <div
+                className="mt-2 w-full h-20 rounded border"
+                style={{ background: backgroundGradient }}
+              ></div>
+            </div>
+
+            <div>
+              <Label htmlFor="backgroundImage">
+                Background Image URL (optional)
+              </Label>
+              <Input
+                id="backgroundImage"
+                value={backgroundImage}
+                onChange={(e) => setBackgroundImage(e.target.value)}
+                placeholder="https://example.com/background.jpg"
+              />
+            </div>
+
+            <div>
+              <ImageCropUpload
+                currentImageUrl={homeImageUrl}
+                onImageUpdate={(url) => setHomeImageUrl(url || "")}
+                bucketName="home-images"
+                label="Hero Image (optional)"
+                aspectRatio={1}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
                   setNewHomeContentOpen(false);
                   resetForms();
-                }}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={loading}>
-                  {loading ? 'Saving...' : (homeContent ? 'Update' : 'Create')}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </SidebarProvider>
-    );
-  };
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Saving..." : homeContent ? "Update" : "Create"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </SidebarProvider>
+  );
+};
 
 export default Admin;
