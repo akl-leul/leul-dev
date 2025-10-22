@@ -731,11 +731,15 @@ const Admin = () => {
       setReplyModalOpen(false);
       resetForms();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to send reply", error);
+
       toast({
         title: "Error",
-        description: error.message || "Failed to send reply",
+
+        description:
+          error instanceof Error ? error.message : "Failed to send reply",
+
         variant: "destructive",
       });
     } finally {
@@ -824,11 +828,15 @@ const Admin = () => {
       });
       setSettingsModalOpen(false);
       resetForms();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to update settings", error);
+
       toast({
         title: "Error",
-        description: error.message || "Failed to update settings",
+
+        description:
+          error instanceof Error ? error.message : "Failed to update settings",
+
         variant: "destructive",
       });
     } finally {
@@ -1048,7 +1056,7 @@ const Admin = () => {
 
         supabase.from("home_content").select("*").limit(1).maybeSingle(),
 
-        (supabase as any)
+        supabase
 
           .from("project_feedbacks")
 
@@ -1290,11 +1298,15 @@ const Admin = () => {
       setCurrentItem(null);
       resetForms();
       fetchData();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to update contact", error);
+
       toast({
         title: "Error",
-        description: error.message || "Failed to update contact",
+
+        description:
+          error instanceof Error ? error.message : "Failed to update contact",
+
         variant: "destructive",
       });
     } finally {
@@ -1483,10 +1495,15 @@ const Admin = () => {
                               title: "Success",
                               description: "Hero image updated successfully",
                             });
-                          } catch (error: any) {
+                          } catch (error: unknown) {
                             toast({
                               title: "Error",
-                              description: error.message,
+
+                              description:
+                                error instanceof Error
+                                  ? error.message
+                                  : "An error occurred",
+
                               variant: "destructive",
                             });
                           }

@@ -58,6 +58,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
 
     { id: "feedback", label: "Feedback", icon: MessageCircle },
   ];
+const COLORS = ["#f59e0b", "#0ea5e9", "#8b5cf6", "#10b981"];
 
   return (
     <Sidebar className="pt-16">

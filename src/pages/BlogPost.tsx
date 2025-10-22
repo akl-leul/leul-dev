@@ -180,7 +180,7 @@ const handleLike = async () => {
       }
     } catch (error) {
       console.error('Error toggling like:', error);
-      toast({ title: 'Error', description: 'Failed to update like status.', variant: 'destructive' });
+      toast({ title: 'Sorry', description: 'You have already liked it.', variant: 'destructive' });
     }
   };
 
