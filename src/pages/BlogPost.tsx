@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { usePageView } from '@/hooks/usePageView';
-import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, UserRoundPen, SquareArrowOutUpRight, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Eye, Share2, Copy, Heart, UserRoundPen, SquareArrowOutUpRight, MessageCircle, Reply, ThumbsUp } from 'lucide-react';
 import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import { useToast } from '@/hooks/use-toast';
@@ -49,6 +49,10 @@ interface Comment {
   content: string;
   created_at: string;
   approved: boolean;
+  parent_id?: number | null;
+  replies_count: number;
+  likes_count: number;
+  replies?: Comment[];
 }
 
 const BlogPost = () => {
@@ -65,6 +69,10 @@ const BlogPost = () => {
   const [commentEmail, setCommentEmail] = useState('');
   const [commentContent, setCommentContent] = useState('');
   const [submittingComment, setSubmittingComment] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [replyContent, setReplyContent] = useState('');
+  const [submittingReply, setSubmittingReply] = useState(false);
+  const [commentLikes, setCommentLikes] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
 
 useEffect(() => {
@@ -111,7 +119,7 @@ try {
       setRelatedPosts(related);
     }
 
-    // Fetch comments
+    // Fetch comments with replies
     const { data: commentsData } = await supabase
       .from('comments')
       .select('*')
@@ -120,7 +128,33 @@ try {
       .order('created_at', { ascending: false });
 
     if (commentsData) {
-      setComments(commentsData);
+      // Organize comments into threads (parent comments with their replies)
+      const parentComments = commentsData.filter(comment => !comment.parent_id);
+      const replies = commentsData.filter(comment => comment.parent_id);
+      
+      // Attach replies to their parent comments
+      const organizedComments = parentComments.map(parent => ({
+        ...parent,
+        replies: replies.filter(reply => reply.parent_id === parent.id)
+      }));
+      
+      setComments(organizedComments);
+      
+      // Check which comments the user has liked
+      const anonUserId = getAnonUserId();
+      const { data: likesData } = await supabase
+        .from('comment_likes')
+        .select('comment_id')
+        .eq('user_id', anonUserId)
+        .in('comment_id', commentsData.map(c => c.id));
+      
+      if (likesData) {
+        const likesMap: Record<number, boolean> = {};
+        likesData.forEach(like => {
+          likesMap[like.comment_id] = true;
+        });
+        setCommentLikes(likesMap);
+      }
     }
   } catch (error) {  
     console.error('Error fetching post:', error);  
@@ -220,6 +254,121 @@ const handleLike = async () => {
       });
     } finally {
       setSubmittingComment(false);
+    }
+  };
+
+  const handleReplySubmit = async (parentId: number) => {
+    if (!post || !commentName.trim() || !commentEmail.trim() || !replyContent.trim()) return;
+
+    setSubmittingReply(true);
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .insert({
+          post_id: post.id,
+          parent_id: parentId,
+          author_name: commentName.trim(),
+          author_email: commentEmail.trim(),
+          content: replyContent.trim(),
+          user_id: null,
+          approved: false
+        });
+
+      if (error) throw error;
+
+      toast({ 
+        title: 'Reply submitted!', 
+        description: 'Your reply is awaiting approval.' 
+      });
+      
+      setReplyContent('');
+      setReplyingTo(null);
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to submit reply.', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setSubmittingReply(false);
+    }
+  };
+
+  const handleCommentLike = async (commentId: number) => {
+    const anonUserId = getAnonUserId();
+    const isLiked = commentLikes[commentId];
+
+    try {
+      if (isLiked) {
+        // Unlike
+        const { error } = await supabase
+          .from('comment_likes')
+          .delete()
+          .eq('comment_id', commentId)
+          .eq('user_id', anonUserId);
+
+        if (error) throw error;
+
+        setCommentLikes(prev => ({ ...prev, [commentId]: false }));
+        
+        // Update local comment likes count
+        setComments(prev => prev.map(comment => {
+          if (comment.id === commentId) {
+            return { ...comment, likes_count: Math.max(0, comment.likes_count - 1) };
+          }
+          // Also update replies
+          if (comment.replies) {
+            comment.replies = comment.replies.map(reply => {
+              if (reply.id === commentId) {
+                return { ...reply, likes_count: Math.max(0, reply.likes_count - 1) };
+              }
+              return reply;
+            });
+          }
+          return comment;
+        }));
+
+        toast({ title: 'Removed like', description: 'You unliked this comment.' });
+      } else {
+        // Like
+        const { error } = await supabase
+          .from('comment_likes')
+          .insert({
+            comment_id: commentId,
+            user_id: anonUserId
+          });
+
+        if (error) throw error;
+
+        setCommentLikes(prev => ({ ...prev, [commentId]: true }));
+        
+        // Update local comment likes count
+        setComments(prev => prev.map(comment => {
+          if (comment.id === commentId) {
+            return { ...comment, likes_count: comment.likes_count + 1 };
+          }
+          // Also update replies
+          if (comment.replies) {
+            comment.replies = comment.replies.map(reply => {
+              if (reply.id === commentId) {
+                return { ...reply, likes_count: reply.likes_count + 1 };
+              }
+              return reply;
+            });
+          }
+          return comment;
+        }));
+
+        toast({ title: 'Liked!', description: 'You liked this comment.' });
+      }
+    } catch (error) {
+      console.error('Error toggling comment like:', error);
+      toast({ 
+        title: 'Error', 
+        description: 'Failed to update like.', 
+        variant: 'destructive' 
+      });
     }
   };
 
@@ -597,26 +746,152 @@ Back to Blog
               </Card>
             ) : (
               comments.map((comment) => (
-                <Card key={comment.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <span className="text-primary font-semibold">
-                          {comment.author_name.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="font-semibold">{comment.author_name}</span>
-                          <span className="text-sm text-muted-foreground">
-                            {format(new Date(comment.created_at), 'MMM dd, yyyy')}
+                <div key={comment.id} className="space-y-3">
+                  {/* Main Comment */}
+                  <Card>
+                    <CardContent className="p-6">
+                      <div className="flex items-start gap-4">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <span className="text-primary font-semibold">
+                            {comment.author_name.charAt(0).toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-muted-foreground">{comment.content}</p>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="font-semibold">{comment.author_name}</span>
+                            <span className="text-sm text-muted-foreground">
+                              {format(new Date(comment.created_at), 'MMM dd, yyyy')}
+                            </span>
+                          </div>
+                          <p className="text-muted-foreground mb-3">{comment.content}</p>
+                          
+                          {/* Comment Actions */}
+                          <div className="flex items-center gap-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCommentLike(comment.id)}
+                              className={`flex items-center gap-1 ${
+                                commentLikes[comment.id] ? "text-red-500" : "text-muted-foreground"
+                              } hover:text-red-500`}
+                            >
+                              {commentLikes[comment.id] ? (
+                                <ThumbsUp className="h-4 w-4 fill-current" />
+                              ) : (
+                                <ThumbsUp className="h-4 w-4" />
+                              )}
+                              <span>{comment.likes_count}</span>
+                            </Button>
+                            
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
+                              className="flex items-center gap-1 text-muted-foreground hover:text-foreground"
+                            >
+                              <Reply className="h-4 w-4" />
+                              Reply
+                            </Button>
+                          </div>
+                        </div>
                       </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Reply Form */}
+                  {replyingTo === comment.id && (
+                    <Card className="ml-8">
+                      <CardContent className="p-4">
+                        <h5 className="font-semibold mb-3">Reply to {comment.author_name}</h5>
+                        <div className="space-y-3">
+                          <Textarea
+                            value={replyContent}
+                            onChange={(e) => setReplyContent(e.target.value)}
+                            placeholder="Write your reply..."
+                            rows={3}
+                            maxLength={500}
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleReplySubmit(comment.id)}
+                              disabled={submittingReply || !replyContent.trim()}
+                            >
+                              {submittingReply ? 'Submitting...' : 'Submit Reply'}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setReplyingTo(null);
+                                setReplyContent('');
+                              }}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Replies */}
+                  {comment.replies && comment.replies.length > 0 && (
+                    <div className="ml-8 space-y-3">
+                      {comment.replies.map((reply) => (
+                        <Card key={reply.id}>
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                <span className="text-primary font-semibold text-sm">
+                                  {reply.author_name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="font-semibold text-sm">{reply.author_name}</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    {format(new Date(reply.created_at), 'MMM dd, yyyy')}
+                                  </span>
+                                </div>
+                                <p className="text-muted-foreground text-sm mb-2">{reply.content}</p>
+                                
+                                {/* Reply Actions */}
+                                <div className="flex items-center gap-3">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleCommentLike(reply.id)}
+                                    className={`flex items-center gap-1 text-xs ${
+                                      commentLikes[reply.id] ? "text-red-500" : "text-muted-foreground"
+                                    } hover:text-red-500`}
+                                  >
+                                    {commentLikes[reply.id] ? (
+                                      <ThumbsUp className="h-3 w-3 fill-current" />
+                                    ) : (
+                                      <ThumbsUp className="h-3 w-3" />
+                                    )}
+                                    <span>{reply.likes_count}</span>
+                                  </Button>
+                                  
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setReplyingTo(replyingTo === reply.id ? null : reply.id)}
+                                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                                  >
+                                    <Reply className="h-3 w-3" />
+                                    Reply
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  )}
+                </div>
               ))
             )}
           </div>

@@ -262,33 +262,33 @@ export function AdminFeedbackManager() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold">
+        <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
           Project Feedback Management ({filteredFeedbacks.length})
         </h2>
       </div>
 
       {/* Filters */}
-      <Card>
-        <CardContent className="p-4">
+      <Card className="shadow-lg border-2 border-blue-100">
+        <CardContent className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="search">Search</Label>
+              <Label htmlFor="search" className="text-blue-700 font-semibold">Search</Label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-blue-500" />
                 <Input
                   id="search"
                   placeholder="Search feedback..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 border-blue-200 focus:border-blue-400 focus:ring-blue-400"
                 />
               </div>
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="status">Status</Label>
+              <Label htmlFor="status" className="text-blue-700 font-semibold">Status</Label>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="border-blue-200 focus:border-blue-400 focus:ring-blue-400">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,9 +300,9 @@ export function AdminFeedbackManager() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="project">Project</Label>
+              <Label htmlFor="project" className="text-blue-700 font-semibold">Project</Label>
               <Select value={projectFilter} onValueChange={setProjectFilter}>
-                <SelectTrigger>
+                <SelectTrigger className="border-blue-200 focus:border-blue-400 focus:ring-blue-400">
                   <SelectValue placeholder="Filter by project" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +317,7 @@ export function AdminFeedbackManager() {
             </div>
 
             <div className="space-y-2">
-              <Label>Actions</Label>
+              <Label className="text-blue-700 font-semibold">Actions</Label>
               <Button
                 variant="outline"
                 onClick={() => {
@@ -325,7 +325,7 @@ export function AdminFeedbackManager() {
                   setStatusFilter("all");
                   setProjectFilter("all");
                 }}
-                className="w-full"
+                className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300"
               >
                 <Filter className="h-4 w-4 mr-2" />
                 Clear Filters
@@ -337,60 +337,67 @@ export function AdminFeedbackManager() {
 
       {/* Feedback List */}
       {filteredFeedbacks.length === 0 ? (
-        <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
-            <Star className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>No feedback found matching your criteria.</p>
+        <Card className="shadow-lg border-2 border-gray-200">
+          <CardContent className="p-8 text-center bg-gradient-to-br from-gray-50 to-gray-100">
+            <Star className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+            <p className="text-gray-600 text-lg">No feedback found matching your criteria.</p>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredFeedbacks.map((feedback) => (
-            <Card key={feedback.id}>
+            <Card key={feedback.id} className="shadow-lg border-2 hover:shadow-xl transition-all duration-300 hover:scale-105">
               <CardContent className="p-6 space-y-4">
                 {/* Header */}
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <div className="font-semibold text-sm">{feedback.author_name}</div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="font-bold text-lg text-gray-800">{feedback.author_name}</div>
+                    <div className="text-sm text-gray-600 font-medium">
                       {getProjectTitle(feedback.project_id)}
                     </div>
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-gray-500">
                       {format(new Date(feedback.created_at), "MMM dd, yyyy")}
                     </div>
                   </div>
                   <Badge
                     variant={feedback.approved ? "default" : "secondary"}
-                    className={
+                    className={`${
                       feedback.approved
-                        ? "bg-green-600 text-white"
-                        : "bg-yellow-600 text-white"
-                    }
+                        ? "bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md"
+                        : "bg-gradient-to-r from-yellow-500 to-yellow-600 text-white shadow-md"
+                    } font-semibold`}
                   >
-                    {feedback.approved ? "Approved" : "Pending"}
+                    {feedback.approved ? "✅ Approved" : "⏳ Pending"}
                   </Badge>
                 </div>
 
                 {/* Rating */}
                 {feedback.rating && (
-                  <div className="flex items-center gap-1">
-                    {renderStars(feedback.rating)}
-                    <span className="text-sm text-muted-foreground ml-1">
+                  <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg">
+                    <div className="flex items-center gap-1">
+                      {renderStars(feedback.rating)}
+                    </div>
+                    <span className="text-sm font-semibold text-yellow-700">
                       ({feedback.rating}/5)
                     </span>
                   </div>
                 )}
 
                 {/* Content */}
-                <p className="text-sm text-muted-foreground line-clamp-3">
-                  {feedback.content}
-                </p>
+                <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg">
+                  <p className="text-sm text-gray-700 line-clamp-3">
+                    {feedback.content}
+                  </p>
+                </div>
 
                 {/* Response */}
                 {feedback.response_message && (
-                  <div className="rounded bg-muted p-3 text-sm">
-                    <div className="font-medium mb-1 text-blue-700">Response</div>
-                    <div className="text-muted-foreground line-clamp-2">
+                  <div className="rounded-lg bg-gradient-to-r from-blue-50 to-blue-100 p-4 border-l-4 border-blue-400">
+                    <div className="font-semibold mb-2 text-blue-800 flex items-center gap-2">
+                      <Reply className="h-4 w-4" />
+                      Response
+                    </div>
+                    <div className="text-sm text-blue-700 line-clamp-2">
                       {feedback.response_message}
                     </div>
                   </div>
@@ -403,7 +410,7 @@ export function AdminFeedbackManager() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleApprove(feedback.id)}
-                      className="flex-1"
+                      className="flex-1 bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200 hover:from-green-100 hover:to-green-200 hover:border-green-300 font-semibold"
                     >
                       <Check className="h-4 w-4 mr-1" />
                       Approve
@@ -417,7 +424,7 @@ export function AdminFeedbackManager() {
                       setFeedbackResponse(feedback.response_message || "");
                       setFeedbackResponseOpen(true);
                     }}
-                    className="flex-1"
+                    className="flex-1 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200 hover:from-blue-100 hover:to-blue-200 hover:border-blue-300 font-semibold"
                   >
                     <Reply className="h-4 w-4 mr-1" />
                     Respond
@@ -426,7 +433,7 @@ export function AdminFeedbackManager() {
                     size="sm"
                     variant="outline"
                     onClick={() => handleDelete(feedback.id)}
-                    className="bg-red-50 text-red-700 hover:bg-red-100"
+                    className="bg-gradient-to-r from-red-50 to-red-100 text-red-700 border-red-200 hover:from-red-100 hover:to-red-200 hover:border-red-300"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -439,39 +446,43 @@ export function AdminFeedbackManager() {
 
       {/* Response Dialog */}
       <Dialog open={feedbackResponseOpen} onOpenChange={setFeedbackResponseOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
+        <DialogContent className="sm:max-w-2xl bg-gradient-to-br from-white to-blue-50 border-2 border-blue-200">
+          <DialogHeader className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-t-lg">
+            <DialogTitle className="text-2xl font-bold text-blue-800">
               Respond to {activeFeedback?.author_name}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="rounded bg-muted p-3">
-              <div className="text-sm font-medium mb-2">Original Feedback:</div>
-              <div className="text-sm text-muted-foreground">
+          <div className="space-y-6 p-6">
+            <div className="rounded-lg bg-gradient-to-r from-gray-50 to-gray-100 p-4 border-l-4 border-gray-400">
+              <div className="text-sm font-semibold mb-2 text-gray-700">Original Feedback:</div>
+              <div className="text-sm text-gray-600">
                 {activeFeedback?.content}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label htmlFor="feedbackResponse">Your Response</Label>
+            <div className="space-y-3">
+              <Label htmlFor="feedbackResponse" className="text-blue-700 font-semibold">Your Response</Label>
               <Textarea
                 id="feedbackResponse"
-                className="min-h-[120px]"
+                className="min-h-[120px] border-blue-200 focus:border-blue-400 focus:ring-blue-400"
                 value={feedbackResponse}
                 onChange={(e) => setFeedbackResponse(e.target.value)}
                 placeholder="Write your response to this feedback..."
               />
             </div>
             
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-end gap-3">
               <Button
                 variant="outline"
                 onClick={() => setFeedbackResponseOpen(false)}
+                className="border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </Button>
-              <Button onClick={handleRespond}>
+              <Button 
+                onClick={handleRespond}
+                className="bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 shadow-md"
+              >
                 Send Response
               </Button>
             </div>
