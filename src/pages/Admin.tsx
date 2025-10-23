@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import DatabaseTest from '@/components/DatabaseTest';
 import {
   Card,
   CardContent,
@@ -1366,6 +1367,7 @@ const Admin = () => {
           {activeTab === "analytics" && (
             <div className="space-y-6">
               <AnalyticsDashboard analytics={analytics} />
+              <DatabaseTest />
             </div>
           )}
 

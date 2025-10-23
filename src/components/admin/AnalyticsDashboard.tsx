@@ -349,7 +349,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
                 </tr>
               </thead>
               <tbody>
-                {pageViews.slice(0, 25).map((view, index) => ( // Increased from 15 to 25
+                {pageViews.slice(0, 10).map((view, index) => ( // Show top 10 latest views
                   <tr key={index} className="border-b border-indigo-100 hover:bg-indigo-50 transition-colors">
                     <td className="py-4 px-4 font-semibold text-gray-800">{view.page_path}</td>
                     <td className="py-4 px-4">

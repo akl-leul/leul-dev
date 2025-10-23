@@ -262,6 +262,16 @@ const handleLike = async () => {
 
     setSubmittingReply(true);
     try {
+      console.log('Submitting reply:', {
+        post_id: post.id,
+        parent_id: parentId,
+        author_name: commentName.trim(),
+        author_email: commentEmail.trim(),
+        content: replyContent.trim(),
+        user_id: null,
+        approved: false
+      });
+
       const { error } = await supabase
         .from('comments')
         .insert({
@@ -274,7 +284,10 @@ const handleLike = async () => {
           approved: false
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Reply submission error:', error);
+        throw error;
+      }
 
       toast({ 
         title: 'Reply submitted!', 
@@ -283,6 +296,24 @@ const handleLike = async () => {
       
       setReplyContent('');
       setReplyingTo(null);
+      
+      // Refresh comments to show the new reply
+      const { data: commentsData } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('post_id', post.id)
+        .eq('approved', true)
+        .order('created_at', { ascending: false });
+
+      if (commentsData) {
+        const parentComments = commentsData.filter(comment => !comment.parent_id);
+        const replies = commentsData.filter(comment => comment.parent_id);
+        const organizedComments = parentComments.map(parent => ({
+          ...parent,
+          replies: replies.filter(reply => reply.parent_id === parent.id)
+        }));
+        setComments(organizedComments);
+      }
     } catch (error) {
       console.error('Error submitting reply:', error);
       toast({ 
@@ -302,13 +333,17 @@ const handleLike = async () => {
     try {
       if (isLiked) {
         // Unlike
+        console.log('Unliking comment:', commentId, 'for user:', anonUserId);
         const { error } = await supabase
           .from('comment_likes')
           .delete()
           .eq('comment_id', commentId)
           .eq('user_id', anonUserId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Unlike error:', error);
+          throw error;
+        }
 
         setCommentLikes(prev => ({ ...prev, [commentId]: false }));
         
@@ -332,6 +367,7 @@ const handleLike = async () => {
         toast({ title: 'Removed like', description: 'You unliked this comment.' });
       } else {
         // Like
+        console.log('Liking comment:', commentId, 'for user:', anonUserId);
         const { error } = await supabase
           .from('comment_likes')
           .insert({
@@ -339,7 +375,10 @@ const handleLike = async () => {
             user_id: anonUserId
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Like error:', error);
+          throw error;
+        }
 
         setCommentLikes(prev => ({ ...prev, [commentId]: true }));
         
