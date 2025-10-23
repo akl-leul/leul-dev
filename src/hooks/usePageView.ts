@@ -4,60 +4,165 @@ import { supabase } from '@/integrations/supabase/client';
 
 // Function to detect device type
 const getDeviceType = (userAgent: string): string => {
-  if (/tablet|ipad|playbook|silk/i.test(userAgent)) {
+  const ua = userAgent.toLowerCase();
+  
+  // Check for tablets first (before mobile)
+  if (ua.includes('ipad') || 
+      ua.includes('tablet') || 
+      ua.includes('playbook') || 
+      ua.includes('kindle') ||
+      (ua.includes('android') && !ua.includes('mobile'))) {
     return 'tablet';
   }
-  if (/mobile|iphone|ipod|android|blackberry|opera|mini|windows\sce|palm|smartphone|iemobile/i.test(userAgent)) {
+  
+  // Check for mobile devices
+  if (ua.includes('mobile') || 
+      ua.includes('iphone') || 
+      ua.includes('ipod') || 
+      ua.includes('android') ||
+      ua.includes('blackberry') || 
+      ua.includes('opera mini') || 
+      ua.includes('windows phone') ||
+      ua.includes('palm') || 
+      ua.includes('smartphone') || 
+      ua.includes('iemobile')) {
     return 'mobile';
   }
+  
   return 'desktop';
 };
 
 // Function to detect browser
 const getBrowser = (userAgent: string): string => {
-  if (userAgent.includes('Chrome')) return 'Chrome';
-  if (userAgent.includes('Firefox')) return 'Firefox';
-  if (userAgent.includes('Safari')) return 'Safari';
-  if (userAgent.includes('Edge')) return 'Edge';
-  if (userAgent.includes('Opera')) return 'Opera';
+  const ua = userAgent.toLowerCase();
+  
+  if (ua.includes('edg/') || ua.includes('edge/')) return 'Edge';
+  if (ua.includes('opr/') || ua.includes('opera/')) return 'Opera';
+  if (ua.includes('chrome/') && !ua.includes('edg/')) return 'Chrome';
+  if (ua.includes('firefox/')) return 'Firefox';
+  if (ua.includes('safari/') && !ua.includes('chrome/')) return 'Safari';
+  if (ua.includes('msie') || ua.includes('trident/')) return 'Internet Explorer';
+  
   return 'Other';
 };
 
 // Function to detect OS
 const getOS = (userAgent: string): string => {
-  if (userAgent.includes('Windows')) return 'Windows';
-  if (userAgent.includes('Mac')) return 'macOS';
-  if (userAgent.includes('Linux')) return 'Linux';
-  if (userAgent.includes('Android')) return 'Android';
-  if (userAgent.includes('iOS')) return 'iOS';
+  const ua = userAgent.toLowerCase();
+  
+  if (ua.includes('windows nt')) return 'Windows';
+  if (ua.includes('mac os x') || ua.includes('macintosh')) return 'macOS';
+  if (ua.includes('linux') && !ua.includes('android')) return 'Linux';
+  if (ua.includes('android')) return 'Android';
+  if (ua.includes('iphone') || ua.includes('ipad') || ua.includes('ipod')) return 'iOS';
+  if (ua.includes('ubuntu')) return 'Ubuntu';
+  if (ua.includes('fedora')) return 'Fedora';
+  if (ua.includes('debian')) return 'Debian';
+  
   return 'Other';
 };
 
-// Function to get IP address (using a free service)
-const getIPAddress = async (): Promise<string | null> => {
+// Helper function to add timeout to fetch
+const fetchWithTimeout = async (url: string, options: RequestInit = {}, timeout = 5000): Promise<Response> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+  
   try {
-    const response = await fetch('https://api.ipify.org?format=json');
-    const data = await response.json();
-    return data.ip;
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
   } catch (error) {
-    console.error('Error fetching IP address:', error);
-    return null;
+    clearTimeout(timeoutId);
+    throw error;
   }
 };
 
-// Function to get location from IP (using a free service)
-const getLocationFromIP = async (ip: string): Promise<{country: string | null, city: string | null}> => {
-  try {
-    const response = await fetch(`https://ipapi.co/${ip}/json/`);
-    const data = await response.json();
-    return {
-      country: data.country_name || null,
-      city: data.city || null
-    };
-  } catch (error) {
-    console.error('Error fetching location:', error);
-    return { country: null, city: null };
+// Function to get IP address (using multiple fallback services)
+const getIPAddress = async (): Promise<string | null> => {
+  const services = [
+    'https://api.ipify.org?format=json',
+    'https://ipapi.co/json/',
+    'https://api.ip.sb/geoip',
+    'https://ipinfo.io/json'
+  ];
+
+  for (const service of services) {
+    try {
+      const response = await fetchWithTimeout(service, {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Different services return IP in different fields
+        const ip = data.ip || data.query || data.ipAddress;
+        if (ip && typeof ip === 'string') {
+          return ip;
+        }
+      }
+    } catch (error) {
+      console.warn(`IP service ${service} failed:`, error);
+      continue;
+    }
   }
+  
+  console.warn('All IP services failed, using fallback');
+  return null;
+};
+
+// Function to get location from IP (using multiple fallback services)
+const getLocationFromIP = async (ip: string): Promise<{country: string | null, city: string | null}> => {
+  const services = [
+    `https://ipapi.co/${ip}/json/`,
+    `https://ipinfo.io/${ip}/json`,
+    `https://api.ip.sb/geoip/${ip}`,
+    `https://ip-api.com/json/${ip}`
+  ];
+
+  for (const service of services) {
+    try {
+      const response = await fetchWithTimeout(service, {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Different services return location data in different formats
+        let country = null;
+        let city = null;
+        
+        if (data.country_name) {
+          country = data.country_name;
+          city = data.city;
+        } else if (data.country) {
+          country = data.country;
+          city = data.city;
+        } else if (data.countryCode) {
+          // For ip-api.com format
+          country = data.country;
+          city = data.city;
+        }
+        
+        if (country) {
+          return { country, city };
+        }
+      }
+    } catch (error) {
+      console.warn(`Location service ${service} failed:`, error);
+      continue;
+    }
+  }
+  
+  console.warn('All location services failed');
+  return { country: null, city: null };
 };
 
 export const usePageView = (pageTitle?: string) => {
@@ -89,6 +194,137 @@ export const usePageView = (pageTitle?: string) => {
           const location = await getLocationFromIP(ipAddress);
           country = location.country;
           city = location.city;
+        }
+
+        // If IP services fail, try to get basic location from browser
+        if (!country && navigator.language) {
+          // Use browser language as a fallback for country detection
+          const lang = navigator.language.split('-')[1];
+          if (lang) {
+            const countryNames: Record<string, string> = {
+              'US': 'United States',
+              'GB': 'United Kingdom',
+              'CA': 'Canada',
+              'AU': 'Australia',
+              'DE': 'Germany',
+              'FR': 'France',
+              'ES': 'Spain',
+              'IT': 'Italy',
+              'JP': 'Japan',
+              'CN': 'China',
+              'IN': 'India',
+              'BR': 'Brazil',
+              'RU': 'Russia',
+              'MX': 'Mexico',
+              'NL': 'Netherlands',
+              'SE': 'Sweden',
+              'NO': 'Norway',
+              'DK': 'Denmark',
+              'FI': 'Finland',
+              'PL': 'Poland',
+              'CZ': 'Czech Republic',
+              'HU': 'Hungary',
+              'RO': 'Romania',
+              'BG': 'Bulgaria',
+              'GR': 'Greece',
+              'PT': 'Portugal',
+              'IE': 'Ireland',
+              'AT': 'Austria',
+              'CH': 'Switzerland',
+              'BE': 'Belgium',
+              'LU': 'Luxembourg',
+              'SK': 'Slovakia',
+              'SI': 'Slovenia',
+              'HR': 'Croatia',
+              'EE': 'Estonia',
+              'LV': 'Latvia',
+              'LT': 'Lithuania',
+              'MT': 'Malta',
+              'CY': 'Cyprus',
+              'KR': 'South Korea',
+              'TH': 'Thailand',
+              'SG': 'Singapore',
+              'MY': 'Malaysia',
+              'ID': 'Indonesia',
+              'PH': 'Philippines',
+              'VN': 'Vietnam',
+              'TW': 'Taiwan',
+              'HK': 'Hong Kong',
+              'NZ': 'New Zealand',
+              'ZA': 'South Africa',
+              'EG': 'Egypt',
+              'NG': 'Nigeria',
+              'KE': 'Kenya',
+              'MA': 'Morocco',
+              'TN': 'Tunisia',
+              'DZ': 'Algeria',
+              'GH': 'Ghana',
+              'ET': 'Ethiopia',
+              'UG': 'Uganda',
+              'TZ': 'Tanzania',
+              'ZW': 'Zimbabwe',
+              'BW': 'Botswana',
+              'NA': 'Namibia',
+              'ZM': 'Zambia',
+              'MW': 'Malawi',
+              'MZ': 'Mozambique',
+              'MG': 'Madagascar',
+              'MU': 'Mauritius',
+              'SC': 'Seychelles',
+              'AR': 'Argentina',
+              'CL': 'Chile',
+              'CO': 'Colombia',
+              'PE': 'Peru',
+              'VE': 'Venezuela',
+              'UY': 'Uruguay',
+              'PY': 'Paraguay',
+              'BO': 'Bolivia',
+              'EC': 'Ecuador',
+              'GY': 'Guyana',
+              'SR': 'Suriname',
+              'FK': 'Falkland Islands',
+              'TR': 'Turkey',
+              'SA': 'Saudi Arabia',
+              'AE': 'United Arab Emirates',
+              'IL': 'Israel',
+              'JO': 'Jordan',
+              'LB': 'Lebanon',
+              'SY': 'Syria',
+              'IQ': 'Iraq',
+              'IR': 'Iran',
+              'AF': 'Afghanistan',
+              'PK': 'Pakistan',
+              'BD': 'Bangladesh',
+              'LK': 'Sri Lanka',
+              'NP': 'Nepal',
+              'BT': 'Bhutan',
+              'MV': 'Maldives',
+              'MM': 'Myanmar',
+              'LA': 'Laos',
+              'KH': 'Cambodia',
+              'BN': 'Brunei',
+              'TL': 'East Timor',
+              'MN': 'Mongolia',
+              'KZ': 'Kazakhstan',
+              'UZ': 'Uzbekistan',
+              'KG': 'Kyrgyzstan',
+              'TJ': 'Tajikistan',
+              'TM': 'Turkmenistan',
+              'AZ': 'Azerbaijan',
+              'AM': 'Armenia',
+              'GE': 'Georgia',
+              'BY': 'Belarus',
+              'MD': 'Moldova',
+              'UA': 'Ukraine',
+              'MK': 'North Macedonia',
+              'AL': 'Albania',
+              'BA': 'Bosnia and Herzegovina',
+              'ME': 'Montenegro',
+              'RS': 'Serbia',
+              'XK': 'Kosovo'
+            };
+            country = countryNames[lang] || null;
+          }
         }
 
         await supabase.from('page_views').insert({

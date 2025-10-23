@@ -93,6 +93,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ImageCropUpload } from "@/components/admin/ImageCropUpload";
 import { AdminFeedbackManager } from "@/components/admin/AdminFeedbackManager";
+import IPTestComponent from "@/components/admin/IPTestComponent";
 
 interface Project {
   id: string;
@@ -1374,6 +1375,7 @@ const Admin = () => {
           {activeTab === "analytics" && (
             <div className="space-y-6">
               <AnalyticsDashboard analytics={analytics} />
+              <IPTestComponent />
             </div>
           )}
 
