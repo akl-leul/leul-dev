@@ -202,52 +202,51 @@ export function ProjectFeedback({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="author_name">Name *</Label>
-                  <Input
-                    id="author_name"
-                    {...register("author_name")}
-                    placeholder="Your name"
-                  />
-                  {errors.author_name && (
-                    <p className="text-sm text-red-500">{errors.author_name.message}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="author_email">Email (Optional)</Label>
-                  <Input
-                    id="author_email"
-                    type="email"
-                    {...register("author_email")}
-                    placeholder="your@email.com"
-                  />
-                  {errors.author_email && (
-                    <p className="text-sm text-red-500">{errors.author_email.message}</p>
-                  )}
-                </div>
-              </div>
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+      <Input
+        id="author_name"
+        {...register("author_name")}
+        placeholder="Your name"
+      />
+      {errors.author_name && (
+        <p className="text-sm text-red-500">{errors.author_name.message}</p>
+      )}
+    </div>
 
-              {renderRatingInput()}
+    <div>
+      <Input
+        id="author_email"
+        type="email"
+        {...register("author_email")}
+        placeholder="your@email.com"
+      />
+      {errors.author_email && (
+        <p className="text-sm text-red-500">{errors.author_email.message}</p>
+      )}
+    </div>
+  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="content">Your Feedback *</Label>
-                <Textarea
-                  id="content"
-                  {...register("content")}
-                  placeholder="Share your thoughts about this project..."
-                  rows={4}
-                />
-                {errors.content && (
-                  <p className="text-sm text-red-500">{errors.content.message}</p>
-                )}
-              </div>
+  {renderRatingInput()}
 
-              <Button type="submit" disabled={submitting} className="w-full">
-                {submitting ? "Submitting..." : "Submit Feedback"}
-              </Button>
-            </form>
+  <div>
+    <Textarea
+      id="content"
+      {...register("content")}
+      placeholder="Share your thoughts about this project..."
+      rows={4}
+    />
+    {errors.content && (
+      <p className="text-sm text-red-500">{errors.content.message}</p>
+    )}
+  </div>
+
+  <Button type="submit" disabled={submitting} className="w-full">
+    {submitting ? "Submitting..." : "Submit Feedback"}
+  </Button>
+</form>
+
           </CardContent>
         </Card>
       )}
