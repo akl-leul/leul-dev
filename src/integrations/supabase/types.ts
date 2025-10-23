@@ -1172,6 +1172,68 @@ export type Database = {
           },
         ]
       }
+      project_feedbacks: {
+        Row: {
+          approved: boolean
+          approved_at: string | null
+          approved_by: string | null
+          author_email: string | null
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          project_id: string
+          rating: number | null
+          responded_at: string | null
+          responded_by: string | null
+          response_message: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          author_email?: string | null
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+          project_id: string
+          rating?: number | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          approved?: boolean
+          approved_at?: string | null
+          approved_by?: string | null
+          author_email?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          rating?: number | null
+          responded_at?: string | null
+          responded_by?: string | null
+          response_message?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_feedbacks_project_id_projects_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           content: string | null

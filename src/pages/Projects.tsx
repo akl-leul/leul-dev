@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageView } from "@/hooks/usePageView";
-import { ExternalLink, Github, Search, Star } from "lucide-react";
+import { ExternalLink, Github, Search, Star, Eye } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   Pagination,
   PaginationContent,
@@ -226,6 +227,12 @@ const Projects = () => {
                     </div>
 
                     <div className="flex gap-2 pt-2">
+                      <Button size="sm" variant="outline" asChild className="flex-1">
+                        <Link to={`/projects/${project.id}`} className="flex items-center justify-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </Link>
+                      </Button>
                       {project.github_url && (
                         <Button
                           size="sm"
