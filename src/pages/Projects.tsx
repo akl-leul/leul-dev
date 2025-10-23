@@ -230,7 +230,7 @@ const Projects = () => {
                       <Button size="sm" variant="outline" asChild className="flex-1">
                         <Link to={`/projects/${project.id}`} className="flex items-center justify-center gap-2">
                           <Eye className="h-4 w-4" />
-                          View Details
+                          Details
                         </Link>
                       </Button>
                       {project.github_url && (
