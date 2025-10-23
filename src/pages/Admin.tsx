@@ -93,7 +93,6 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 import { ImageCropUpload } from "@/components/admin/ImageCropUpload";
 import { AdminFeedbackManager } from "@/components/admin/AdminFeedbackManager";
-import IPTestComponent from "@/components/admin/IPTestComponent";
 
 interface Project {
   id: string;
@@ -977,29 +976,18 @@ const Admin = () => {
 
   useEffect(() => {
     const targetAnalytics = {
-      totalProjects: projects.length,
-
-      featuredProjects: projects.filter((p) => p.featured).length,
-
-      totalPosts: posts.length,
-
-      publishedPosts: posts.filter((p) => p.published).length,
-
-      totalViews: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0),
-
-      totalLikes: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0),
-
-      totalSkills: skills.length,
-
-      totalExperiences: experiences.length,
-
-      totalContacts: contacts.length,
-
-      newContacts: contacts.filter((c) => c.status === "new").length,
-
-      totalComments: comments.length,
-
-      pendingComments: comments.filter((c) => !c.approved).length,
+      totalProjects: projects.length, // REAL DATA ONLY
+      featuredProjects: projects.filter((p) => p.featured).length, // REAL DATA ONLY
+      totalPosts: posts.length, // REAL DATA ONLY
+      publishedPosts: posts.filter((p) => p.published).length, // REAL DATA ONLY
+      totalViews: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0), // REAL DATA ONLY
+      totalLikes: posts.reduce((sum, post) => sum + (post.likes_count || 0), 0), // REAL DATA ONLY
+      totalSkills: skills.length, // REAL DATA ONLY
+      totalExperiences: experiences.length, // REAL DATA ONLY
+      totalContacts: contacts.length, // REAL DATA ONLY
+      newContacts: contacts.filter((c) => c.status === "new").length, // REAL DATA ONLY
+      totalComments: comments.length, // REAL DATA ONLY
+      pendingComments: comments.filter((c) => !c.approved).length, // REAL DATA ONLY
     };
     const duration = 1000;
     const start = performance.now();
@@ -1364,34 +1352,43 @@ const Admin = () => {
       <div className="flex min-h-screen w-full mt-16">
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="flex-1 p-6">
-          <div className="mb-6 flex items-center gap-4">
-            <SidebarTrigger />
-            <h1 className="text-3xl font-bold text-foreground">
-              Admin Dashboard
-            </h1>
+        <main className="flex-1 p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+          <div className="mb-8 flex items-center gap-4">
+            <SidebarTrigger className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg" />
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                Admin Dashboard
+              </h1>
+              <p className="text-gray-600 mt-2">Manage your website content and analytics</p>
+            </div>
           </div>
 
           {activeTab === "analytics" && (
             <div className="space-y-6">
               <AnalyticsDashboard analytics={analytics} />
-              <IPTestComponent />
             </div>
           )}
 
           {activeTab === "home" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">Home Page Content</h2>
-                <div className="flex gap-2">
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border-2 border-green-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-green-800">Home Page Content</h2>
+                  <p className="text-green-600 mt-1">Manage your homepage content and hero section</p>
+                </div>
+                <div className="flex gap-3">
                   <Button
                     variant="outline"
                     onClick={() => setShowHomePreview(!showHomePreview)}
+                    className="bg-white/80 border-green-300 text-green-700 hover:bg-green-50 hover:border-green-400 shadow-md"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     {showHomePreview ? "Hide" : "Show"} Preview
                   </Button>
-                  <Button onClick={editHomeContent}>
+                  <Button 
+                    onClick={editHomeContent}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg"
+                  >
                     <Edit className="h-4 w-4 mr-2" />
                     Edit Home Content
                   </Button>
@@ -1609,11 +1606,14 @@ const Admin = () => {
           )}
 
           {activeTab === "projects" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">
-                  Projects ({filteredProjects.length})
-                </h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl border-2 border-purple-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-purple-800">
+                    Projects ({filteredProjects.length})
+                  </h2>
+                  <p className="text-purple-600 mt-1">Manage your portfolio projects</p>
+                </div>
                 <Dialog
                   open={newProjectOpen}
                   onOpenChange={(open) => {
@@ -1622,7 +1622,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700 shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Project
                     </Button>
@@ -1874,11 +1874,14 @@ const Admin = () => {
           )}
 
           {activeTab === "posts" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">
-                  Blog Posts ({filteredPosts.length})
-                </h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border-2 border-blue-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-blue-800">
+                    Blog Posts ({filteredPosts.length})
+                  </h2>
+                  <p className="text-blue-600 mt-1">Manage your blog content and articles</p>
+                </div>
                 <Dialog
                   open={newPostOpen}
                   onOpenChange={(open) => {
@@ -1887,7 +1890,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white hover:from-blue-600 hover:to-cyan-700 shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       New Post
                     </Button>
@@ -2095,11 +2098,14 @@ const Admin = () => {
           )}
 
           {activeTab === "skills" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">
-                  Skills ({filteredSkills.length})
-                </h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-yellow-800">
+                    Skills ({filteredSkills.length})
+                  </h2>
+                  <p className="text-yellow-600 mt-1">Manage your technical skills and expertise</p>
+                </div>
                 <Dialog
                   open={newSkillOpen}
                   onOpenChange={(open) => {
@@ -2108,7 +2114,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white hover:from-yellow-600 hover:to-orange-700 shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Skill
                     </Button>
@@ -2308,11 +2314,14 @@ const Admin = () => {
           )}
 
           {activeTab === "experiences" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">
-                  Work Experience ({filteredExperiences.length})
-                </h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-indigo-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-indigo-800">
+                    Work Experience ({filteredExperiences.length})
+                  </h2>
+                  <p className="text-indigo-600 mt-1">Manage your professional work history</p>
+                </div>
                 <Dialog
                   open={newExperienceOpen}
                   onOpenChange={(open) => {
@@ -2321,7 +2330,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-lg">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Experience
                     </Button>
@@ -2605,12 +2614,15 @@ const Admin = () => {
           )}
 
           {activeTab === "contacts" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">
-                  Contact Messages ({filteredContacts.length})
-                </h2>
-                <Badge variant="secondary">
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-xl border-2 border-red-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-red-800">
+                    Contact Messages ({filteredContacts.length})
+                  </h2>
+                  <p className="text-red-600 mt-1">Manage incoming contact messages and inquiries</p>
+                </div>
+                <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-300 px-4 py-2 text-lg font-semibold">
                   {contacts.filter((c) => c.status === "new").length} new
                 </Badge>
               </div>
@@ -2882,12 +2894,15 @@ const Admin = () => {
           )}
 
           {activeTab === "comments" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">
-                  Comments ({filteredComments.length})
-                </h2>
-                <Badge variant="secondary">
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-teal-50 to-cyan-50 p-6 rounded-xl border-2 border-teal-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-teal-800">
+                    Comments ({filteredComments.length})
+                  </h2>
+                  <p className="text-teal-600 mt-1">Manage blog post comments and moderation</p>
+                </div>
+                <Badge variant="secondary" className="bg-teal-100 text-teal-800 border-teal-300 px-4 py-2 text-lg font-semibold">
                   {comments.filter((c) => !c.approved).length} pending
                 </Badge>
               </div>
@@ -3044,11 +3059,14 @@ const Admin = () => {
           {activeTab === "feedback" && <AdminFeedbackManager />}
 
           {activeTab === "about" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">About Page</h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-emerald-50 to-green-50 p-6 rounded-xl border-2 border-emerald-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-emerald-800">About Page</h2>
+                  <p className="text-emerald-600 mt-1">Manage your personal information and bio</p>
+                </div>
               </div>
-              <Card>
+              <Card className="shadow-lg border-2 border-emerald-100">
                 <CardContent className="p-6">
                   <form
                     onSubmit={async (e) => {
@@ -3242,11 +3260,14 @@ const Admin = () => {
           )}
 
           {activeTab === "contact" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">Contact Page</h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-violet-50 to-purple-50 p-6 rounded-xl border-2 border-violet-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-violet-800">Contact Page</h2>
+                  <p className="text-violet-600 mt-1">Manage your contact information and social links</p>
+                </div>
               </div>
-              <Card>
+              <Card className="shadow-lg border-2 border-violet-100">
                 <CardContent className="p-6">
                   <form
                     onSubmit={async (e) => {
@@ -3341,15 +3362,18 @@ const Admin = () => {
           )}
 
           {activeTab === "settings" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-semibold">Account Settings</h2>
+            <div className="space-y-8">
+              <div className="flex justify-between items-center bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border-2 border-gray-200 shadow-lg">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-800">Account Settings</h2>
+                  <p className="text-gray-600 mt-1">Manage your account preferences and security</p>
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <Card className="shadow-lg border-2 border-gray-100 hover:shadow-xl transition-all duration-300">
+                  <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
+                    <CardTitle className="flex items-center gap-2 text-gray-800">
                       <Settings className="h-5 w-5" />
                       Update Account Information
                     </CardTitle>

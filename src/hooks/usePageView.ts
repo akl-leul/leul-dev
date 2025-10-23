@@ -86,7 +86,10 @@ const getIPAddress = async (): Promise<string | null> => {
     'https://api.ipify.org?format=json',
     'https://ipapi.co/json/',
     'https://api.ip.sb/geoip',
-    'https://ipinfo.io/json'
+    'https://ipinfo.io/json',
+    'https://api.db-ip.com/v2/free/self',
+    'https://ipapi.co/json/',
+    'https://freeipapi.com/api/json'
   ];
 
   for (const service of services) {
@@ -100,8 +103,8 @@ const getIPAddress = async (): Promise<string | null> => {
       if (response.ok) {
         const data = await response.json();
         // Different services return IP in different fields
-        const ip = data.ip || data.query || data.ipAddress;
-        if (ip && typeof ip === 'string') {
+        const ip = data.ip || data.query || data.ipAddress || data.ipAddress;
+        if (ip && typeof ip === 'string' && ip.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
           return ip;
         }
       }
@@ -121,7 +124,10 @@ const getLocationFromIP = async (ip: string): Promise<{country: string | null, c
     `https://ipapi.co/${ip}/json/`,
     `https://ipinfo.io/${ip}/json`,
     `https://api.ip.sb/geoip/${ip}`,
-    `https://ip-api.com/json/${ip}`
+    `https://ip-api.com/json/${ip}`,
+    `https://api.db-ip.com/v2/free/${ip}`,
+    `https://freeipapi.com/api/json/${ip}`,
+    `https://ipapi.co/${ip}/json/`
   ];
 
   for (const service of services) {
@@ -139,6 +145,7 @@ const getLocationFromIP = async (ip: string): Promise<{country: string | null, c
         let country = null;
         let city = null;
         
+        // Handle different API response formats
         if (data.country_name) {
           country = data.country_name;
           city = data.city;
@@ -149,6 +156,42 @@ const getLocationFromIP = async (ip: string): Promise<{country: string | null, c
           // For ip-api.com format
           country = data.country;
           city = data.city;
+        } else if (data.country_name && data.city_name) {
+          // For db-ip.com format
+          country = data.country_name;
+          city = data.city_name;
+        }
+        
+        // Additional fallback for country code to name conversion
+        if (data.country_code && !country) {
+          const countryCodeMap: Record<string, string> = {
+            'ET': 'Ethiopia', 'US': 'United States', 'GB': 'United Kingdom', 'CA': 'Canada', 'AU': 'Australia',
+            'DE': 'Germany', 'FR': 'France', 'ES': 'Spain', 'IT': 'Italy', 'JP': 'Japan',
+            'CN': 'China', 'IN': 'India', 'BR': 'Brazil', 'RU': 'Russia', 'MX': 'Mexico',
+            'NL': 'Netherlands', 'SE': 'Sweden', 'NO': 'Norway', 'DK': 'Denmark', 'FI': 'Finland',
+            'PL': 'Poland', 'CZ': 'Czech Republic', 'HU': 'Hungary', 'RO': 'Romania', 'BG': 'Bulgaria',
+            'GR': 'Greece', 'PT': 'Portugal', 'IE': 'Ireland', 'AT': 'Austria', 'CH': 'Switzerland',
+            'BE': 'Belgium', 'LU': 'Luxembourg', 'SK': 'Slovakia', 'SI': 'Slovenia', 'HR': 'Croatia',
+            'EE': 'Estonia', 'LV': 'Latvia', 'LT': 'Lithuania', 'MT': 'Malta', 'CY': 'Cyprus',
+            'KR': 'South Korea', 'TH': 'Thailand', 'SG': 'Singapore', 'MY': 'Malaysia', 'ID': 'Indonesia',
+            'PH': 'Philippines', 'VN': 'Vietnam', 'TW': 'Taiwan', 'HK': 'Hong Kong', 'NZ': 'New Zealand',
+            'ZA': 'South Africa', 'EG': 'Egypt', 'NG': 'Nigeria', 'KE': 'Kenya', 'MA': 'Morocco',
+            'TN': 'Tunisia', 'DZ': 'Algeria', 'GH': 'Ghana', 'UG': 'Uganda', 'TZ': 'Tanzania',
+            'ZW': 'Zimbabwe', 'BW': 'Botswana', 'NA': 'Namibia', 'ZM': 'Zambia', 'MW': 'Malawi',
+            'MZ': 'Mozambique', 'MG': 'Madagascar', 'MU': 'Mauritius', 'SC': 'Seychelles',
+            'AR': 'Argentina', 'CL': 'Chile', 'CO': 'Colombia', 'PE': 'Peru', 'VE': 'Venezuela',
+            'UY': 'Uruguay', 'PY': 'Paraguay', 'BO': 'Bolivia', 'EC': 'Ecuador', 'GY': 'Guyana',
+            'SR': 'Suriname', 'FK': 'Falkland Islands', 'TR': 'Turkey', 'SA': 'Saudi Arabia',
+            'AE': 'United Arab Emirates', 'IL': 'Israel', 'JO': 'Jordan', 'LB': 'Lebanon', 'SY': 'Syria',
+            'IQ': 'Iraq', 'IR': 'Iran', 'AF': 'Afghanistan', 'PK': 'Pakistan', 'BD': 'Bangladesh',
+            'LK': 'Sri Lanka', 'NP': 'Nepal', 'BT': 'Bhutan', 'MV': 'Maldives', 'MM': 'Myanmar',
+            'LA': 'Laos', 'KH': 'Cambodia', 'BN': 'Brunei', 'TL': 'East Timor', 'MN': 'Mongolia',
+            'KZ': 'Kazakhstan', 'UZ': 'Uzbekistan', 'KG': 'Kyrgyzstan', 'TJ': 'Tajikistan', 'TM': 'Turkmenistan',
+            'AZ': 'Azerbaijan', 'AM': 'Armenia', 'GE': 'Georgia', 'BY': 'Belarus', 'MD': 'Moldova',
+            'UA': 'Ukraine', 'MK': 'North Macedonia', 'AL': 'Albania', 'BA': 'Bosnia and Herzegovina',
+            'ME': 'Montenegro', 'RS': 'Serbia', 'XK': 'Kosovo'
+          };
+          country = countryCodeMap[data.country_code] || data.country_code;
         }
         
         if (country) {

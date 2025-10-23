@@ -34,9 +34,13 @@ interface AnalyticsDashboardProps {
 export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   useEffect(() => {
     fetchPageViews();
+    // Refresh page views every 30 seconds to show real-time updates
+    const interval = setInterval(fetchPageViews, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchPageViews = async () => {
@@ -47,6 +51,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
         .order('created_at', { ascending: false });
 
       setPageViews(data || []);
+      setLastUpdate(new Date()); // Update the last update time
     } catch (error) {
       console.error('Error fetching page views:', error);
     } finally {
@@ -54,7 +59,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
     }
   };
 
-  // Process page views by date (last 7 days)
+  // Process page views by date (last 7 days) - REAL DATA ONLY
   const viewsByDate = Array.from({ length: 7 }, (_, i) => {
     const date = startOfDay(subDays(new Date(), 6 - i));
     const count = pageViews.filter(v => {
@@ -63,7 +68,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
     }).length;
     return {
       date: format(date, 'MMM dd'),
-      views: count,
+      views: count, // REAL DATA ONLY
     };
   });
 
@@ -75,9 +80,9 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }, {});
 
   const pageViewsData = Object.entries(viewsByPage)
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, value]) => ({ name, value })) // REAL DATA ONLY
     .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
+    .slice(0, 10); // Show top 10 pages
 
   // Process device analytics
   const deviceAnalytics = pageViews.reduce((acc: Record<string, number>, view) => {
@@ -87,7 +92,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }, {});
 
   const deviceData = Object.entries(deviceAnalytics)
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, value]) => ({ name, value })) // REAL DATA ONLY
     .sort((a, b) => b.value - a.value);
 
   // Process country analytics
@@ -98,9 +103,9 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }, {});
 
   const countryData = Object.entries(countryAnalytics)
-    .map(([name, value]) => ({ name, value }))
+    .map(([name, value]) => ({ name, value })) // REAL DATA ONLY
     .sort((a, b) => b.value - a.value)
-    .slice(0, 10);
+    .slice(0, 10); // Show top 10 countries
 
   const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316'];
 
@@ -147,7 +152,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
     },
     { 
       label: 'Page Views', 
-      value: pageViews.length, 
+      value: pageViews.length, // REAL PAGE VIEWS COUNT FROM DATABASE
       icon: TrendingUp, 
       color: 'text-indigo-600',
       bgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100',
@@ -156,55 +161,70 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   ];
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-3xl font-bold text-foreground">Analytics Dashboard</h2>
+    <div className="space-y-8">
+      <div className="text-center mb-8">
+        <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
+          📊 Analytics Dashboard
+        </h2>
+        <p className="text-gray-600 text-lg">Comprehensive insights into your website performance</p>
+      </div>
       
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {stats.map((stat) => (
-          <Card key={stat.label} className={`${stat.bgColor} ${stat.borderColor} border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}>
+          <Card key={stat.label} className={`${stat.bgColor} ${stat.borderColor} border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group`}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-700">{stat.label}</CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
+              <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
             </CardHeader>
             <CardContent>
-              <div className={`text-3xl font-bold ${stat.color}`}>{stat.value.toLocaleString()}</div>
-              <p className="text-xs text-gray-500 mt-1">Last updated: {format(new Date(), 'MMM dd, yyyy')}</p>
+              <div className={`text-4xl font-bold ${stat.color} mb-2`}>
+                {stat.label === 'Page Views' ? pageViews.length.toLocaleString() : stat.value.toLocaleString()}
+              </div>
+              <p className="text-xs text-gray-500">
+                {stat.label === 'Page Views' 
+                  ? `Live count • Updated every 30s • Last updated: ${format(lastUpdate, 'HH:mm:ss')}`
+                  : `Last updated: ${format(new Date(), 'MMM dd, yyyy')}`
+                }
+              </p>
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Views over time */}
-        <Card className="shadow-lg border-2 border-blue-100">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100">
-            <CardTitle className="text-blue-800">Views Over Time (Last 7 Days)</CardTitle>
+        <Card className="shadow-xl border-2 border-blue-100 hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200">
+            <CardTitle className="text-blue-800 text-xl font-bold flex items-center gap-2">
+              📈 Views Over Time (Last 7 Days)
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-6">
+            <ResponsiveContainer width="100%" height={350}>
               <LineChart data={viewsByDate}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+                <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#ffffff',
                     border: '2px solid #3b82f6',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    fontSize: '14px'
                   }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="views" 
                   stroke="#3b82f6" 
-                  strokeWidth={3}
+                  strokeWidth={4}
                   dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
-                  activeDot={{ r: 8, stroke: '#3b82f6', strokeWidth: 2 }}
+                  activeDot={{ r: 10, stroke: '#3b82f6', strokeWidth: 3 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -212,12 +232,14 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
         </Card>
 
         {/* Device Analytics */}
-        <Card className="shadow-lg border-2 border-purple-100">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100">
-            <CardTitle className="text-purple-800">Device Types</CardTitle>
+        <Card className="shadow-xl border-2 border-purple-100 hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b-2 border-purple-200">
+            <CardTitle className="text-purple-800 text-xl font-bold flex items-center gap-2">
+              📱 Device Types
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-6">
+            <ResponsiveContainer width="100%" height={350}>
               <PieChart>
                 <Pie
                   data={deviceData}
@@ -225,7 +247,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
                   cy="50%"
                   labelLine={false}
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
+                  outerRadius={100}
                   fill="#8b5cf6"
                   dataKey="value"
                 >
@@ -238,7 +260,8 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
                     backgroundColor: '#ffffff',
                     border: '2px solid #8b5cf6',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    fontSize: '14px'
                   }}
                 />
               </PieChart>
@@ -248,46 +271,54 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
       </div>
 
       {/* Additional Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Top Pages */}
-        <Card className="shadow-lg border-2 border-green-100">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100">
-            <CardTitle className="text-green-800">Top Pages</CardTitle>
+        <Card className="shadow-xl border-2 border-green-100 hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b-2 border-green-200">
+            <CardTitle className="text-green-800 text-xl font-bold flex items-center gap-2">
+              🌐 Top Pages
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
+          <CardContent className="p-6">
+            <ResponsiveContainer width="100%" height={350}>
               <BarChart data={pageViewsData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
+                <YAxis stroke="#6b7280" fontSize={12} />
                 <Tooltip 
                   contentStyle={{ 
                     backgroundColor: '#ffffff',
                     border: '2px solid #10b981',
                     borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    fontSize: '14px'
                   }}
                 />
-                <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#10b981" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         {/* Country Analytics */}
-        <Card className="shadow-lg border-2 border-orange-100">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100">
-            <CardTitle className="text-orange-800">Top Countries</CardTitle>
+        <Card className="shadow-xl border-2 border-orange-100 hover:shadow-2xl transition-all duration-300">
+          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b-2 border-orange-200">
+            <CardTitle className="text-orange-800 text-xl font-bold flex items-center gap-2">
+              🌍 Top Countries
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {countryData.slice(0, 5).map((country, index) => (
-                <div key={country.name} className="flex items-center justify-between p-3 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg">
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {countryData.slice(0, 10).map((country, index) => ( // Show top 10 countries
+                <div key={country.name} className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 hover:shadow-md transition-all duration-300">
                   <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {index + 1}
+                    </div>
                     <Globe className="h-5 w-5 text-orange-600" />
-                    <span className="font-medium text-gray-700">{country.name}</span>
+                    <span className="font-semibold text-gray-800">{country.name}</span>
                   </div>
-                  <Badge variant="secondary" className="bg-orange-200 text-orange-800">
+                  <Badge variant="secondary" className="bg-orange-200 text-orange-800 px-3 py-1 text-sm font-semibold">
                     {country.value} views
                   </Badge>
                 </div>
@@ -298,49 +329,51 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
       </div>
 
       {/* Recent Page Views Table */}
-      <Card className="shadow-lg border-2 border-indigo-100">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100">
-          <CardTitle className="text-indigo-800">Recent Page Views with IP Addresses</CardTitle>
+      <Card className="shadow-xl border-2 border-indigo-100 hover:shadow-2xl transition-all duration-300">
+        <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100 border-b-2 border-indigo-200">
+          <CardTitle className="text-indigo-800 text-xl font-bold flex items-center gap-2">
+            🔍 Recent Page Views with IP Addresses
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-6">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b-2 border-indigo-200">
-                  <th className="text-left py-3 px-4 text-indigo-700 font-semibold">Page</th>
-                  <th className="text-left py-3 px-4 text-indigo-700 font-semibold">IP Address</th>
-                  <th className="text-left py-3 px-4 text-indigo-700 font-semibold">Device</th>
-                  <th className="text-left py-3 px-4 text-indigo-700 font-semibold">Browser</th>
-                  <th className="text-left py-3 px-4 text-indigo-700 font-semibold">Location</th>
-                  <th className="text-left py-3 px-4 text-indigo-700 font-semibold">Date</th>
+                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Page</th>
+                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">IP Address</th>
+                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Device</th>
+                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Browser</th>
+                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Location</th>
+                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Date</th>
                 </tr>
               </thead>
               <tbody>
-                {pageViews.slice(0, 15).map((view, index) => (
+                {pageViews.slice(0, 25).map((view, index) => ( // Increased from 15 to 25
                   <tr key={index} className="border-b border-indigo-100 hover:bg-indigo-50 transition-colors">
-                    <td className="py-3 px-4 font-medium text-gray-800">{view.page_path}</td>
-                    <td className="py-3 px-4">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                    <td className="py-4 px-4 font-semibold text-gray-800">{view.page_path}</td>
+                    <td className="py-4 px-4">
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
                         {view.ip_address || 'Unknown'}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4">
+                    <td className="py-4 px-4">
                       <div className="flex items-center gap-2">
-                        {view.device_type === 'mobile' && <Smartphone className="h-4 w-4 text-green-600" />}
-                        {view.device_type === 'desktop' && <Monitor className="h-4 w-4 text-blue-600" />}
-                        {view.device_type === 'tablet' && <Tablet className="h-4 w-4 text-purple-600" />}
-                        <span className="text-sm font-medium capitalize">{view.device_type || 'Unknown'}</span>
+                        {view.device_type === 'mobile' && <Smartphone className="h-5 w-5 text-green-600" />}
+                        {view.device_type === 'desktop' && <Monitor className="h-5 w-5 text-blue-600" />}
+                        {view.device_type === 'tablet' && <Tablet className="h-5 w-5 text-purple-600" />}
+                        <span className="text-sm font-semibold capitalize">{view.device_type || 'Unknown'}</span>
                       </div>
                     </td>
-                    <td className="py-3 px-4">
-                      <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                    <td className="py-4 px-4">
+                      <Badge variant="secondary" className="bg-gray-100 text-gray-700 px-3 py-1">
                         {view.browser || 'Unknown'}
                       </Badge>
                     </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-1">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-2">
                         <Globe className="h-4 w-4 text-orange-600" />
-                        <span className="text-sm">
+                        <span className="text-sm font-medium">
                           {view.city && view.country 
                             ? `${view.city}, ${view.country}` 
                             : view.country || 'Unknown'
@@ -348,7 +381,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
                         </span>
                       </div>
                     </td>
-                    <td className="py-3 px-4 text-gray-600">
+                    <td className="py-4 px-4 text-gray-600 font-medium">
                       {format(new Date(view.created_at), 'MMM dd, HH:mm')}
                     </td>
                   </tr>
