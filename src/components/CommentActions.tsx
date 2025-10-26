@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { Check, X } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Button } from "@/components/ui/button";
+import { Check, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface CommentActionsProps {
   commentId: number;
@@ -9,40 +9,52 @@ interface CommentActionsProps {
   onUpdate: () => void;
 }
 
-export const CommentActions = ({ commentId, approved, onUpdate }: CommentActionsProps) => {
+export const CommentActions = ({
+  commentId,
+  approved,
+  onUpdate,
+}: CommentActionsProps) => {
   const { toast } = useToast();
 
   const handleApprove = async () => {
     try {
       const { error } = await supabase
-        .from('comments')
+        .from("comments")
         .update({ approved: true })
-        .eq('id', commentId);
+        .eq("id", commentId);
 
       if (error) throw error;
 
-      toast({ title: 'Comment approved!' });
+      toast({ title: "Comment approved!" });
       onUpdate();
     } catch (error) {
-      console.error('Error approving comment:', error);
-      toast({ title: 'Error', description: 'Failed to approve comment', variant: 'destructive' });
+      console.error("Error approving comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to approve comment",
+        variant: "destructive",
+      });
     }
   };
 
   const handleDelete = async () => {
     try {
       const { error } = await supabase
-        .from('comments')
+        .from("comments")
         .delete()
-        .eq('id', commentId);
+        .eq("id", commentId);
 
       if (error) throw error;
 
-      toast({ title: 'Comment deleted!' });
+      toast({ title: "Comment deleted!" });
       onUpdate();
     } catch (error) {
-      console.error('Error deleting comment:', error);
-      toast({ title: 'Error', description: 'Failed to delete comment', variant: 'destructive' });
+      console.error("Error deleting comment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to delete comment",
+        variant: "destructive",
+      });
     }
   };
 

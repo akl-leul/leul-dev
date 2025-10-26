@@ -364,6 +364,13 @@ const BlogPost = () => {
           .eq("comment_id", commentId)
           .eq("user_id", anonUserId);
         if (error) throw error;
+        // Update comments state to reflect new likes_count
+        setComments((prevComments) =>
+          updateCommentInState(prevComments, commentId, (c) => ({
+            ...c,
+            likes_count: Math.max(0, c.likes_count - 1),
+          })),
+        );
         toast({
           title: "Removed like",
           description: "You unliked this comment.",
@@ -374,6 +381,13 @@ const BlogPost = () => {
           .from("comment_likes")
           .insert({ comment_id: commentId, user_id: anonUserId });
         if (error) throw error;
+        // Update comments state to reflect new likes_count
+        setComments((prevComments) =>
+          updateCommentInState(prevComments, commentId, (c) => ({
+            ...c,
+            likes_count: c.likes_count + 1,
+          })),
+        );
         toast({ title: "Liked!", description: "You liked this comment." });
       }
     } catch (error) {
@@ -848,6 +862,43 @@ const BlogPost = () => {
                                   Reply to {comment.author_name}
                                 </h5>
                                 <div className="space-y-3">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                      <Label
+                                        htmlFor={`reply-name-${comment.id}`}
+                                      >
+                                        Name *
+                                      </Label>
+                                      <Input
+                                        id={`reply-name-${comment.id}`}
+                                        value={commentName}
+                                        onChange={(e) =>
+                                          setCommentName(e.target.value)
+                                        }
+                                        placeholder="Your name"
+                                        required
+                                        maxLength={100}
+                                      />
+                                    </div>
+                                    <div>
+                                      <Label
+                                        htmlFor={`reply-email-${comment.id}`}
+                                      >
+                                        Email *
+                                      </Label>
+                                      <Input
+                                        id={`reply-email-${comment.id}`}
+                                        type="email"
+                                        value={commentEmail}
+                                        onChange={(e) =>
+                                          setCommentEmail(e.target.value)
+                                        }
+                                        placeholder="your@email.com"
+                                        required
+                                        maxLength={255}
+                                      />
+                                    </div>
+                                  </div>
                                   <Textarea
                                     value={replyContent}
                                     onChange={(e) =>
