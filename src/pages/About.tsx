@@ -45,7 +45,7 @@ const defaultProfile: Profile = {
   linkedin_url: 'https://linkedin.com/in/leul-ayfokru',
   twitter_url: 'https://x.com/LAyfokru44401?t=5FkoLuXg7Z_1KaUzneFbGQ&s=09',
   resume_url: 'https://leul-dev.vercel.app/about',
-  avatar_url: 'https://gcxqcxrshrfzuhyhfciv.supabase.co/storage/v1/object/public/project-images/avatars/0282d3df-966e-4c01-afcf-a7d3e88642ca-1757474473335.jpg',
+  avatar_url: '/placeholder.svg',
 };
 
 const About = () => {
@@ -57,13 +57,37 @@ const About = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: profileData } = await supabase.from('profiles').select('*').single();
-        if (profileData) setProfile({ ...defaultProfile, ...profileData });
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('*')
+          .limit(1)
+          .maybeSingle();
+        
+        if (profileData) {
+          setProfile({
+            name: profileData.name || defaultProfile.name,
+            bio: profileData.bio || defaultProfile.bio,
+            location: profileData.location || defaultProfile.location,
+            email: profileData.email || defaultProfile.email,
+            website: profileData.website || defaultProfile.website,
+            github_url: profileData.github_url || defaultProfile.github_url,
+            linkedin_url: profileData.linkedin_url || defaultProfile.linkedin_url,
+            twitter_url: profileData.twitter_url || defaultProfile.twitter_url,
+            resume_url: profileData.resume_url || defaultProfile.resume_url,
+            avatar_url: profileData.avatar_url || defaultProfile.avatar_url,
+          });
+        } else {
+          setProfile(defaultProfile);
+        }
 
-        const { data: experiencesData } = await supabase.from('experiences').select('*').order('start_date', { ascending: false });
+        const { data: experiencesData } = await supabase
+          .from('experiences')
+          .select('*')
+          .order('start_date', { ascending: false });
         setExperiences(experiencesData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setProfile(defaultProfile);
       } finally {
         setLoading(false);
       }

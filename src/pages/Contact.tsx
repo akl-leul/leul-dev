@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -24,6 +24,30 @@ const Contact = () => {
   usePageView('Contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [contactInfo, setContactInfo] = useState({
+    email: 'layfokru@gmail.com',
+    phone: '+251963889227',
+    location: 'Addis Ababa, Ethiopia'
+  });
+
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email, location')
+        .limit(1)
+        .maybeSingle();
+      
+      if (profile) {
+        setContactInfo(prev => ({
+          ...prev,
+          email: profile.email || prev.email,
+          location: profile.location || prev.location
+        }));
+      }
+    };
+    fetchContactInfo();
+  }, []);
 
   const {
     register,
@@ -83,21 +107,21 @@ const Contact = () => {
                   <Mail className="h-6 w-6 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">Email</p>
-                    <p className="text-sm text-muted-foreground break-words">layfokru@gmail.com</p>
+                    <p className="text-sm text-muted-foreground break-words">{contactInfo.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <Phone className="h-6 w-6 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">Phone</p>
-                    <p className="text-sm text-muted-foreground">+251963889227</p>
+                    <p className="text-sm text-muted-foreground">{contactInfo.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4">
                   <MapPin className="h-6 w-6 text-primary" />
                   <div>
                     <p className="font-medium text-foreground">Location</p>
-                    <p className="text-sm text-muted-foreground">Addis Ababa, Ethiopia</p>
+                    <p className="text-sm text-muted-foreground">{contactInfo.location}</p>
                   </div>
                 </div>
               </CardContent>

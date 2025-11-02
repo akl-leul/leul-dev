@@ -1356,14 +1356,14 @@ const Admin = () => {
       <div className="flex min-h-screen w-full mt-16">
         <AdminSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <main className="flex-1 p-6 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+        <main className="flex-1 p-6 bg-indigo-50/50 min-h-screen">
           <div className="mb-8 flex items-center gap-4">
-            <SidebarTrigger className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 shadow-lg" />
+            <SidebarTrigger className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg" />
             <div className="flex-1">
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold text-indigo-900">
                 Admin Dashboard
               </h1>
-              <p className="text-gray-600 mt-2">Manage your website content and analytics</p>
+              <p className="text-indigo-600 mt-2">Manage your website content and analytics</p>
             </div>
           </div>
 
@@ -1382,12 +1382,12 @@ const Admin = () => {
 
           {activeTab === "projects" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl border-2 border-purple-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-purple-800">
+                  <h2 className="text-3xl font-bold text-indigo-900">
                     Projects ({filteredProjects.length})
                   </h2>
-                  <p className="text-purple-600 mt-1">Manage your portfolio projects</p>
+                  <p className="text-indigo-600 mt-1">Manage your portfolio projects</p>
                 </div>
                 <Dialog
                   open={newProjectOpen}
@@ -1397,7 +1397,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-purple-500 to-pink-600 text-white hover:from-purple-600 hover:to-pink-700 shadow-lg">
+                    <Button className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Project
                     </Button>
@@ -1650,12 +1650,12 @@ const Admin = () => {
 
           {activeTab === "posts" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-blue-50 to-cyan-50 p-6 rounded-xl border-2 border-blue-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-blue-800">
+                  <h2 className="text-3xl font-bold text-indigo-900">
                     Blog Posts ({filteredPosts.length})
                   </h2>
-                  <p className="text-blue-600 mt-1">Manage your blog content and articles</p>
+                  <p className="text-indigo-600 mt-1">Manage your blog content and articles</p>
                 </div>
                 <Dialog
                   open={newPostOpen}
@@ -1874,12 +1874,12 @@ const Admin = () => {
 
           {activeTab === "skills" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-yellow-50 to-orange-50 p-6 rounded-xl border-2 border-yellow-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-yellow-800">
+                  <h2 className="text-3xl font-bold text-indigo-900">
                     Skills ({filteredSkills.length})
                   </h2>
-                  <p className="text-yellow-600 mt-1">Manage your technical skills and expertise</p>
+                  <p className="text-indigo-600 mt-1">Manage your technical skills and expertise</p>
                 </div>
                 <Dialog
                   open={newSkillOpen}
@@ -1889,7 +1889,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-yellow-500 to-orange-600 text-white hover:from-yellow-600 hover:to-orange-700 shadow-lg">
+                    <Button className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Skill
                     </Button>
@@ -2090,9 +2090,9 @@ const Admin = () => {
 
           {activeTab === "experiences" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-indigo-50 to-purple-50 p-6 rounded-xl border-2 border-indigo-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-indigo-800">
+                  <h2 className="text-3xl font-bold text-indigo-900">
                     Work Experience ({filteredExperiences.length})
                   </h2>
                   <p className="text-indigo-600 mt-1">Manage your professional work history</p>
@@ -2105,7 +2105,7 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 shadow-lg">
+                    <Button className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Experience
                     </Button>
@@ -2390,14 +2390,14 @@ const Admin = () => {
 
           {activeTab === "contacts" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-red-50 to-pink-50 p-6 rounded-xl border-2 border-red-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-red-800">
+                  <h2 className="text-3xl font-bold text-indigo-900">
                     Contact Messages ({filteredContacts.length})
                   </h2>
-                  <p className="text-red-600 mt-1">Manage incoming contact messages and inquiries</p>
+                  <p className="text-indigo-600 mt-1">Manage incoming contact messages and inquiries</p>
                 </div>
-                <Badge variant="secondary" className="bg-red-100 text-red-800 border-red-300 px-4 py-2 text-lg font-semibold">
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 border-indigo-300 px-4 py-2 text-lg font-semibold">
                   {contacts.filter((c) => c.status === "new").length} new
                 </Badge>
               </div>
@@ -2670,14 +2670,14 @@ const Admin = () => {
 
           {activeTab === "comments" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-teal-50 to-cyan-50 p-6 rounded-xl border-2 border-teal-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-teal-800">
+                  <h2 className="text-3xl font-bold text-indigo-900">
                     Comments ({filteredComments.length})
                   </h2>
-                  <p className="text-teal-600 mt-1">Manage blog post comments and moderation</p>
+                  <p className="text-indigo-600 mt-1">Manage blog post comments and moderation</p>
                 </div>
-                <Badge variant="secondary" className="bg-teal-100 text-teal-800 border-teal-300 px-4 py-2 text-lg font-semibold">
+                <Badge variant="secondary" className="bg-indigo-100 text-indigo-800 border-indigo-300 px-4 py-2 text-lg font-semibold">
                   {comments.filter((c) => !c.approved).length} pending
                 </Badge>
               </div>
@@ -2858,17 +2858,17 @@ const Admin = () => {
 
           {activeTab === "settings" && (
             <div className="space-y-8">
-              <div className="flex justify-between items-center bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border-2 border-gray-200 shadow-lg">
+              <div className="flex justify-between items-center bg-indigo-50 p-6 rounded-xl border border-indigo-200 shadow-md">
                 <div>
-                  <h2 className="text-3xl font-bold text-gray-800">Account Settings</h2>
-                  <p className="text-gray-600 mt-1">Manage your account preferences and security</p>
+                  <h2 className="text-3xl font-bold text-indigo-900">Account Settings</h2>
+                  <p className="text-indigo-600 mt-1">Manage your account preferences and security</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <Card className="shadow-lg border-2 border-gray-100 hover:shadow-xl transition-all duration-300">
-                  <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100">
-                    <CardTitle className="flex items-center gap-2 text-gray-800">
+                <Card className="shadow-md border border-indigo-100 hover:shadow-lg transition-all duration-300">
+                  <CardHeader className="bg-indigo-50">
+                    <CardTitle className="flex items-center gap-2 text-indigo-900">
                       <Settings className="h-5 w-5" />
                       Update Account Information
                     </CardTitle>
