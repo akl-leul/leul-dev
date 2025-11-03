@@ -23,8 +23,9 @@ import {
   ThumbsUp,
 } from "lucide-react";
 import { format } from "date-fns";
-import ReactMarkdown from "react-markdown";
 import { useToast } from "@/hooks/use-toast";
+import DOMPurify from 'dompurify';
+import '@/components/admin/blog-editor.css';
 import {
   FaXTwitter,
   FaLinkedin,
@@ -518,76 +519,15 @@ const BlogPost = () => {
                 {/* Post Content */}
                 <Card>
                   <CardContent className="p-8">
-                    <div className="prose prose-neutral dark:prose-invert max-w-none">
-                      <ReactMarkdown
-                        components={{
-                          h1: ({ children }) => (
-                            <h1 className="text-3xl font-bold text-foreground mt-8 mb-4 first:mt-0">
-                              {children}
-                            </h1>
-                          ),
-                          h2: ({ children }) => (
-                            <h2 className="text-2xl font-semibold text-foreground mt-6 mb-3">
-                              {children}
-                            </h2>
-                          ),
-                          h3: ({ children }) => (
-                            <h3 className="text-xl font-semibold text-foreground mt-4 mb-2">
-                              {children}
-                            </h3>
-                          ),
-                          p: ({ children }) => (
-                            <p className="text-muted-foreground leading-relaxed mb-4">
-                              {children}
-                            </p>
-                          ),
-                          code: ({ children, className }) => {
-                            const isInline = !className;
-                            return isInline ? (
-                              <code className="bg-muted px-2 py-1 rounded text-sm font-mono">
-                                {children}
-                              </code>
-                            ) : (
-                              <code className={className}>{children}</code>
-                            );
-                          },
-                          pre: ({ children }) => (
-                            <pre className="bg-muted p-4 rounded-lg overflow-x-auto mb-4">
-                              {children}
-                            </pre>
-                          ),
-                          blockquote: ({ children }) => (
-                            <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground my-4">
-                              {children}
-                            </blockquote>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="list-disc list-inside text-muted-foreground mb-4 space-y-1">
-                              {children}
-                            </ul>
-                          ),
-                          ol: ({ children }) => (
-                            <ol className="list-decimal list-inside text-muted-foreground mb-4 space-y-1">
-                              {children}
-                            </ol>
-                          ),
-                          a: ({ children, href }) => (
-                            <a
-                              href={href}
-                              className="inline-flex items-center gap-1 text-primary hover:text-primary/80
- hover:underline whitespace-nowrap"
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {children}
-                              <SquareArrowOutUpRight className="h-4 w-4" />
-                            </a>
-                          ),
-                        }}
-                      >
-                        {post.content}
-                      </ReactMarkdown>
-                    </div>
+                    <div 
+                      className="prose prose-neutral dark:prose-invert prose-lg max-w-none"
+                      dangerouslySetInnerHTML={{ 
+                        __html: DOMPurify.sanitize(post.content, {
+                          ADD_TAGS: ['iframe'],
+                          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+                        })
+                      }}
+                    />
                   </CardContent>
                 </Card>
 

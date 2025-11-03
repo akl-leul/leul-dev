@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import DatabaseTest from '@/components/DatabaseTest';
+import { BlogPostEditor } from '@/components/admin/BlogPostEditor';
 import {
   Card,
   CardContent,
@@ -1665,12 +1666,12 @@ const Admin = () => {
                   }}
                 >
                   <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white hover:from-blue-600 hover:to-cyan-700 shadow-lg">
+                    <Button className="bg-indigo-600 text-white hover:bg-indigo-700 shadow-md">
                       <Plus className="h-4 w-4 mr-2" />
                       New Post
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>
                         {editMode ? "Edit Post" : "Create New Post"}
@@ -1707,13 +1708,10 @@ const Admin = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="content">Content (Markdown)</Label>
-                        <Textarea
-                          id="content"
-                          value={content}
-                          onChange={(e) => setContent(e.target.value)}
-                          className="min-h-[160px]"
-                          required
+                        <Label htmlFor="content">Content</Label>
+                        <BlogPostEditor
+                          content={content}
+                          onChange={setContent}
                         />
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
