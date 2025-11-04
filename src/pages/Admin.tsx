@@ -98,6 +98,8 @@ import { AdminFeedbackManager } from "@/components/admin/AdminFeedbackManager";
 import { HomeContentEditor } from "@/components/admin/HomeContentEditor";
 import { AboutContentEditor } from "@/components/admin/AboutContentEditor";
 import { ContactContentEditor } from "@/components/admin/ContactContentEditor";
+import { DynamicPageEditor } from "@/components/admin/DynamicPageEditor";
+import { NavigationManager } from "@/components/admin/NavigationManager";
 
 interface Project {
   id: string;
@@ -2830,6 +2832,18 @@ const Admin = () => {
           )}
 
           {activeTab === "feedback" && <AdminFeedbackManager />}
+
+          {activeTab === "dynamic-pages" && (
+            <div className="space-y-6">
+              <DynamicPageEditor />
+            </div>
+          )}
+
+          {activeTab === "navigation" && (
+            <div className="space-y-6">
+              <NavigationManager />
+            </div>
+          )}
 
           {activeTab === "about" && (
             <div className="space-y-6">

@@ -120,7 +120,7 @@ const responsePatterns: ResponsePattern[] = [
   }
 ];
 
-export function generateAIResponse(userMessage: string, conversationHistory: ChatMessage[]): string {
+export async function generateAIResponse(userMessage: string, conversationHistory: ChatMessage[]): Promise<string> {
   const lowerMessage = userMessage.toLowerCase().trim();
   
   // Check response patterns first
@@ -138,7 +138,7 @@ export function generateAIResponse(userMessage: string, conversationHistory: Cha
   }
   
   // If no pattern matches, do content search
-  const relevantPages = searchContent(userMessage);
+  const relevantPages = await searchContent(userMessage);
   
   if (relevantPages.length > 0) {
     const topPage = relevantPages[0];

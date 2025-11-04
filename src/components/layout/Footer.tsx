@@ -1,8 +1,61 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Github, Linkedin, Twitter, Mail, Heart } from 'lucide-react';
 import { FaXTwitter } from "react-icons/fa6";
+import { supabase } from '@/integrations/supabase/client';
+
+interface NavigationItem {
+  id: string;
+  label: string;
+  href: string;
+  is_external: boolean;
+  section: string | null;
+}
+
+interface FooterSection {
+  title: string;
+  links: NavigationItem[];
+}
+
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [footerLinks, setFooterLinks] = useState<FooterSection[]>([]);
+
+  useEffect(() => {
+    fetchFooterLinks();
+  }, []);
+
+  const fetchFooterLinks = async () => {
+    try {
+      const { data } = await supabase
+        .from('navigation_items')
+        .select('*')
+        .eq('location', 'footer')
+        .eq('is_visible', true)
+        .order('display_order');
+
+      if (data) {
+        // Group by section
+        const sections: { [key: string]: NavigationItem[] } = {};
+        data.forEach((item) => {
+          const section = item.section || 'Links';
+          if (!sections[section]) {
+            sections[section] = [];
+          }
+          sections[section].push(item);
+        });
+
+        const formattedSections = Object.entries(sections).map(([title, links]) => ({
+          title,
+          links,
+        }));
+
+        setFooterLinks(formattedSections);
+      }
+    } catch (error) {
+      console.error('Error fetching footer links:', error);
+    }
+  };
 
   const socialLinks = [
     { 
@@ -24,26 +77,6 @@ const Footer = () => {
       name: 'Email', 
       href: 'mailto:layfokru@gmail.com', 
       icon: Mail 
-    },
-  ];
-
-  const footerLinks = [
-    {
-      title: 'Navigation',
-      links: [
-        { name: 'Home', href: '/' },
-        { name: 'About', href: '/about' },
-        { name: 'Skills', href: '/skills' },
-        { name: 'Projects', href: '/projects' },
-      ],
-    },
-    {
-      title: 'Content',
-      links: [
-        { name: 'Blog', href: '/blog' },
-        { name: 'Contact', href: '/contact' },
-  
-      ],
     },
   ];
 
@@ -93,13 +126,24 @@ const Footer = () => {
                 </h3>
                 <ul className="mt-4 space-y-3">
                   {section.links.map((link) => (
-                    <li key={link.name}>
-                      <Link
-                        to={link.href}
-                        className="text-sm text-muted-foreground hover:text-primary transition-colors"
-                      >
-                        {link.name}
-                      </Link>
+                    <li key={link.id}>
+                      {link.is_external ? (
+                        <a
+                          href={link.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {link.label}
+                        </a>
+                      ) : (
+                        <Link
+                          to={link.href}
+                          className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                        >
+                          {link.label}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>

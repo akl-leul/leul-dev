@@ -397,6 +397,45 @@ export type Database = {
         }
         Relationships: []
       }
+      dynamic_pages: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          is_published: boolean
+          meta_description: string | null
+          password: string | null
+          slug: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          password?: string | null
+          slug: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_published?: boolean
+          meta_description?: string | null
+          password?: string | null
+          slug?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       experiences: {
         Row: {
           achievements: string[] | null
@@ -738,6 +777,48 @@ export type Database = {
           price?: number
           tags?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      navigation_items: {
+        Row: {
+          created_at: string
+          display_order: number
+          href: string
+          icon: string | null
+          id: string
+          is_external: boolean
+          is_visible: boolean
+          label: string
+          location: string
+          section: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          href: string
+          icon?: string | null
+          id?: string
+          is_external?: boolean
+          is_visible?: boolean
+          label: string
+          location: string
+          section?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          href?: string
+          icon?: string | null
+          id?: string
+          is_external?: boolean
+          is_visible?: boolean
+          label?: string
+          location?: string
+          section?: string | null
+          updated_at?: string
         }
         Relationships: []
       }

@@ -11,6 +11,8 @@ import {
   FileText,
   Info,
   Phone,
+  Navigation,
+  FileCode,
 } from "lucide-react";
 import {
   Sidebar,
@@ -49,6 +51,8 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
     { id: "posts", label: "Blog Posts", icon: PenLine, color: "text-pink-600", bgColor: "bg-pink-50" },
     { id: "skills", label: "Skills", icon: Award, color: "text-yellow-600", bgColor: "bg-yellow-50" },
     { id: "experiences", label: "Experience", icon: Briefcase, color: "text-indigo-600", bgColor: "bg-indigo-50" },
+    { id: "dynamic-pages", label: "Dynamic Pages", icon: FileCode, color: "text-violet-600", bgColor: "bg-violet-50" },
+    { id: "navigation", label: "Navigation", icon: Navigation, color: "text-emerald-600", bgColor: "bg-emerald-50" },
   ];
 
   const communicationItems = [

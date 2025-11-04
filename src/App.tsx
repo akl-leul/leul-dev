@@ -16,6 +16,7 @@ import BlogPost from "./pages/BlogPost";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
 import Admin from "./pages/Admin";
+import DynamicPage from "./pages/DynamicPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => (
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/page/:slug" element={<DynamicPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

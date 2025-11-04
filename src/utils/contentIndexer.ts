@@ -1,4 +1,6 @@
 // Content indexer for website pages
+import { supabase } from '@/integrations/supabase/client';
+
 export interface PageContent {
   path: string;
   title: string;
@@ -45,11 +47,42 @@ export const websiteContent: PageContent[] = [
   }
 ];
 
-export function searchContent(query: string): PageContent[] {
+// Strip HTML tags helper
+const stripHtml = (html: string): string => {
+  const tmp = document.createElement('DIV');
+  tmp.innerHTML = html;
+  return tmp.textContent || tmp.innerText || '';
+};
+
+// Load dynamic pages from database
+async function loadDynamicPages(): Promise<PageContent[]> {
+  try {
+    const { data } = await supabase
+      .from('dynamic_pages')
+      .select('slug, title, content, meta_description')
+      .eq('is_published', true);
+
+    return (data || []).map(page => ({
+      path: `/page/${page.slug}`,
+      title: page.title,
+      content: `${page.title} ${page.meta_description || ''} ${stripHtml(page.content)}`,
+      keywords: [page.slug, ...page.title.toLowerCase().split(' ')],
+    }));
+  } catch (error) {
+    console.error('Error loading dynamic pages:', error);
+    return [];
+  }
+}
+
+export async function searchContent(query: string): Promise<PageContent[]> {
   const lowerQuery = query.toLowerCase();
   const words = lowerQuery.split(/\s+/).filter(w => w.length > 2);
   
-  return websiteContent
+  // Load dynamic pages and combine with static content
+  const dynamicPages = await loadDynamicPages();
+  const allContent = [...websiteContent, ...dynamicPages];
+  
+  return allContent
     .map(page => {
       let score = 0;
       
