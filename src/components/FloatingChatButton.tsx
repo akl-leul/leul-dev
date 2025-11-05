@@ -67,8 +67,8 @@ const FloatingChatButton = () => {
     setIsTyping(true);
 
     // Simulate typing delay for better UX
-    setTimeout(() => {
-      const aiResponse = generateAIResponse(userMessage.content, messages);
+    setTimeout(async () => {
+      const aiResponse = await generateAIResponse(userMessage.content, messages);
       const assistantMessage: ChatMessage = {
         role: 'assistant',
         content: aiResponse,
@@ -95,7 +95,7 @@ const FloatingChatButton = () => {
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
-            className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-4"
+            className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-50 flex flex-col items-end gap-4"
           >
             {/* Chat Interface */}
             <AnimatePresence>
@@ -106,7 +106,7 @@ const FloatingChatButton = () => {
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <Card className="w-[380px] h-[500px] flex flex-col shadow-2xl border-2">
+                  <Card className="w-[calc(100vw-2rem)] sm:w-[380px] h-[500px] max-h-[calc(100vh-8rem)] flex flex-col shadow-2xl border-2">
                     {/* Chat Header */}
                     <div className="flex items-center justify-between p-4 border-b bg-primary text-primary-foreground rounded-t-lg">
                       <div className="flex items-center gap-2">
