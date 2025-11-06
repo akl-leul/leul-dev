@@ -25,6 +25,17 @@ import {
   User,
   Link,
   MessageSquare,
+  Home,
+  Info,
+  Phone,
+  FolderOpen,
+  PenLine,
+  Award,
+  Briefcase,
+  Mail,
+  MessageCircle,
+  FileCode,
+  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -43,12 +54,46 @@ export function WordPressAdminLayout({
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
 
-  const menuItems = [
-    { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { id: 'pages', icon: FileText, label: 'Pages' },
-    { id: 'navigation', icon: Link, label: 'Navigation' },
-    { id: 'feedback', icon: MessageSquare, label: 'Feedback' },
-    { id: 'settings', icon: Settings, label: 'Settings' },
+  const menuSections = [
+    {
+      title: 'Analytics',
+      items: [
+        { id: 'analytics', icon: BarChart3, label: 'Analytics' },
+      ],
+    },
+    {
+      title: 'Content',
+      items: [
+        { id: 'home', icon: Home, label: 'Home' },
+        { id: 'about', icon: Info, label: 'About' },
+        { id: 'contact', icon: Phone, label: 'Contact' },
+      ],
+    },
+    {
+      title: 'Management',
+      items: [
+        { id: 'projects', icon: FolderOpen, label: 'Projects' },
+        { id: 'posts', icon: PenLine, label: 'Blog Posts' },
+        { id: 'skills', icon: Award, label: 'Skills' },
+        { id: 'experiences', icon: Briefcase, label: 'Experience' },
+        { id: 'dynamic-pages', icon: FileCode, label: 'Dynamic Pages' },
+        { id: 'navigation', icon: Link, label: 'Navigation' },
+      ],
+    },
+    {
+      title: 'Communication',
+      items: [
+        { id: 'contacts', icon: Mail, label: 'Messages' },
+        { id: 'comments', icon: MessageCircle, label: 'Comments' },
+        { id: 'feedback', icon: MessageSquare, label: 'Feedback' },
+      ],
+    },
+    {
+      title: 'Settings',
+      items: [
+        { id: 'settings', icon: Settings, label: 'Settings' },
+      ],
+    },
   ];
 
   const getUserInitials = () => {
@@ -127,25 +172,34 @@ export function WordPressAdminLayout({
           )}
         >
           <ScrollArea className="h-full">
-            <nav className="p-4 space-y-2">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Button
-                    key={item.id}
-                    variant={activeSection === item.id ? 'secondary' : 'ghost'}
-                    className={cn(
-                      'w-full justify-start text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-accent-foreground))]',
-                      activeSection === item.id &&
-                        'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
-                    )}
-                    onClick={() => onSectionChange(item.id)}
-                  >
-                    <Icon className="h-4 w-4 mr-3" />
-                    {item.label}
-                  </Button>
-                );
-              })}
+            <nav className="p-4 space-y-6">
+              {menuSections.map((section) => (
+                <div key={section.title} className="space-y-2">
+                  <h3 className="px-3 text-xs font-semibold text-[hsl(var(--sidebar-foreground))]/60 uppercase tracking-wider">
+                    {section.title}
+                  </h3>
+                  <div className="space-y-1">
+                    {section.items.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Button
+                          key={item.id}
+                          variant={activeSection === item.id ? 'secondary' : 'ghost'}
+                          className={cn(
+                            'w-full justify-start text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-accent-foreground))]',
+                            activeSection === item.id &&
+                              'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
+                          )}
+                          onClick={() => onSectionChange(item.id)}
+                        >
+                          <Icon className="h-4 w-4 mr-3" />
+                          {item.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </nav>
           </ScrollArea>
         </aside>
