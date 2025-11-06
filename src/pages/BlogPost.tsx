@@ -25,6 +25,7 @@ import {
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from 'dompurify';
+import { marked } from 'marked';
 import '@/components/admin/blog-editor.css';
 import '@/components/admin/blog-content.css';
 import {
@@ -523,10 +524,16 @@ const BlogPost = () => {
                     <div 
                       className="blog-content prose prose-neutral dark:prose-invert prose-lg max-w-none"
                       dangerouslySetInnerHTML={{ 
-                        __html: DOMPurify.sanitize(post.content, {
-                          ADD_TAGS: ['iframe', 'video', 'audio', 'source'],
-                          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'type', 'controls', 'width', 'height', 'style']
-                        })
+                        __html: DOMPurify.sanitize(
+                          // Check if content is HTML or Markdown and convert accordingly
+                          post.content.trim().startsWith('<') 
+                            ? post.content 
+                            : marked.parse(post.content, { async: false }) as string,
+                          {
+                            ADD_TAGS: ['iframe', 'video', 'audio', 'source'],
+                            ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'type', 'controls', 'width', 'height', 'style']
+                          }
+                        )
                       }}
                     />
                   </CardContent>

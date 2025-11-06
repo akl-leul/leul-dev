@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { WordPressAdminLayout } from '@/components/admin/WordPressAdminLayout';
 import { WordPressPageEditor } from '@/components/admin/WordPressPageEditor';
 import { NavigationManager } from '@/components/admin/NavigationManager';
@@ -10,11 +11,43 @@ import { AnalyticsDashboard } from '@/components/admin/AnalyticsDashboard';
 const Admin = () => {
   const { user, loading } = useAuth();
   const [selectedSection, setSelectedSection] = useState('pages');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAdmin, setCheckingAdmin] = useState(true);
 
-  // Check if user is admin (you'll need to implement this logic based on your setup)
-  const isAdmin = user?.email === 'admin@example.com'; // Replace with your admin check logic
+  // Check if user is admin by querying admin_roles table
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setCheckingAdmin(false);
+        return;
+      }
 
-  if (loading) {
+      try {
+        const { data, error } = await supabase
+          .from('admin_roles')
+          .select('id')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!data);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      } finally {
+        setCheckingAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
+
+  if (loading || checkingAdmin) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-muted-foreground">Loading...</div>
