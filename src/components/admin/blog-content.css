@@ -1,0 +1,201 @@
+/* Blog Content Display Styles - Applied to rendered blog posts */
+
+/* Image Styles */
+.blog-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem auto;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.blog-content img:hover {
+  transform: scale(1.02);
+}
+
+/* Video Styles */
+.blog-content video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem auto;
+  border-radius: 0.5rem;
+}
+
+/* Table Styles */
+.blog-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 1.5rem 0;
+  overflow: hidden;
+  border-radius: 0.5rem;
+}
+
+.blog-content td,
+.blog-content th {
+  border: 1px solid hsl(var(--border));
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.blog-content th {
+  background-color: hsl(var(--muted));
+  font-weight: 600;
+}
+
+.blog-content tr:nth-child(even) {
+  background-color: hsl(var(--muted) / 0.3);
+}
+
+/* Link Styles */
+.blog-content a {
+  color: hsl(var(--primary));
+  text-decoration: underline;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.blog-content a:hover {
+  color: hsl(var(--primary) / 0.8);
+}
+
+/* YouTube Embed Styles */
+.blog-content iframe {
+  max-width: 100%;
+  margin: 1.5rem auto;
+  display: block;
+  border-radius: 0.5rem;
+}
+
+/* Code Block Styles */
+.blog-content pre {
+  background-color: hsl(var(--muted));
+  border-radius: 0.5rem;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1.5rem 0;
+}
+
+.blog-content code {
+  background-color: hsl(var(--muted));
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.875em;
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.blog-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+/* Blockquote Styles */
+.blog-content blockquote {
+  border-left: 4px solid hsl(var(--primary));
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+  font-style: italic;
+  color: hsl(var(--muted-foreground));
+}
+
+/* List Styles */
+.blog-content ul,
+.blog-content ol {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.blog-content li {
+  margin: 0.5rem 0;
+}
+
+/* Heading Styles */
+.blog-content h1 {
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 2rem 0 1rem;
+  line-height: 1.2;
+  color: hsl(var(--foreground));
+}
+
+.blog-content h2 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin: 1.75rem 0 0.875rem;
+  line-height: 1.3;
+  color: hsl(var(--foreground));
+}
+
+.blog-content h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 1.5rem 0 0.75rem;
+  line-height: 1.4;
+  color: hsl(var(--foreground));
+}
+
+.blog-content h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 1.25rem 0 0.625rem;
+  line-height: 1.4;
+  color: hsl(var(--foreground));
+}
+
+.blog-content h5 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin: 1.125rem 0 0.5625rem;
+  line-height: 1.4;
+  color: hsl(var(--foreground));
+}
+
+.blog-content h6 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 1rem 0 0.5rem;
+  line-height: 1.4;
+  color: hsl(var(--foreground));
+}
+
+/* Horizontal Rule */
+.blog-content hr {
+  border: none;
+  border-top: 2px solid hsl(var(--border));
+  margin: 2rem 0;
+}
+
+/* Paragraph Styles */
+.blog-content p {
+  margin: 1rem 0;
+  line-height: 1.7;
+  color: hsl(var(--foreground));
+}
+
+/* Strong and Em */
+.blog-content strong {
+  font-weight: 700;
+}
+
+.blog-content em {
+  font-style: italic;
+}
+
+/* Text Alignment */
+.blog-content [style*="text-align: center"] {
+  text-align: center;
+}
+
+.blog-content [style*="text-align: right"] {
+  text-align: right;
+}
+
+.blog-content [style*="text-align: left"] {
+  text-align: left;
+}
+
+.blog-content [style*="text-align: justify"] {
+  text-align: justify;
+}

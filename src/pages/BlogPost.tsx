@@ -26,6 +26,7 @@ import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import DOMPurify from 'dompurify';
 import '@/components/admin/blog-editor.css';
+import '@/components/admin/blog-content.css';
 import {
   FaXTwitter,
   FaLinkedin,
@@ -518,13 +519,13 @@ const BlogPost = () => {
 
                 {/* Post Content */}
                 <Card>
-                  <CardContent className="p-8">
+                  <CardContent className="p-4 sm:p-6 md:p-8">
                     <div 
-                      className="prose prose-neutral dark:prose-invert prose-lg max-w-none"
+                      className="blog-content prose prose-neutral dark:prose-invert prose-lg max-w-none"
                       dangerouslySetInnerHTML={{ 
                         __html: DOMPurify.sanitize(post.content, {
-                          ADD_TAGS: ['iframe'],
-                          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling']
+                          ADD_TAGS: ['iframe', 'video', 'audio', 'source'],
+                          ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'type', 'controls', 'width', 'height', 'style']
                         })
                       }}
                     />
