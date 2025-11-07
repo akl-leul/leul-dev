@@ -11,6 +11,11 @@ import { HomeContentEditor } from '@/components/admin/HomeContentEditor';
 import { AboutContentEditor } from '@/components/admin/AboutContentEditor';
 import { ContactContentEditor } from '@/components/admin/ContactContentEditor';
 import { BlogPostEditor } from '@/components/admin/BlogPostEditor';
+import { ProjectsManager } from '@/components/admin/ProjectsManager';
+import { BlogPostsManager } from '@/components/admin/BlogPostsManager';
+import { ExperiencesManager } from '@/components/admin/ExperiencesManager';
+import { MessagesManager } from '@/components/admin/MessagesManager';
+import { CommentsManager } from '@/components/admin/CommentsManager';
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
@@ -176,15 +181,13 @@ const AdminPage = () => {
       case 'projects':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Projects</h1>
-            <p className="text-muted-foreground">Projects management coming soon...</p>
+            <ProjectsManager />
           </div>
         );
       case 'posts':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Blog Posts</h1>
-            <p className="text-muted-foreground">Blog post management coming soon...</p>
+            <BlogPostsManager />
           </div>
         );
       case 'skills':
@@ -197,8 +200,7 @@ const AdminPage = () => {
       case 'experiences':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Experience</h1>
-            <p className="text-muted-foreground">Experience management coming soon...</p>
+            <ExperiencesManager />
           </div>
         );
       case 'dynamic-pages':
@@ -212,15 +214,13 @@ const AdminPage = () => {
       case 'contacts':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Messages</h1>
-            <p className="text-muted-foreground">Messages management coming soon...</p>
+            <MessagesManager />
           </div>
         );
       case 'comments':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Comments</h1>
-            <p className="text-muted-foreground">Comments management coming soon...</p>
+            <CommentsManager />
           </div>
         );
       case 'feedback':
