@@ -3,6 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -22,6 +26,8 @@ interface BlogPost {
 export const BlogPostsManager = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -70,6 +76,35 @@ export const BlogPostsManager = () => {
       toast({ title: `Post ${!post.published ? 'published' : 'unpublished'} successfully` });
       loadPosts();
     }
+  };
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    const postData = {
+      title: formData.get('title') as string,
+      excerpt: formData.get('excerpt') as string,
+      status: formData.get('status') as string,
+      published: formData.get('published') === 'true',
+    };
+
+    if (editingPost) {
+      const { error } = await supabase
+        .from('posts')
+        .update(postData)
+        .eq('id', editingPost.id);
+      
+      if (error) {
+        toast({ title: 'Error updating post', variant: 'destructive' });
+      } else {
+        toast({ title: 'Post updated successfully' });
+      }
+    }
+    
+    setIsDialogOpen(false);
+    setEditingPost(null);
+    loadPosts();
   };
 
   if (loading) return <div>Loading...</div>;
@@ -122,6 +157,16 @@ export const BlogPostsManager = () => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => {
+                        setEditingPost(post);
+                        setIsDialogOpen(true);
+                      }}
+                    >
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => togglePublish(post)}
                     >
                       {post.published ? 'Unpublish' : 'Publish'}
@@ -140,6 +185,57 @@ export const BlogPostsManager = () => {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Blog Post</DialogTitle>
+          </DialogHeader>
+          {editingPost && (
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Title</label>
+                <Input name="title" defaultValue={editingPost.title} required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Excerpt</label>
+                <Textarea name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Status</label>
+                <Select name="status" defaultValue={editingPost.status}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="draft">Draft</SelectItem>
+                    <SelectItem value="published">Published</SelectItem>
+                    <SelectItem value="archived">Archived</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Published</label>
+                <Select name="published" defaultValue={editingPost.published ? 'true' : 'false'}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit">Save Changes</Button>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

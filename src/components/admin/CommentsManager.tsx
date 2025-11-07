@@ -3,8 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Trash2, Check, X } from 'lucide-react';
+import { Eye, Trash2, Check, X, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Comment {
@@ -22,7 +24,9 @@ export const CommentsManager = () => {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedComment, setSelectedComment] = useState<Comment | null>(null);
+  const [editingComment, setEditingComment] = useState<Comment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const loadComments = async () => {
@@ -74,6 +78,37 @@ export const CommentsManager = () => {
     setIsDialogOpen(true);
   };
 
+  const handleEdit = (comment: Comment) => {
+    setEditingComment(comment);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    
+    if (editingComment) {
+      const { error } = await supabase
+        .from('comments')
+        .update({
+          content: formData.get('content') as string,
+          author_name: formData.get('author_name') as string,
+          author_email: formData.get('author_email') as string,
+        })
+        .eq('id', editingComment.id);
+      
+      if (error) {
+        toast({ title: 'Error updating comment', variant: 'destructive' });
+      } else {
+        toast({ title: 'Comment updated successfully' });
+      }
+    }
+    
+    setIsEditDialogOpen(false);
+    setEditingComment(null);
+    loadComments();
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -116,6 +151,13 @@ export const CommentsManager = () => {
                       onClick={() => handleView(comment)}
                     >
                       <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(comment)}
+                    >
+                      <Pencil className="w-4 h-4" />
                     </Button>
                     {!comment.approved && (
                       <Button
@@ -180,6 +222,36 @@ export const CommentsManager = () => {
                 <p className="mt-2 p-4 bg-muted rounded-lg whitespace-pre-wrap">{selectedComment.content}</p>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Comment</DialogTitle>
+          </DialogHeader>
+          {editingComment && (
+            <form onSubmit={handleSave} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Author Name</label>
+                <Input name="author_name" defaultValue={editingComment.author_name} required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Author Email</label>
+                <Input name="author_email" type="email" defaultValue={editingComment.author_email} required />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Comment</label>
+                <Textarea name="content" defaultValue={editingComment.content} required rows={6} />
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit">Save Changes</Button>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </form>
           )}
         </DialogContent>
       </Dialog>
