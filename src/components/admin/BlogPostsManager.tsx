@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Pencil, Trash2, Eye } from 'lucide-react';
@@ -14,12 +15,19 @@ import { useNavigate } from 'react-router-dom';
 interface BlogPost {
   id: number;
   title: string;
+  slug: string;
   excerpt: string;
+  content: string;
+  featured_image?: string;
+  category_id?: number;
   status: string;
   published: boolean;
+  read_time: number;
   views: number;
   likes_count: number;
+  user_id?: string;
   created_at: string;
+  updated_at: string;
   published_at?: string;
 }
 
@@ -82,9 +90,17 @@ export const BlogPostsManager = () => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     
+    const title = formData.get('title') as string;
+    const slug = formData.get('slug') as string || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const categoryId = formData.get('category_id') as string;
+    
     const postData = {
-      title: formData.get('title') as string,
+      title,
+      slug,
       excerpt: formData.get('excerpt') as string,
+      featured_image: formData.get('featured_image') as string || null,
+      category_id: categoryId ? parseInt(categoryId) : null,
+      read_time: parseInt(formData.get('read_time') as string) || 5,
       status: formData.get('status') as string,
       published: formData.get('published') === 'true',
     };
@@ -192,17 +208,33 @@ export const BlogPostsManager = () => {
             <DialogTitle>Edit Blog Post</DialogTitle>
           </DialogHeader>
           {editingPost && (
-            <form onSubmit={handleSave} className="space-y-4">
+            <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
               <div>
-                <label className="text-sm font-medium">Title</label>
-                <Input name="title" defaultValue={editingPost.title} required />
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" name="title" defaultValue={editingPost.title} required />
               </div>
               <div>
-                <label className="text-sm font-medium">Excerpt</label>
-                <Textarea name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
+                <Label htmlFor="slug">Slug</Label>
+                <Input id="slug" name="slug" placeholder="url-friendly-title" defaultValue={editingPost.slug} required />
               </div>
               <div>
-                <label className="text-sm font-medium">Status</label>
+                <Label htmlFor="excerpt">Excerpt</Label>
+                <Textarea id="excerpt" name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
+              </div>
+              <div>
+                <Label htmlFor="featured_image">Featured Image URL</Label>
+                <Input id="featured_image" name="featured_image" type="url" placeholder="https://..." defaultValue={editingPost.featured_image || ''} />
+              </div>
+              <div>
+                <Label htmlFor="category_id">Category ID</Label>
+                <Input id="category_id" name="category_id" type="number" placeholder="Category ID" defaultValue={editingPost.category_id || ''} />
+              </div>
+              <div>
+                <Label htmlFor="read_time">Read Time (minutes)</Label>
+                <Input id="read_time" name="read_time" type="number" min="1" defaultValue={editingPost.read_time} required />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
                 <Select name="status" defaultValue={editingPost.status}>
                   <SelectTrigger>
                     <SelectValue />
@@ -215,7 +247,7 @@ export const BlogPostsManager = () => {
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium">Published</label>
+                <Label htmlFor="published">Published</Label>
                 <Select name="published" defaultValue={editingPost.published ? 'true' : 'false'}>
                   <SelectTrigger>
                     <SelectValue />
@@ -225,6 +257,11 @@ export const BlogPostsManager = () => {
                     <SelectItem value="false">No</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Note:</strong> Content editing should be done in the full blog editor. This form only updates metadata.
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button type="submit">Save Changes</Button>

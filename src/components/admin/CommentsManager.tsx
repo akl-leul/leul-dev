@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Eye, Trash2, Check, X, Pencil } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -15,6 +16,8 @@ interface Comment {
   author_name: string;
   author_email: string;
   post_id: number;
+  parent_id?: number;
+  user_id?: string;
   approved: boolean;
   likes_count: number;
   created_at: string;
@@ -124,6 +127,7 @@ export const CommentsManager = () => {
               <TableHead>Author</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Content Preview</TableHead>
+              <TableHead>Post ID</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Likes</TableHead>
               <TableHead>Date</TableHead>
@@ -136,6 +140,7 @@ export const CommentsManager = () => {
                 <TableCell className="font-medium">{comment.author_name}</TableCell>
                 <TableCell>{comment.author_email}</TableCell>
                 <TableCell className="max-w-xs truncate">{comment.content}</TableCell>
+                <TableCell>{comment.post_id}</TableCell>
                 <TableCell>
                   <Badge variant={comment.approved ? 'default' : 'secondary'}>
                     {comment.approved ? 'Approved' : 'Pending'}
@@ -209,6 +214,12 @@ export const CommentsManager = () => {
                 <strong>Post ID:</strong> {selectedComment.post_id}
               </div>
               <div>
+                <strong>Parent ID:</strong> {selectedComment.parent_id || 'None (Top-level comment)'}
+              </div>
+              <div>
+                <strong>User ID:</strong> {selectedComment.user_id || 'Anonymous'}
+              </div>
+              <div>
                 <strong>Date:</strong> {new Date(selectedComment.created_at).toLocaleString()}
               </div>
               <div>
@@ -234,16 +245,21 @@ export const CommentsManager = () => {
           {editingComment && (
             <form onSubmit={handleSave} className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Author Name</label>
-                <Input name="author_name" defaultValue={editingComment.author_name} required />
+                <Label htmlFor="author_name">Author Name</Label>
+                <Input id="author_name" name="author_name" defaultValue={editingComment.author_name} required />
               </div>
               <div>
-                <label className="text-sm font-medium">Author Email</label>
-                <Input name="author_email" type="email" defaultValue={editingComment.author_email} required />
+                <Label htmlFor="author_email">Author Email</Label>
+                <Input id="author_email" name="author_email" type="email" defaultValue={editingComment.author_email} required />
               </div>
               <div>
-                <label className="text-sm font-medium">Comment</label>
-                <Textarea name="content" defaultValue={editingComment.content} required rows={6} />
+                <Label htmlFor="content">Comment</Label>
+                <Textarea id="content" name="content" defaultValue={editingComment.content} required rows={6} />
+              </div>
+              <div className="p-3 bg-muted rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Note:</strong> Post ID, Parent ID, and User ID cannot be edited here for data integrity.
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button type="submit">Save Changes</Button>
