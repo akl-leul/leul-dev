@@ -14,8 +14,10 @@ import { BlogPostEditor } from '@/components/admin/BlogPostEditor';
 import { ProjectsManager } from '@/components/admin/ProjectsManager';
 import { BlogPostsManager } from '@/components/admin/BlogPostsManager';
 import { ExperiencesManager } from '@/components/admin/ExperiencesManager';
+import { SkillsManager } from '@/components/admin/SkillsManager';
 import { MessagesManager } from '@/components/admin/MessagesManager';
 import { CommentsManager } from '@/components/admin/CommentsManager';
+import { ComingSoon } from '@/components/admin/ComingSoon';
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
@@ -193,8 +195,7 @@ const AdminPage = () => {
       case 'skills':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Skills</h1>
-            <p className="text-muted-foreground">Skills management coming soon...</p>
+            <SkillsManager />
           </div>
         );
       case 'experiences':
@@ -232,8 +233,10 @@ const AdminPage = () => {
       case 'settings':
         return (
           <div className="p-6">
-            <h1 className="text-3xl font-bold mb-4">Settings</h1>
-            <p className="text-muted-foreground">Settings panel coming soon...</p>
+            <ComingSoon 
+              title="Settings" 
+              description="Configure your website settings, appearance, and preferences here." 
+            />
           </div>
         );
       default:

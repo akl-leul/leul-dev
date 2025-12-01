@@ -4,7 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Trash2 } from 'lucide-react';
+import { Eye, Trash2, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -22,6 +25,8 @@ export const MessagesManager = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editingMessage, setEditingMessage] = useState<Message | null>(null);
   const { toast } = useToast();
 
   const loadMessages = async () => {
@@ -81,6 +86,35 @@ export const MessagesManager = () => {
     }
   };
 
+  const handleEdit = (message: Message) => {
+    setEditingMessage(message);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingMessage) return;
+
+    const formData = new FormData(e.currentTarget);
+    const { error } = await supabase
+      .from('contact_submissions')
+      .update({
+        name: formData.get('name') as string,
+        email: formData.get('email') as string,
+        subject: formData.get('subject') as string,
+        message: formData.get('message') as string,
+      })
+      .eq('id', editingMessage.id);
+    
+    if (error) {
+      toast({ title: 'Error updating message', variant: 'destructive' });
+    } else {
+      toast({ title: 'Message updated successfully' });
+      setIsEditDialogOpen(false);
+      loadMessages();
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -121,6 +155,13 @@ export const MessagesManager = () => {
                       onClick={() => handleView(message)}
                     >
                       <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(message)}
+                    >
+                      <Pencil className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -168,6 +209,62 @@ export const MessagesManager = () => {
                 <p className="mt-2 p-4 bg-muted rounded-lg whitespace-pre-wrap">{selectedMessage.message}</p>
               </div>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Message</DialogTitle>
+          </DialogHeader>
+          {editingMessage && (
+            <form onSubmit={handleUpdate} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  name="name"
+                  defaultValue={editingMessage.name}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  defaultValue={editingMessage.email}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="subject">Subject</Label>
+                <Input
+                  id="subject"
+                  name="subject"
+                  defaultValue={editingMessage.subject}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="message">Message</Label>
+                <Textarea
+                  id="message"
+                  name="message"
+                  defaultValue={editingMessage.message}
+                  rows={6}
+                  required
+                />
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Update</Button>
+              </div>
+            </form>
           )}
         </DialogContent>
       </Dialog>
