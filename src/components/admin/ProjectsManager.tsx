@@ -4,6 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
@@ -14,12 +15,16 @@ interface Project {
   id: string;
   title: string;
   description: string;
+  content?: string;
   status: string;
   tech_stack: string[];
   github_url?: string;
   demo_url?: string;
+  image_url?: string;
   featured: boolean;
   created_at: string;
+  updated_at: string;
+  user_id: string;
 }
 
 export const ProjectsManager = () => {
@@ -66,10 +71,12 @@ export const ProjectsManager = () => {
     const projectData = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
+      content: formData.get('content') as string || null,
       status: formData.get('status') as string,
-      tech_stack: (formData.get('tech_stack') as string).split(',').map(t => t.trim()),
+      tech_stack: (formData.get('tech_stack') as string).split(',').map(t => t.trim()).filter(Boolean),
       github_url: formData.get('github_url') as string || null,
       demo_url: formData.get('demo_url') as string || null,
+      image_url: formData.get('image_url') as string || null,
       featured: formData.get('featured') === 'true',
     };
 
@@ -118,32 +125,64 @@ export const ProjectsManager = () => {
             <DialogHeader>
               <DialogTitle>{editingProject ? 'Edit Project' : 'Add Project'}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSave} className="space-y-4">
-              <Input name="title" placeholder="Title" defaultValue={editingProject?.title} required />
-              <Textarea name="description" placeholder="Description" defaultValue={editingProject?.description} required />
-              <Select name="status" defaultValue={editingProject?.status || 'completed'}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="planned">Planned</SelectItem>
-                </SelectContent>
-              </Select>
-              <Input name="tech_stack" placeholder="Tech Stack (comma separated)" defaultValue={editingProject?.tech_stack?.join(', ')} />
-              <Input name="github_url" placeholder="GitHub URL" defaultValue={editingProject?.github_url} />
-              <Input name="demo_url" placeholder="Demo URL" defaultValue={editingProject?.demo_url} />
-              <Select name="featured" defaultValue={editingProject?.featured ? 'true' : 'false'}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Featured" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="true">Yes</SelectItem>
-                  <SelectItem value="false">No</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button type="submit">Save</Button>
+            <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
+              <div>
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" name="title" placeholder="Title" defaultValue={editingProject?.title} required />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" placeholder="Short description" defaultValue={editingProject?.description} required rows={2} />
+              </div>
+              <div>
+                <Label htmlFor="content">Content (Detailed)</Label>
+                <Textarea id="content" name="content" placeholder="Full project content/details" defaultValue={editingProject?.content || ''} rows={4} />
+              </div>
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select name="status" defaultValue={editingProject?.status || 'completed'}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="completed">Completed</SelectItem>
+                    <SelectItem value="in-progress">In Progress</SelectItem>
+                    <SelectItem value="planned">Planned</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="image_url">Image URL</Label>
+                <Input id="image_url" name="image_url" placeholder="Project image URL" defaultValue={editingProject?.image_url || ''} />
+              </div>
+              <div>
+                <Label htmlFor="tech_stack">Tech Stack (comma separated)</Label>
+                <Input id="tech_stack" name="tech_stack" placeholder="React, Node.js, PostgreSQL" defaultValue={editingProject?.tech_stack?.join(', ')} />
+              </div>
+              <div>
+                <Label htmlFor="github_url">GitHub URL</Label>
+                <Input id="github_url" name="github_url" type="url" placeholder="https://github.com/..." defaultValue={editingProject?.github_url || ''} />
+              </div>
+              <div>
+                <Label htmlFor="demo_url">Demo URL</Label>
+                <Input id="demo_url" name="demo_url" type="url" placeholder="https://..." defaultValue={editingProject?.demo_url || ''} />
+              </div>
+              <div>
+                <Label htmlFor="featured">Featured</Label>
+                <Select name="featured" defaultValue={editingProject?.featured ? 'true' : 'false'}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Featured" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="true">Yes</SelectItem>
+                    <SelectItem value="false">No</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit">Save</Button>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+              </div>
             </form>
           </DialogContent>
         </Dialog>
