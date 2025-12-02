@@ -202,7 +202,11 @@ const ProjectDetail = () => {
               <div 
                 className="prose prose-sm max-w-none dark:prose-invert"
                 dangerouslySetInnerHTML={{ 
-                  __html: DOMPurify.sanitize(marked(project.content) as string)
+                  __html: DOMPurify.sanitize(
+                    project.content.startsWith('<') 
+                      ? project.content 
+                      : marked(project.content) as string
+                  )
                 }}
               />
             </CardContent>
