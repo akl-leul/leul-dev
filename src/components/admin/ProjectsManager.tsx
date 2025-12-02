@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ImageCropUpload } from './ImageCropUpload';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Project {
   id: string;
@@ -32,6 +34,7 @@ export const ProjectsManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadProjects = async () => {
@@ -76,7 +79,7 @@ export const ProjectsManager = () => {
       tech_stack: (formData.get('tech_stack') as string).split(',').map(t => t.trim()).filter(Boolean),
       github_url: formData.get('github_url') as string || null,
       demo_url: formData.get('demo_url') as string || null,
-      image_url: formData.get('image_url') as string || null,
+      image_url: imageUrl || null,
       featured: formData.get('featured') === 'true',
     };
 
@@ -115,72 +118,115 @@ export const ProjectsManager = () => {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Projects Management</h2>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setEditingProject(null);
+            setImageUrl(null);
+          }
+        }}>
           <DialogTrigger asChild>
-            <Button onClick={() => setEditingProject(null)}>
+            <Button onClick={() => {
+              setEditingProject(null);
+              setImageUrl(null);
+            }}>
               <Plus className="w-4 h-4 mr-2" /> Add Project
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-4xl max-h-[90vh]">
             <DialogHeader>
               <DialogTitle>{editingProject ? 'Edit Project' : 'Add Project'}</DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" placeholder="Title" defaultValue={editingProject?.title} required />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" placeholder="Short description" defaultValue={editingProject?.description} required rows={2} />
-              </div>
-              <div>
-                <Label htmlFor="content">Content (Detailed)</Label>
-                <Textarea id="content" name="content" placeholder="Full project content/details" defaultValue={editingProject?.content || ''} rows={4} />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select name="status" defaultValue={editingProject?.status || 'completed'}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
-                    <SelectItem value="planned">Planned</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="image_url">Image URL</Label>
-                <Input id="image_url" name="image_url" placeholder="Project image URL" defaultValue={editingProject?.image_url || ''} />
-              </div>
-              <div>
-                <Label htmlFor="tech_stack">Tech Stack (comma separated)</Label>
-                <Input id="tech_stack" name="tech_stack" placeholder="React, Node.js, PostgreSQL" defaultValue={editingProject?.tech_stack?.join(', ')} />
-              </div>
-              <div>
-                <Label htmlFor="github_url">GitHub URL</Label>
-                <Input id="github_url" name="github_url" type="url" placeholder="https://github.com/..." defaultValue={editingProject?.github_url || ''} />
-              </div>
-              <div>
-                <Label htmlFor="demo_url">Demo URL</Label>
-                <Input id="demo_url" name="demo_url" type="url" placeholder="https://..." defaultValue={editingProject?.demo_url || ''} />
-              </div>
-              <div>
-                <Label htmlFor="featured">Featured</Label>
-                <Select name="featured" defaultValue={editingProject?.featured ? 'true' : 'false'}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Featured" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Yes</SelectItem>
-                    <SelectItem value="false">No</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex gap-2">
-                <Button type="submit">Save</Button>
+            <form onSubmit={handleSave} className="space-y-4">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="links">Links & Media</TabsTrigger>
+                </TabsList>
+                
+                <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
+                  <TabsContent value="basic" className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title *</Label>
+                      <Input id="title" name="title" placeholder="Project title" defaultValue={editingProject?.title} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea id="description" name="description" placeholder="Short description" defaultValue={editingProject?.description} required rows={3} />
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select name="status" defaultValue={editingProject?.status || 'completed'}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="completed">Completed</SelectItem>
+                          <SelectItem value="in-progress">In Progress</SelectItem>
+                          <SelectItem value="planned">Planned</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="tech_stack">Tech Stack (comma separated)</Label>
+                      <Input id="tech_stack" name="tech_stack" placeholder="React, Node.js, PostgreSQL" defaultValue={editingProject?.tech_stack?.join(', ')} />
+                    </div>
+                    <div>
+                      <Label htmlFor="featured">Featured</Label>
+                      <Select name="featured" defaultValue={editingProject?.featured ? 'true' : 'false'}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Featured" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Yes</SelectItem>
+                          <SelectItem value="false">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="content" className="space-y-4">
+                    <div>
+                      <Label htmlFor="content">Project Content (Markdown supported)</Label>
+                      <Textarea 
+                        id="content" 
+                        name="content" 
+                        placeholder="Write detailed project description using Markdown..."
+                        defaultValue={editingProject?.content || ''} 
+                        rows={15}
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Supports Markdown: **bold**, *italic*, # headers, - lists, [links](url), etc.
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="links" className="space-y-4">
+                    <div>
+                      <ImageCropUpload
+                        bucketName="home-images"
+                        label="Project Image"
+                        currentImageUrl={imageUrl || editingProject?.image_url || undefined}
+                        onImageUpdate={(url) => setImageUrl(url)}
+                        aspectRatio={16 / 9}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="github_url">GitHub URL</Label>
+                      <Input id="github_url" name="github_url" type="url" placeholder="https://github.com/..." defaultValue={editingProject?.github_url || ''} />
+                    </div>
+                    <div>
+                      <Label htmlFor="demo_url">Demo URL</Label>
+                      <Input id="demo_url" name="demo_url" type="url" placeholder="https://..." defaultValue={editingProject?.demo_url || ''} />
+                    </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
+              
+              <div className="flex gap-2 pt-4 border-t">
+                <Button type="submit">Save Project</Button>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
               </div>
             </form>
@@ -215,6 +261,7 @@ export const ProjectsManager = () => {
                       size="sm"
                       onClick={() => {
                         setEditingProject(project);
+                        setImageUrl(project.image_url);
                         setIsDialogOpen(true);
                       }}
                     >

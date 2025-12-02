@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Pencil, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { ImageCropUpload } from './ImageCropUpload';
 
 interface BlogPost {
   id: number;
@@ -36,6 +37,7 @@ export const BlogPostsManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [featuredImage, setFeaturedImage] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -98,7 +100,7 @@ export const BlogPostsManager = () => {
       title,
       slug,
       excerpt: formData.get('excerpt') as string,
-      featured_image: formData.get('featured_image') as string || null,
+      featured_image: featuredImage || null,
       category_id: categoryId ? parseInt(categoryId) : null,
       read_time: parseInt(formData.get('read_time') as string) || 5,
       status: formData.get('status') as string,
@@ -175,6 +177,7 @@ export const BlogPostsManager = () => {
                       size="sm"
                       onClick={() => {
                         setEditingPost(post);
+                        setFeaturedImage(post.featured_image || null);
                         setIsDialogOpen(true);
                       }}
                     >
@@ -222,8 +225,13 @@ export const BlogPostsManager = () => {
                 <Textarea id="excerpt" name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
               </div>
               <div>
-                <Label htmlFor="featured_image">Featured Image URL</Label>
-                <Input id="featured_image" name="featured_image" type="url" placeholder="https://..." defaultValue={editingPost.featured_image || ''} />
+                <ImageCropUpload
+                  bucketName="blog-media"
+                  label="Featured Image"
+                  currentImageUrl={featuredImage || undefined}
+                  onImageUpdate={(url) => setFeaturedImage(url)}
+                  aspectRatio={16 / 9}
+                />
               </div>
               <div>
                 <Label htmlFor="category_id">Category ID</Label>
