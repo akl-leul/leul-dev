@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProjectFeedback } from "@/components/ProjectFeedback";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 interface Project {
   id: string;
@@ -198,8 +200,10 @@ const ProjectDetail = () => {
             </CardHeader>
             <CardContent>
               <div 
-                className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: project.content }}
+                className="prose prose-sm max-w-none dark:prose-invert"
+                dangerouslySetInnerHTML={{ 
+                  __html: DOMPurify.sanitize(marked(project.content) as string)
+                }}
               />
             </CardContent>
           </Card>
