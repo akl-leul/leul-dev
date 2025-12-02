@@ -12,6 +12,7 @@ import { Pencil, Trash2, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropUpload } from './ImageCropUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RichTextEditor } from './RichTextEditor';
 
 interface Project {
   id: string;
@@ -35,6 +36,7 @@ export const ProjectsManager = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [contentHtml, setContentHtml] = useState<string>('');
   const { toast } = useToast();
 
   const loadProjects = async () => {
@@ -74,7 +76,7 @@ export const ProjectsManager = () => {
     const projectData = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
-      content: formData.get('content') as string || null,
+      content: contentHtml || null,
       status: formData.get('status') as string,
       tech_stack: (formData.get('tech_stack') as string).split(',').map(t => t.trim()).filter(Boolean),
       github_url: formData.get('github_url') as string || null,
@@ -123,12 +125,14 @@ export const ProjectsManager = () => {
           if (!open) {
             setEditingProject(null);
             setImageUrl(null);
+            setContentHtml('');
           }
         }}>
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingProject(null);
               setImageUrl(null);
+              setContentHtml('');
             }}>
               <Plus className="w-4 h-4 mr-2" /> Add Project
             </Button>
@@ -188,18 +192,12 @@ export const ProjectsManager = () => {
 
                   <TabsContent value="content" className="space-y-4">
                     <div>
-                      <Label htmlFor="content">Project Content (Markdown supported)</Label>
-                      <Textarea 
-                        id="content" 
-                        name="content" 
-                        placeholder="Write detailed project description using Markdown..."
-                        defaultValue={editingProject?.content || ''} 
-                        rows={15}
-                        className="font-mono text-sm"
+                      <Label>Project Content</Label>
+                      <RichTextEditor
+                        content={contentHtml || editingProject?.content || ''}
+                        onChange={setContentHtml}
+                        placeholder="Write detailed project description..."
                       />
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Supports Markdown: **bold**, *italic*, # headers, - lists, [links](url), etc.
-                      </p>
                     </div>
                   </TabsContent>
 
@@ -262,6 +260,7 @@ export const ProjectsManager = () => {
                       onClick={() => {
                         setEditingProject(project);
                         setImageUrl(project.image_url);
+                        setContentHtml(project.content || '');
                         setIsDialogOpen(true);
                       }}
                     >

@@ -12,6 +12,8 @@ import { Pencil, Trash2, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { ImageCropUpload } from './ImageCropUpload';
+import { RichTextEditor } from './RichTextEditor';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface BlogPost {
   id: number;
@@ -38,6 +40,7 @@ export const BlogPostsManager = () => {
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
+  const [contentHtml, setContentHtml] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -100,6 +103,7 @@ export const BlogPostsManager = () => {
       title,
       slug,
       excerpt: formData.get('excerpt') as string,
+      content: contentHtml,
       featured_image: featuredImage || null,
       category_id: categoryId ? parseInt(categoryId) : null,
       read_time: parseInt(formData.get('read_time') as string) || 5,
@@ -142,6 +146,7 @@ export const BlogPostsManager = () => {
               <TableHead>Published</TableHead>
               <TableHead>Views</TableHead>
               <TableHead>Likes</TableHead>
+              <TableHead>User ID</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -162,6 +167,7 @@ export const BlogPostsManager = () => {
                 </TableCell>
                 <TableCell>{post.views}</TableCell>
                 <TableCell>{post.likes_count}</TableCell>
+                <TableCell className="text-xs">{post.user_id?.slice(0, 8) || 'N/A'}</TableCell>
                 <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex gap-2">
@@ -178,6 +184,7 @@ export const BlogPostsManager = () => {
                       onClick={() => {
                         setEditingPost(post);
                         setFeaturedImage(post.featured_image || null);
+                        setContentHtml(post.content || '');
                         setIsDialogOpen(true);
                       }}
                     >
@@ -206,72 +213,112 @@ export const BlogPostsManager = () => {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Blog Post</DialogTitle>
           </DialogHeader>
           {editingPost && (
-            <form onSubmit={handleSave} className="space-y-4 max-h-[70vh] overflow-y-auto px-1">
-              <div>
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" name="title" defaultValue={editingPost.title} required />
-              </div>
-              <div>
-                <Label htmlFor="slug">Slug</Label>
-                <Input id="slug" name="slug" placeholder="url-friendly-title" defaultValue={editingPost.slug} required />
-              </div>
-              <div>
-                <Label htmlFor="excerpt">Excerpt</Label>
-                <Textarea id="excerpt" name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
-              </div>
-              <div>
-                <ImageCropUpload
-                  bucketName="blog-media"
-                  label="Featured Image"
-                  currentImageUrl={featuredImage || undefined}
-                  onImageUpdate={(url) => setFeaturedImage(url)}
-                  aspectRatio={16 / 9}
-                />
-              </div>
-              <div>
-                <Label htmlFor="category_id">Category ID</Label>
-                <Input id="category_id" name="category_id" type="number" placeholder="Category ID" defaultValue={editingPost.category_id || ''} />
-              </div>
-              <div>
-                <Label htmlFor="read_time">Read Time (minutes)</Label>
-                <Input id="read_time" name="read_time" type="number" min="1" defaultValue={editingPost.read_time} required />
-              </div>
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select name="status" defaultValue={editingPost.status}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="published">Published</SelectItem>
-                    <SelectItem value="archived">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="published">Published</Label>
-                <Select name="published" defaultValue={editingPost.published ? 'true' : 'false'}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Yes</SelectItem>
-                    <SelectItem value="false">No</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="p-3 bg-muted rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Note:</strong> Content editing should be done in the full blog editor. This form only updates metadata.
-                </p>
-              </div>
-              <div className="flex gap-2">
+            <form onSubmit={handleSave} className="space-y-4">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-3">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="content">Content</TabsTrigger>
+                  <TabsTrigger value="meta">Metadata</TabsTrigger>
+                </TabsList>
+                
+                <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
+                  <TabsContent value="basic" className="space-y-4">
+                    <div>
+                      <Label htmlFor="title">Title *</Label>
+                      <Input id="title" name="title" defaultValue={editingPost.title} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="slug">Slug *</Label>
+                      <Input id="slug" name="slug" placeholder="url-friendly-title" defaultValue={editingPost.slug} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="excerpt">Excerpt *</Label>
+                      <Textarea id="excerpt" name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
+                    </div>
+                    <div>
+                      <ImageCropUpload
+                        bucketName="blog-media"
+                        label="Featured Image"
+                        currentImageUrl={featuredImage || undefined}
+                        onImageUpdate={(url) => setFeaturedImage(url)}
+                        aspectRatio={16 / 9}
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="content" className="space-y-4">
+                    <div>
+                      <Label>Blog Post Content</Label>
+                      <RichTextEditor
+                        content={contentHtml || editingPost.content || ''}
+                        onChange={setContentHtml}
+                        placeholder="Write your blog post content..."
+                      />
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="meta" className="space-y-4">
+                    <div>
+                      <Label htmlFor="category_id">Category ID</Label>
+                      <Input id="category_id" name="category_id" type="number" placeholder="Category ID" defaultValue={editingPost.category_id || ''} />
+                    </div>
+                    <div>
+                      <Label htmlFor="read_time">Read Time (minutes) *</Label>
+                      <Input id="read_time" name="read_time" type="number" min="1" defaultValue={editingPost.read_time} required />
+                    </div>
+                    <div>
+                      <Label htmlFor="status">Status</Label>
+                      <Select name="status" defaultValue={editingPost.status}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="draft">Draft</SelectItem>
+                          <SelectItem value="published">Published</SelectItem>
+                          <SelectItem value="archived">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="published">Published</Label>
+                      <Select name="published" defaultValue={editingPost.published ? 'true' : 'false'}>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="true">Yes</SelectItem>
+                          <SelectItem value="false">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Views</Label>
+                        <Input value={editingPost.views} disabled />
+                      </div>
+                      <div>
+                        <Label>Likes Count</Label>
+                        <Input value={editingPost.likes_count} disabled />
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Published At</Label>
+                      <Input value={editingPost.published_at ? new Date(editingPost.published_at).toLocaleString() : 'Not published'} disabled />
+                    </div>
+                    <div>
+                      <Label>User ID</Label>
+                      <Input value={editingPost.user_id || 'N/A'} disabled className="text-xs" />
+                    </div>
+                  </TabsContent>
+                </div>
+              </Tabs>
+              
+              <div className="flex gap-2 pt-4 border-t">
                 <Button type="submit">Save Changes</Button>
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
