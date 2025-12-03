@@ -173,8 +173,8 @@ export function SkillsManager() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Skills Management</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Skills Management</h2>
         <Dialog open={dialogOpen} onOpenChange={handleDialogChange}>
           <DialogTrigger asChild>
             <Button>
@@ -264,53 +264,55 @@ export function SkillsManager() {
         </Dialog>
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Category</TableHead>
-            <TableHead>Level</TableHead>
-            <TableHead>Years</TableHead>
-            <TableHead>Icon</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {skills.map((skill) => (
-            <TableRow key={skill.id}>
-              <TableCell className="font-medium">{skill.name}</TableCell>
-              <TableCell>
-                <Badge variant="outline">{skill.category}</Badge>
-              </TableCell>
-              <TableCell>
-                <Badge variant={getLevelBadgeVariant(skill.level)}>
-                  {skill.level}
-                </Badge>
-              </TableCell>
-              <TableCell>{skill.years_experience || "N/A"}</TableCell>
-              <TableCell>{skill.icon || "N/A"}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex gap-2 justify-end">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEdit(skill)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(skill.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </TableCell>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Name</TableHead>
+              <TableHead className="hidden sm:table-cell">Category</TableHead>
+              <TableHead>Level</TableHead>
+              <TableHead className="hidden md:table-cell">Years</TableHead>
+              <TableHead className="hidden md:table-cell">Icon</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {skills.map((skill) => (
+              <TableRow key={skill.id}>
+                <TableCell className="font-medium">{skill.name}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <Badge variant="outline">{skill.category}</Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={getLevelBadgeVariant(skill.level)}>
+                    {skill.level}
+                  </Badge>
+                </TableCell>
+                <TableCell className="hidden md:table-cell">{skill.years_experience || "N/A"}</TableCell>
+                <TableCell className="hidden md:table-cell">{skill.icon || "N/A"}</TableCell>
+                <TableCell className="text-right">
+                  <div className="flex gap-1 sm:gap-2 justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(skill)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(skill.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
 
       {skills.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">

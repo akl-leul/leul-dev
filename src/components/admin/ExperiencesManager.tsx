@@ -115,8 +115,8 @@ export const ExperiencesManager = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Experience Management</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Experience Management</h2>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button onClick={() => setEditingExperience(null)}>
@@ -177,31 +177,34 @@ export const ExperiencesManager = () => {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Company</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Period</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Technologies</TableHead>
+              <TableHead className="hidden sm:table-cell">Role</TableHead>
+              <TableHead className="hidden md:table-cell">Period</TableHead>
+              <TableHead className="hidden lg:table-cell">Location</TableHead>
+              <TableHead className="hidden md:table-cell">Technologies</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {experiences.map((exp) => (
               <TableRow key={exp.id}>
-                <TableCell className="font-medium">{exp.company}</TableCell>
-                <TableCell>{exp.role}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium">
+                  <div>{exp.company}</div>
+                  <div className="sm:hidden text-xs text-muted-foreground">{exp.role}</div>
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">{exp.role}</TableCell>
+                <TableCell className="hidden md:table-cell">
                   {new Date(exp.start_date).toLocaleDateString()} - {exp.current ? 'Present' : exp.end_date ? new Date(exp.end_date).toLocaleDateString() : 'N/A'}
                   {exp.current && <Badge className="ml-2" variant="secondary">Current</Badge>}
                 </TableCell>
-                <TableCell>{exp.location || 'N/A'}</TableCell>
-                <TableCell>{exp.tech_used?.slice(0, 3).join(', ')}</TableCell>
+                <TableCell className="hidden lg:table-cell">{exp.location || 'N/A'}</TableCell>
+                <TableCell className="hidden md:table-cell">{exp.tech_used?.slice(0, 3).join(', ')}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2">
                     <Button
                       variant="ghost"
                       size="sm"
