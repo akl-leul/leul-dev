@@ -133,29 +133,28 @@ export const BlogPostsManager = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Blog Posts Management</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Blog Posts Management</h2>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
               <TableHead>Published</TableHead>
-              <TableHead>Views</TableHead>
-              <TableHead>Likes</TableHead>
-              <TableHead>User ID</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="hidden md:table-cell">Views</TableHead>
+              <TableHead className="hidden lg:table-cell">Likes</TableHead>
+              <TableHead className="hidden md:table-cell">Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {posts.map((post) => (
               <TableRow key={post.id}>
-                <TableCell className="font-medium">{post.title}</TableCell>
-                <TableCell>
+                <TableCell className="font-medium max-w-[150px] truncate">{post.title}</TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
                     {post.status}
                   </Badge>
@@ -165,12 +164,11 @@ export const BlogPostsManager = () => {
                     {post.published ? 'Yes' : 'No'}
                   </Badge>
                 </TableCell>
-                <TableCell>{post.views}</TableCell>
-                <TableCell>{post.likes_count}</TableCell>
-                <TableCell className="text-xs">{post.user_id?.slice(0, 8) || 'N/A'}</TableCell>
-                <TableCell>{new Date(post.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="hidden md:table-cell">{post.views}</TableCell>
+                <TableCell className="hidden lg:table-cell">{post.likes_count}</TableCell>
+                <TableCell className="hidden md:table-cell">{new Date(post.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 flex-wrap">
                     <Button
                       variant="ghost"
                       size="sm"

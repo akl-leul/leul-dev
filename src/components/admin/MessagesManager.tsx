@@ -119,19 +119,19 @@ export const MessagesManager = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Messages Management</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Messages Management</h2>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Subject</TableHead>
+              <TableHead className="hidden sm:table-cell">Email</TableHead>
+              <TableHead className="hidden md:table-cell">Subject</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="hidden sm:table-cell">Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -139,16 +139,16 @@ export const MessagesManager = () => {
             {messages.map((message) => (
               <TableRow key={message.id}>
                 <TableCell className="font-medium">{message.name}</TableCell>
-                <TableCell>{message.email}</TableCell>
-                <TableCell>{message.subject}</TableCell>
+                <TableCell className="hidden sm:table-cell">{message.email}</TableCell>
+                <TableCell className="hidden md:table-cell max-w-[150px] truncate">{message.subject}</TableCell>
                 <TableCell>
                   <Badge variant={message.status === 'new' ? 'default' : message.status === 'read' ? 'secondary' : 'outline'}>
                     {message.status}
                   </Badge>
                 </TableCell>
-                <TableCell>{new Date(message.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="hidden sm:table-cell">{new Date(message.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 flex-wrap">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -166,6 +166,7 @@ export const MessagesManager = () => {
                     <Button
                       variant="ghost"
                       size="sm"
+                      className="hidden sm:inline-flex"
                       onClick={() => handleStatusChange(message.id, message.status === 'new' ? 'read' : 'resolved')}
                     >
                       {message.status === 'new' ? 'Mark Read' : 'Resolve'}

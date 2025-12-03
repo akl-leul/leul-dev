@@ -118,8 +118,8 @@ export const ProjectsManager = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Projects Management</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Projects Management</h2>
         <Dialog open={isDialogOpen} onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) {
@@ -232,14 +232,14 @@ export const ProjectsManager = () => {
         </Dialog>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Tech Stack</TableHead>
-              <TableHead>Featured</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
+              <TableHead className="hidden md:table-cell">Tech Stack</TableHead>
+              <TableHead className="hidden sm:table-cell">Featured</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -247,13 +247,13 @@ export const ProjectsManager = () => {
             {projects.map((project) => (
               <TableRow key={project.id}>
                 <TableCell className="font-medium">{project.title}</TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge>{project.status}</Badge>
                 </TableCell>
-                <TableCell>{project.tech_stack?.slice(0, 3).join(', ')}</TableCell>
-                <TableCell>{project.featured ? '✓' : '✗'}</TableCell>
+                <TableCell className="hidden md:table-cell">{project.tech_stack?.slice(0, 3).join(', ')}</TableCell>
+                <TableCell className="hidden sm:table-cell">{project.featured ? '✓' : '✗'}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 sm:gap-2">
                     <Button
                       variant="ghost"
                       size="sm"

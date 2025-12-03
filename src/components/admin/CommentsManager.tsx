@@ -116,21 +116,21 @@ export const CommentsManager = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Comments Management</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-bold">Comments Management</h2>
       </div>
 
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Author</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Content Preview</TableHead>
-              <TableHead>Post ID</TableHead>
+              <TableHead className="hidden sm:table-cell">Email</TableHead>
+              <TableHead className="hidden md:table-cell">Content</TableHead>
+              <TableHead className="hidden lg:table-cell">Post ID</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Likes</TableHead>
-              <TableHead>Date</TableHead>
+              <TableHead className="hidden sm:table-cell">Likes</TableHead>
+              <TableHead className="hidden md:table-cell">Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -138,18 +138,18 @@ export const CommentsManager = () => {
             {comments.map((comment) => (
               <TableRow key={comment.id}>
                 <TableCell className="font-medium">{comment.author_name}</TableCell>
-                <TableCell>{comment.author_email}</TableCell>
-                <TableCell className="max-w-xs truncate">{comment.content}</TableCell>
-                <TableCell>{comment.post_id}</TableCell>
+                <TableCell className="hidden sm:table-cell">{comment.author_email}</TableCell>
+                <TableCell className="hidden md:table-cell max-w-[150px] truncate">{comment.content}</TableCell>
+                <TableCell className="hidden lg:table-cell">{comment.post_id}</TableCell>
                 <TableCell>
                   <Badge variant={comment.approved ? 'default' : 'secondary'}>
                     {comment.approved ? 'Approved' : 'Pending'}
                   </Badge>
                 </TableCell>
-                <TableCell>{comment.likes_count}</TableCell>
-                <TableCell>{new Date(comment.created_at).toLocaleDateString()}</TableCell>
+                <TableCell className="hidden sm:table-cell">{comment.likes_count}</TableCell>
+                <TableCell className="hidden md:table-cell">{new Date(comment.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1 flex-wrap">
                     <Button
                       variant="ghost"
                       size="sm"

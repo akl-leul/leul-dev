@@ -24,6 +24,10 @@ const Contact = () => {
   usePageView('Contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const [pageContent, setPageContent] = useState({
+    title: 'Get In Touch',
+    description: "Have a project in mind or just want to chat? I'd love to hear from you!"
+  });
   const [contactInfo, setContactInfo] = useState({
     email: 'layfokru@gmail.com',
     phone: '+251963889227',
@@ -32,18 +36,38 @@ const Contact = () => {
 
   useEffect(() => {
     const fetchContactInfo = async () => {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email, location')
+      // First try to get from contact_content table
+      const { data: content } = await supabase
+        .from('contact_content')
+        .select('*')
         .limit(1)
         .maybeSingle();
       
-      if (profile) {
-        setContactInfo(prev => ({
-          ...prev,
-          email: profile.email || prev.email,
-          location: profile.location || prev.location
-        }));
+      if (content) {
+        setPageContent({
+          title: content.title || 'Get In Touch',
+          description: content.description || "Have a project in mind or just want to chat? I'd love to hear from you!"
+        });
+        setContactInfo({
+          email: content.email || contactInfo.email,
+          phone: content.phone || contactInfo.phone,
+          location: content.location || contactInfo.location
+        });
+      } else {
+        // Fallback to profiles table
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, location')
+          .limit(1)
+          .maybeSingle();
+        
+        if (profile) {
+          setContactInfo(prev => ({
+            ...prev,
+            email: profile.email || prev.email,
+            location: profile.location || prev.location
+          }));
+        }
       }
     };
     fetchContactInfo();
@@ -80,15 +104,15 @@ const Contact = () => {
   };
 
   return (
-    <main className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
-        <header className="text-center mb-16 mt-8">
-          <h1 className="text-4xl font-extrabold text-foreground sm:text-5xl">
-            Get In Touch
+        <header className="text-center mb-10 sm:mb-16 mt-6 sm:mt-8">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">
+            {pageContent.title}
           </h1>
-          <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-            Have a project in mind or just want to chat? I'd love to hear from you!
+          <p className="mt-4 max-w-xl mx-auto text-base sm:text-lg text-muted-foreground px-4">
+            {pageContent.description}
           </p>
         </header>
 
