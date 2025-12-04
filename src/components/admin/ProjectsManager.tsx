@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropUpload } from './ImageCropUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -24,6 +24,7 @@ interface Project {
   github_url?: string;
   demo_url?: string;
   image_url?: string;
+  gallery_images?: string[];
   featured: boolean;
   created_at: string;
   updated_at: string;
@@ -36,6 +37,7 @@ export const ProjectsManager = () => {
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [contentHtml, setContentHtml] = useState<string>('');
   const { toast } = useToast();
 
@@ -69,6 +71,16 @@ export const ProjectsManager = () => {
     }
   };
 
+  const handleAddGalleryImage = (url: string | null) => {
+    if (url && galleryImages.length < 5) {
+      setGalleryImages([...galleryImages, url]);
+    }
+  };
+
+  const handleRemoveGalleryImage = (index: number) => {
+    setGalleryImages(galleryImages.filter((_, i) => i !== index));
+  };
+
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -82,6 +94,7 @@ export const ProjectsManager = () => {
       github_url: formData.get('github_url') as string || null,
       demo_url: formData.get('demo_url') as string || null,
       image_url: imageUrl || null,
+      gallery_images: galleryImages,
       featured: formData.get('featured') === 'true',
     };
 
@@ -111,7 +124,25 @@ export const ProjectsManager = () => {
     
     setIsDialogOpen(false);
     setEditingProject(null);
+    setImageUrl(null);
+    setGalleryImages([]);
+    setContentHtml('');
     loadProjects();
+  };
+
+  const openDialog = (project?: Project) => {
+    if (project) {
+      setEditingProject(project);
+      setImageUrl(project.image_url || null);
+      setGalleryImages(project.gallery_images || []);
+      setContentHtml(project.content || '');
+    } else {
+      setEditingProject(null);
+      setImageUrl(null);
+      setGalleryImages([]);
+      setContentHtml('');
+    }
+    setIsDialogOpen(true);
   };
 
   if (loading) return <div>Loading...</div>;
@@ -125,15 +156,12 @@ export const ProjectsManager = () => {
           if (!open) {
             setEditingProject(null);
             setImageUrl(null);
+            setGalleryImages([]);
             setContentHtml('');
           }
         }}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingProject(null);
-              setImageUrl(null);
-              setContentHtml('');
-            }}>
+            <Button onClick={() => openDialog()}>
               <Plus className="w-4 h-4 mr-2" /> Add Project
             </Button>
           </DialogTrigger>
@@ -146,7 +174,7 @@ export const ProjectsManager = () => {
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="basic">Basic Info</TabsTrigger>
                   <TabsTrigger value="content">Content</TabsTrigger>
-                  <TabsTrigger value="links">Links & Media</TabsTrigger>
+                  <TabsTrigger value="media">Media & Links</TabsTrigger>
                 </TabsList>
                 
                 <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
@@ -194,23 +222,61 @@ export const ProjectsManager = () => {
                     <div>
                       <Label>Project Content</Label>
                       <RichTextEditor
-                        content={contentHtml || editingProject?.content || ''}
+                        content={contentHtml}
                         onChange={setContentHtml}
                         placeholder="Write detailed project description..."
                       />
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="links" className="space-y-4">
+                  <TabsContent value="media" className="space-y-4">
                     <div>
+                      <Label>Featured Image</Label>
                       <ImageCropUpload
                         bucketName="home-images"
-                        label="Project Image"
-                        currentImageUrl={imageUrl || editingProject?.image_url || undefined}
+                        label="Featured Image"
+                        currentImageUrl={imageUrl || undefined}
                         onImageUpdate={(url) => setImageUrl(url)}
                         aspectRatio={16 / 9}
                       />
                     </div>
+
+                    <div className="space-y-3">
+                      <Label>Gallery Images ({galleryImages.length}/5)</Label>
+                      
+                      {galleryImages.length > 0 && (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {galleryImages.map((img, index) => (
+                            <div key={index} className="relative group">
+                              <img 
+                                src={img} 
+                                alt={`Gallery ${index + 1}`} 
+                                className="w-full h-24 object-cover rounded-lg border"
+                              />
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleRemoveGalleryImage(index)}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {galleryImages.length < 5 && (
+                        <ImageCropUpload
+                          bucketName="home-images"
+                          label="Add Gallery Image"
+                          onImageUpdate={handleAddGalleryImage}
+                          aspectRatio={16 / 9}
+                        />
+                      )}
+                    </div>
+
                     <div>
                       <Label htmlFor="github_url">GitHub URL</Label>
                       <Input id="github_url" name="github_url" type="url" placeholder="https://github.com/..." defaultValue={editingProject?.github_url || ''} />
@@ -257,12 +323,7 @@ export const ProjectsManager = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setEditingProject(project);
-                        setImageUrl(project.image_url);
-                        setContentHtml(project.content || '');
-                        setIsDialogOpen(true);
-                      }}
+                      onClick={() => openDialog(project)}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>

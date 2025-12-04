@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Github, Star, ArrowLeft, Share2, Copy } from "lucide-react";
+import { ExternalLink, Github, Star, ArrowLeft, Share2, Copy, ChevronLeft, ChevronRight } from "lucide-react";
 import { FaXTwitter, FaLinkedin, FaFacebook, FaWhatsapp, FaTelegram, FaReddit, FaEnvelope } from "react-icons/fa6";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectFeedback } from "@/components/ProjectFeedback";
@@ -18,6 +18,7 @@ interface Project {
   description: string;
   content: string | null;
   image_url: string | null;
+  gallery_images: string[] | null;
   github_url: string | null;
   demo_url: string | null;
   tech_stack: string[];
@@ -30,7 +31,14 @@ const ProjectDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { toast } = useToast();
+
+  // Combine featured image + gallery images for carousel
+  const allImages = project ? [
+    ...(project.image_url ? [project.image_url] : []),
+    ...(project.gallery_images || [])
+  ] : [];
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -54,6 +62,14 @@ const ProjectDetail = () => {
 
     fetchProject();
   }, [id]);
+
+  const nextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
+  };
+
+  const prevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+  };
 
   if (loading) {
     return (
@@ -163,17 +179,80 @@ const ProjectDetail = () => {
           </div>
         </div>
 
-        {/* Project Image */}
-        {project.image_url && (
-          <Card className="mb-8">
-            <CardContent className="p-0">
+        {/* Image Carousel */}
+        {allImages.length > 0 && (
+          <Card className="mb-8 overflow-hidden">
+            <CardContent className="p-0 relative">
               <img
-                src={project.image_url}
-                alt={project.title}
-                className="w-full h-64 object-cover rounded-lg"
+                src={allImages[currentImageIndex]}
+                alt={`${project.title} - Image ${currentImageIndex + 1}`}
+                className="w-full h-64 sm:h-80 md:h-96 object-cover"
               />
+              
+              {allImages.length > 1 && (
+                <>
+                  {/* Navigation Arrows */}
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
+                    onClick={prevImage}
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="icon"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
+                    onClick={nextImage}
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </Button>
+                  
+                  {/* Dots Indicator */}
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                    {allImages.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setCurrentImageIndex(index)}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          index === currentImageIndex 
+                            ? 'bg-primary' 
+                            : 'bg-muted-foreground/50 hover:bg-muted-foreground'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Image Counter */}
+                  <div className="absolute top-4 right-4 bg-background/80 px-2 py-1 rounded text-sm">
+                    {currentImageIndex + 1} / {allImages.length}
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
+        )}
+
+        {/* Thumbnail Strip */}
+        {allImages.length > 1 && (
+          <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+            {allImages.map((img, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImageIndex(index)}
+                className={`shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
+                  index === currentImageIndex ? 'border-primary' : 'border-transparent'
+                }`}
+              >
+                <img
+                  src={img}
+                  alt={`Thumbnail ${index + 1}`}
+                  className="w-20 h-14 object-cover"
+                />
+              </button>
+            ))}
+          </div>
         )}
 
         {/* Tech Stack */}
@@ -223,7 +302,6 @@ const ProjectDetail = () => {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {/* Twitter/X */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Check out this project: ${project.title}`)}`}
@@ -236,7 +314,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* LinkedIn */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
@@ -249,7 +326,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* Facebook */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
@@ -262,7 +338,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* WhatsApp */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`https://wa.me/?text=${encodeURIComponent(`Check out this project: ${project.title} - ${window.location.href}`)}`}
@@ -275,7 +350,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* Telegram */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Check out this project: ${project.title}`)}`}
@@ -288,7 +362,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* Reddit */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`https://www.reddit.com/submit?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(`Check out this project: ${project.title}`)}`}
@@ -301,7 +374,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* Email */}
               <Button variant="outline" size="sm" asChild>
                 <a
                   href={`mailto:?subject=${encodeURIComponent(`Check out this project: ${project.title}`)}&body=${encodeURIComponent(`I found this interesting project and thought you might like it:\n\n${project.title}\n${project.description}\n\nView it here: ${window.location.href}`)}`}
@@ -312,7 +384,6 @@ const ProjectDetail = () => {
                 </a>
               </Button>
 
-              {/* Copy Link */}
               <Button
                 variant="outline"
                 size="sm"
