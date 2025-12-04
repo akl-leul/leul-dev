@@ -17,7 +17,9 @@ import { ExperiencesManager } from '@/components/admin/ExperiencesManager';
 import { SkillsManager } from '@/components/admin/SkillsManager';
 import { MessagesManager } from '@/components/admin/MessagesManager';
 import { CommentsManager } from '@/components/admin/CommentsManager';
-import { ComingSoon } from '@/components/admin/ComingSoon';
+import { SettingsManager } from '@/components/admin/SettingsManager';
+import { CategoriesManager } from '@/components/admin/CategoriesManager';
+import { TagsManager } from '@/components/admin/TagsManager';
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
@@ -233,10 +235,19 @@ const AdminPage = () => {
       case 'settings':
         return (
           <div className="p-6">
-            <ComingSoon 
-              title="Settings" 
-              description="Configure your website settings, appearance, and preferences here." 
-            />
+            <SettingsManager />
+          </div>
+        );
+      case 'categories':
+        return (
+          <div className="p-6">
+            <CategoriesManager />
+          </div>
+        );
+      case 'tags':
+        return (
+          <div className="p-6">
+            <TagsManager />
           </div>
         );
       default:

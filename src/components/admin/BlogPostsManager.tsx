@@ -8,7 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, Eye, Plus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Pencil, Trash2, Eye, Plus, Tag } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { ImageCropUpload } from './ImageCropUpload';
@@ -34,13 +35,29 @@ interface BlogPost {
   published_at?: string;
 }
 
+interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface TagType {
+  id: number;
+  name: string;
+  slug: string;
+}
+
 export const BlogPostsManager = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tags, setTags] = useState<TagType[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
   const [contentHtml, setContentHtml] = useState<string>('');
+  const [selectedTags, setSelectedTags] = useState<number[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -58,8 +75,28 @@ export const BlogPostsManager = () => {
     setLoading(false);
   };
 
+  const loadCategories = async () => {
+    const { data } = await supabase.from('categories').select('*').order('name');
+    setCategories(data || []);
+  };
+
+  const loadTags = async () => {
+    const { data } = await supabase.from('tags').select('*').order('name');
+    setTags(data || []);
+  };
+
+  const loadPostTags = async (postId: number) => {
+    const { data } = await supabase
+      .from('post_tags')
+      .select('tag_id')
+      .eq('post_id', postId);
+    return data?.map(pt => pt.tag_id) || [];
+  };
+
   useEffect(() => {
     loadPosts();
+    loadCategories();
+    loadTags();
   }, []);
 
   const handleDelete = async (id: number) => {
@@ -97,7 +134,6 @@ export const BlogPostsManager = () => {
     
     const title = formData.get('title') as string;
     const slug = formData.get('slug') as string || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-    const categoryId = formData.get('category_id') as string;
     
     const postData = {
       title,
@@ -105,11 +141,13 @@ export const BlogPostsManager = () => {
       excerpt: formData.get('excerpt') as string,
       content: contentHtml,
       featured_image: featuredImage || null,
-      category_id: categoryId ? parseInt(categoryId) : null,
+      category_id: selectedCategoryId ? parseInt(selectedCategoryId) : null,
       read_time: parseInt(formData.get('read_time') as string) || 5,
       status: formData.get('status') as string,
       published: formData.get('published') === 'true',
     };
+
+    let postId: number;
 
     if (editingPost) {
       const { error } = await supabase
@@ -119,32 +157,72 @@ export const BlogPostsManager = () => {
       
       if (error) {
         toast({ title: 'Error updating post', variant: 'destructive' });
-      } else {
-        toast({ title: 'Post updated successfully' });
+        return;
       }
+      postId = editingPost.id;
+      toast({ title: 'Post updated successfully' });
     } else {
       // Create new post
       const { data: user } = await supabase.auth.getUser();
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('posts')
         .insert([{ 
           ...postData, 
           user_id: user.user?.id,
           published_at: postData.published ? new Date().toISOString() : null
-        }]);
+        }])
+        .select('id')
+        .single();
       
       if (error) {
         toast({ title: 'Error creating post', description: error.message, variant: 'destructive' });
-      } else {
-        toast({ title: 'Post created successfully' });
+        return;
       }
+      postId = data.id;
+      toast({ title: 'Post created successfully' });
+    }
+
+    // Update post tags
+    await supabase.from('post_tags').delete().eq('post_id', postId);
+    if (selectedTags.length > 0) {
+      const tagInserts = selectedTags.map(tagId => ({ post_id: postId, tag_id: tagId }));
+      await supabase.from('post_tags').insert(tagInserts);
     }
     
     setIsDialogOpen(false);
     setEditingPost(null);
     setFeaturedImage(null);
     setContentHtml('');
+    setSelectedTags([]);
+    setSelectedCategoryId('');
     loadPosts();
+  };
+
+  const openEditDialog = async (post: BlogPost) => {
+    setEditingPost(post);
+    setFeaturedImage(post.featured_image || null);
+    setContentHtml(post.content || '');
+    setSelectedCategoryId(post.category_id?.toString() || '');
+    const postTags = await loadPostTags(post.id);
+    setSelectedTags(postTags);
+    setIsDialogOpen(true);
+  };
+
+  const openNewDialog = () => {
+    setEditingPost(null);
+    setFeaturedImage(null);
+    setContentHtml('');
+    setSelectedTags([]);
+    setSelectedCategoryId('');
+    setIsDialogOpen(true);
+  };
+
+  const toggleTag = (tagId: number) => {
+    setSelectedTags(prev => 
+      prev.includes(tagId) 
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
   };
 
   if (loading) return <div>Loading...</div>;
@@ -153,12 +231,7 @@ export const BlogPostsManager = () => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-2xl sm:text-3xl font-bold">Blog Posts Management</h2>
-        <Button onClick={() => {
-          setEditingPost(null);
-          setFeaturedImage(null);
-          setContentHtml('');
-          setIsDialogOpen(true);
-        }}>
+        <Button onClick={openNewDialog}>
           <Plus className="w-4 h-4 mr-2" /> Add Post
         </Button>
       </div>
@@ -168,10 +241,10 @@ export const BlogPostsManager = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
+              <TableHead className="hidden sm:table-cell">Category</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
               <TableHead>Published</TableHead>
               <TableHead className="hidden md:table-cell">Views</TableHead>
-              <TableHead className="hidden lg:table-cell">Likes</TableHead>
               <TableHead className="hidden md:table-cell">Date</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
@@ -180,6 +253,11 @@ export const BlogPostsManager = () => {
             {posts.map((post) => (
               <TableRow key={post.id}>
                 <TableCell className="font-medium max-w-[150px] truncate">{post.title}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <Badge variant="outline">
+                    {categories.find(c => c.id === post.category_id)?.name || 'None'}
+                  </Badge>
+                </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant={post.status === 'published' ? 'default' : 'secondary'}>
                     {post.status}
@@ -191,26 +269,20 @@ export const BlogPostsManager = () => {
                   </Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{post.views}</TableCell>
-                <TableCell className="hidden lg:table-cell">{post.likes_count}</TableCell>
                 <TableCell className="hidden md:table-cell">{new Date(post.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => navigate(`/blog/${post.id}`)}
+                      onClick={() => navigate(`/blog/${post.slug}`)}
                     >
                       <Eye className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => {
-                        setEditingPost(post);
-                        setFeaturedImage(post.featured_image || null);
-                        setContentHtml(post.content || '');
-                        setIsDialogOpen(true);
-                      }}
+                      onClick={() => openEditDialog(post)}
                     >
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -239,65 +311,104 @@ export const BlogPostsManager = () => {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>Edit Blog Post</DialogTitle>
+            <DialogTitle>{editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}</DialogTitle>
           </DialogHeader>
-          {editingPost && (
-            <form onSubmit={handleSave} className="space-y-4">
-              <Tabs defaultValue="basic" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
-                  <TabsTrigger value="content">Content</TabsTrigger>
-                  <TabsTrigger value="meta">Metadata</TabsTrigger>
-                </TabsList>
-                
-                <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
-                  <TabsContent value="basic" className="space-y-4">
-                    <div>
-                      <Label htmlFor="title">Title *</Label>
-                      <Input id="title" name="title" defaultValue={editingPost.title} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="slug">Slug *</Label>
-                      <Input id="slug" name="slug" placeholder="url-friendly-title" defaultValue={editingPost.slug} required />
-                    </div>
-                    <div>
-                      <Label htmlFor="excerpt">Excerpt *</Label>
-                      <Textarea id="excerpt" name="excerpt" defaultValue={editingPost.excerpt} required rows={3} />
-                    </div>
-                    <div>
-                      <ImageCropUpload
-                        bucketName="blog-media"
-                        label="Featured Image"
-                        currentImageUrl={featuredImage || undefined}
-                        onImageUpdate={(url) => setFeaturedImage(url)}
-                        aspectRatio={16 / 9}
-                      />
-                    </div>
-                  </TabsContent>
+          <form onSubmit={handleSave} className="space-y-4">
+            <Tabs defaultValue="basic" className="w-full">
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                <TabsTrigger value="content">Content</TabsTrigger>
+                <TabsTrigger value="meta">Metadata</TabsTrigger>
+              </TabsList>
+              
+              <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
+                <TabsContent value="basic" className="space-y-4">
+                  <div>
+                    <Label htmlFor="title">Title *</Label>
+                    <Input id="title" name="title" defaultValue={editingPost?.title || ''} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="slug">Slug *</Label>
+                    <Input id="slug" name="slug" placeholder="url-friendly-title" defaultValue={editingPost?.slug || ''} required />
+                  </div>
+                  <div>
+                    <Label htmlFor="excerpt">Excerpt *</Label>
+                    <Textarea id="excerpt" name="excerpt" defaultValue={editingPost?.excerpt || ''} required rows={3} />
+                  </div>
+                  <div>
+                    <ImageCropUpload
+                      bucketName="blog-media"
+                      label="Featured Image"
+                      currentImageUrl={featuredImage || undefined}
+                      onImageUpdate={(url) => setFeaturedImage(url)}
+                      aspectRatio={16 / 9}
+                    />
+                  </div>
+                </TabsContent>
 
-                  <TabsContent value="content" className="space-y-4">
-                    <div>
-                      <Label>Blog Post Content</Label>
-                      <RichTextEditor
-                        content={contentHtml || editingPost.content || ''}
-                        onChange={setContentHtml}
-                        placeholder="Write your blog post content..."
-                      />
-                    </div>
-                  </TabsContent>
+                <TabsContent value="content" className="space-y-4">
+                  <div>
+                    <Label>Blog Post Content</Label>
+                    <RichTextEditor
+                      content={contentHtml}
+                      onChange={setContentHtml}
+                      placeholder="Write your blog post content..."
+                    />
+                  </div>
+                </TabsContent>
 
                   <TabsContent value="meta" className="space-y-4">
                     <div>
-                      <Label htmlFor="category_id">Category ID</Label>
-                      <Input id="category_id" name="category_id" type="number" placeholder="Category ID" defaultValue={editingPost.category_id || ''} />
+                      <Label>Category</Label>
+                      <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">No Category</SelectItem>
+                          {categories.map(cat => (
+                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                              {cat.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label className="flex items-center gap-2 mb-2">
+                        <Tag className="h-4 w-4" />
+                        Tags
+                      </Label>
+                      <div className="flex flex-wrap gap-2 p-3 border rounded-md max-h-32 overflow-y-auto">
+                        {tags.map(tag => (
+                          <label 
+                            key={tag.id} 
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                              selectedTags.includes(tag.id) 
+                                ? 'bg-primary text-primary-foreground border-primary' 
+                                : 'hover:bg-muted'
+                            }`}
+                          >
+                            <Checkbox
+                              checked={selectedTags.includes(tag.id)}
+                              onCheckedChange={() => toggleTag(tag.id)}
+                              className="sr-only"
+                            />
+                            {tag.name}
+                          </label>
+                        ))}
+                        {tags.length === 0 && (
+                          <span className="text-muted-foreground text-sm">No tags available. Create tags in the Tags manager.</span>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <Label htmlFor="read_time">Read Time (minutes) *</Label>
-                      <Input id="read_time" name="read_time" type="number" min="1" defaultValue={editingPost.read_time} required />
+                      <Input id="read_time" name="read_time" type="number" min="1" defaultValue={editingPost?.read_time || 5} required />
                     </div>
                     <div>
                       <Label htmlFor="status">Status</Label>
-                      <Select name="status" defaultValue={editingPost.status}>
+                      <Select name="status" defaultValue={editingPost?.status || 'draft'}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -310,7 +421,7 @@ export const BlogPostsManager = () => {
                     </div>
                     <div>
                       <Label htmlFor="published">Published</Label>
-                      <Select name="published" defaultValue={editingPost.published ? 'true' : 'false'}>
+                      <Select name="published" defaultValue={editingPost?.published ? 'true' : 'false'}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -320,36 +431,35 @@ export const BlogPostsManager = () => {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Views</Label>
-                        <Input value={editingPost.views} disabled />
-                      </div>
-                      <div>
-                        <Label>Likes Count</Label>
-                        <Input value={editingPost.likes_count} disabled />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Published At</Label>
-                      <Input value={editingPost.published_at ? new Date(editingPost.published_at).toLocaleString() : 'Not published'} disabled />
-                    </div>
-                    <div>
-                      <Label>User ID</Label>
-                      <Input value={editingPost.user_id || 'N/A'} disabled className="text-xs" />
-                    </div>
+                    {editingPost && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label>Views</Label>
+                            <Input value={editingPost.views} disabled />
+                          </div>
+                          <div>
+                            <Label>Likes Count</Label>
+                            <Input value={editingPost.likes_count} disabled />
+                          </div>
+                        </div>
+                        <div>
+                          <Label>Published At</Label>
+                          <Input value={editingPost.published_at ? new Date(editingPost.published_at).toLocaleString() : 'Not published'} disabled />
+                        </div>
+                      </>
+                    )}
                   </TabsContent>
-                </div>
-              </Tabs>
-              
-              <div className="flex gap-2 pt-4 border-t">
-                <Button type="submit">Save Changes</Button>
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                  Cancel
-                </Button>
               </div>
-            </form>
-          )}
+            </Tabs>
+            
+            <div className="flex gap-2 pt-4 border-t">
+              <Button type="submit">{editingPost ? 'Save Changes' : 'Create Post'}</Button>
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

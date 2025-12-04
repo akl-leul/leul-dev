@@ -85,6 +85,8 @@ export function WordPressAdminLayout({
       items: [
         { id: 'projects', icon: FolderOpen, label: 'Projects' },
         { id: 'posts', icon: PenLine, label: 'Blog Posts' },
+        { id: 'categories', icon: FolderOpen, label: 'Categories' },
+        { id: 'tags', icon: Award, label: 'Tags' },
         { id: 'skills', icon: Award, label: 'Skills' },
         { id: 'experiences', icon: Briefcase, label: 'Experience' },
         { id: 'dynamic-pages', icon: FileCode, label: 'Dynamic Pages' },
