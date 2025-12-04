@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Github, Star, ArrowLeft, Share2, Copy, ChevronLeft, ChevronRight } from "lucide-react";
+import { ExternalLink, Github, Star, ArrowLeft, Share2, Copy, ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { FaXTwitter, FaLinkedin, FaFacebook, FaWhatsapp, FaTelegram, FaReddit, FaEnvelope } from "react-icons/fa6";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectFeedback } from "@/components/ProjectFeedback";
@@ -11,6 +11,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 interface Project {
   id: string;
@@ -32,6 +33,8 @@ const ProjectDetail = () => {
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const { toast } = useToast();
 
   // Combine featured image + gallery images for carousel
@@ -62,6 +65,11 @@ const ProjectDetail = () => {
 
     fetchProject();
   }, [id]);
+
+  const openLightbox = (index: number) => {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  };
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % allImages.length);
@@ -182,12 +190,23 @@ const ProjectDetail = () => {
         {/* Image Carousel */}
         {allImages.length > 0 && (
           <Card className="mb-8 overflow-hidden">
-            <CardContent className="p-0 relative">
+            <CardContent className="p-0 relative group">
               <img
                 src={allImages[currentImageIndex]}
                 alt={`${project.title} - Image ${currentImageIndex + 1}`}
-                className="w-full h-64 sm:h-80 md:h-96 object-cover"
+                className="w-full h-64 sm:h-80 md:h-96 object-cover cursor-pointer"
+                onClick={() => openLightbox(currentImageIndex)}
               />
+              
+              {/* Expand button */}
+              <Button
+                variant="secondary"
+                size="icon"
+                className="absolute top-4 left-4 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => openLightbox(currentImageIndex)}
+              >
+                <Expand className="h-4 w-4" />
+              </Button>
               
               {allImages.length > 1 && (
                 <>
@@ -241,9 +260,11 @@ const ProjectDetail = () => {
               <button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
+                onDoubleClick={() => openLightbox(index)}
                 className={`shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
                   index === currentImageIndex ? 'border-primary' : 'border-transparent'
                 }`}
+                title="Double-click to open fullscreen"
               >
                 <img
                   src={img}
@@ -254,6 +275,15 @@ const ProjectDetail = () => {
             ))}
           </div>
         )}
+
+        {/* Image Lightbox */}
+        <ImageLightbox
+          images={allImages}
+          initialIndex={lightboxIndex}
+          open={lightboxOpen}
+          onOpenChange={setLightboxOpen}
+          alt={project.title}
+        />
 
         {/* Tech Stack */}
         <Card className="mb-8">
