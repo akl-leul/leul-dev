@@ -1382,6 +1382,7 @@ export type Database = {
           demo_url: string | null
           description: string
           featured: boolean
+          gallery_images: string[] | null
           github_url: string | null
           id: string
           image_url: string | null
@@ -1397,6 +1398,7 @@ export type Database = {
           demo_url?: string | null
           description: string
           featured?: boolean
+          gallery_images?: string[] | null
           github_url?: string | null
           id?: string
           image_url?: string | null
@@ -1412,6 +1414,7 @@ export type Database = {
           demo_url?: string | null
           description?: string
           featured?: boolean
+          gallery_images?: string[] | null
           github_url?: string | null
           id?: string
           image_url?: string | null

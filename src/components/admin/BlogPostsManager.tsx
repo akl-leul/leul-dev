@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, Eye } from 'lucide-react';
+import { Pencil, Trash2, Eye, Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { ImageCropUpload } from './ImageCropUpload';
@@ -122,10 +122,28 @@ export const BlogPostsManager = () => {
       } else {
         toast({ title: 'Post updated successfully' });
       }
+    } else {
+      // Create new post
+      const { data: user } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('posts')
+        .insert([{ 
+          ...postData, 
+          user_id: user.user?.id,
+          published_at: postData.published ? new Date().toISOString() : null
+        }]);
+      
+      if (error) {
+        toast({ title: 'Error creating post', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Post created successfully' });
+      }
     }
     
     setIsDialogOpen(false);
     setEditingPost(null);
+    setFeaturedImage(null);
+    setContentHtml('');
     loadPosts();
   };
 
@@ -135,6 +153,14 @@ export const BlogPostsManager = () => {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="text-2xl sm:text-3xl font-bold">Blog Posts Management</h2>
+        <Button onClick={() => {
+          setEditingPost(null);
+          setFeaturedImage(null);
+          setContentHtml('');
+          setIsDialogOpen(true);
+        }}>
+          <Plus className="w-4 h-4 mr-2" /> Add Post
+        </Button>
       </div>
 
       <div className="border rounded-lg overflow-x-auto">
