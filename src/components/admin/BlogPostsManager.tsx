@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Pencil, Trash2, Eye, Plus, Tag } from 'lucide-react';
+import { Pencil, Trash2, Eye, Plus, Tag, Search, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { ImageCropUpload } from './ImageCropUpload';
@@ -58,8 +58,20 @@ export const BlogPostsManager = () => {
   const [contentHtml, setContentHtml] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('none');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [newTagName, setNewTagName] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const filteredPosts = posts.filter(post => {
+    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || post.status === filterStatus ||
+      (filterStatus === 'published' && post.published) ||
+      (filterStatus === 'unpublished' && !post.published);
+    return matchesSearch && matchesStatus;
+  });
 
   const loadPosts = async () => {
     const { data, error } = await supabase
@@ -225,6 +237,27 @@ export const BlogPostsManager = () => {
     );
   };
 
+  const handleAddNewTag = async () => {
+    if (!newTagName.trim()) return;
+    
+    const slug = newTagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    
+    const { data, error } = await supabase
+      .from('tags')
+      .insert([{ name: newTagName.trim(), slug }])
+      .select()
+      .single();
+    
+    if (error) {
+      toast({ title: 'Error creating tag', description: error.message, variant: 'destructive' });
+    } else if (data) {
+      setTags(prev => [...prev, data]);
+      setSelectedTags(prev => [...prev, data.id]);
+      setNewTagName('');
+      toast({ title: 'Tag created and selected' });
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -234,6 +267,41 @@ export const BlogPostsManager = () => {
         <Button onClick={openNewDialog}>
           <Plus className="w-4 h-4 mr-2" /> Add Post
         </Button>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search posts..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Posts</SelectItem>
+            <SelectItem value="published">Published</SelectItem>
+            <SelectItem value="unpublished">Unpublished</SelectItem>
+            <SelectItem value="draft">Draft</SelectItem>
+            <SelectItem value="archived">Archived</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="border rounded-lg overflow-x-auto">
@@ -250,7 +318,7 @@ export const BlogPostsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {posts.map((post) => (
+            {filteredPosts.map((post) => (
               <TableRow key={post.id}>
                 <TableCell className="font-medium max-w-[150px] truncate">{post.title}</TableCell>
                 <TableCell className="hidden sm:table-cell">
@@ -379,27 +447,41 @@ export const BlogPostsManager = () => {
                         <Tag className="h-4 w-4" />
                         Tags
                       </Label>
-                      <div className="flex flex-wrap gap-2 p-3 border rounded-md max-h-32 overflow-y-auto">
-                        {tags.map(tag => (
-                          <label 
-                            key={tag.id} 
-                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
-                              selectedTags.includes(tag.id) 
-                                ? 'bg-primary text-primary-foreground border-primary' 
-                                : 'hover:bg-muted'
-                            }`}
-                          >
-                            <Checkbox
-                              checked={selectedTags.includes(tag.id)}
-                              onCheckedChange={() => toggleTag(tag.id)}
-                              className="sr-only"
-                            />
-                            {tag.name}
-                          </label>
-                        ))}
-                        {tags.length === 0 && (
-                          <span className="text-muted-foreground text-sm">No tags available. Create tags in the Tags manager.</span>
-                        )}
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add new tag..."
+                            value={newTagName}
+                            onChange={(e) => setNewTagName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddNewTag())}
+                            className="flex-1"
+                          />
+                          <Button type="button" variant="secondary" onClick={handleAddNewTag} disabled={!newTagName.trim()}>
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 p-3 border rounded-md max-h-32 overflow-y-auto">
+                          {tags.map(tag => (
+                            <label 
+                              key={tag.id} 
+                              className={`flex items-center gap-2 px-3 py-1.5 rounded-full border cursor-pointer transition-colors ${
+                                selectedTags.includes(tag.id) 
+                                  ? 'bg-primary text-primary-foreground border-primary' 
+                                  : 'hover:bg-muted'
+                              }`}
+                            >
+                              <Checkbox
+                                checked={selectedTags.includes(tag.id)}
+                                onCheckedChange={() => toggleTag(tag.id)}
+                                className="sr-only"
+                              />
+                              {tag.name}
+                            </label>
+                          ))}
+                          {tags.length === 0 && (
+                            <span className="text-muted-foreground text-sm">No tags yet. Create one above!</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div>

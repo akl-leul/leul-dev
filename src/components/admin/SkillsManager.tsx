@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Plus } from "lucide-react";
+import { Pencil, Trash2, Plus, Search, X } from "lucide-react";
 
 interface Skill {
   id: string;
@@ -27,6 +27,8 @@ export function SkillsManager() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSkill, setEditingSkill] = useState<Skill | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
   const [formData, setFormData] = useState({
     name: "",
     category: "frontend",
@@ -264,6 +266,43 @@ export function SkillsManager() {
         </Dialog>
       </div>
 
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search skills..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <Select value={filterCategory} onValueChange={setFilterCategory}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Filter category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="frontend">Frontend</SelectItem>
+            <SelectItem value="backend">Backend</SelectItem>
+            <SelectItem value="database">Database</SelectItem>
+            <SelectItem value="devops">DevOps</SelectItem>
+            <SelectItem value="design">Design</SelectItem>
+            <SelectItem value="other">Other</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
@@ -277,7 +316,13 @@ export function SkillsManager() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {skills.map((skill) => (
+            {skills
+              .filter(skill => {
+                const matchesSearch = skill.name.toLowerCase().includes(searchQuery.toLowerCase());
+                const matchesCategory = filterCategory === 'all' || skill.category === filterCategory;
+                return matchesSearch && matchesCategory;
+              })
+              .map((skill) => (
               <TableRow key={skill.id}>
                 <TableCell className="font-medium">{skill.name}</TableCell>
                 <TableCell className="hidden sm:table-cell">

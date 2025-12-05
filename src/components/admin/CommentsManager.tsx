@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Trash2, Check, X, Pencil } from 'lucide-react';
+import { Eye, Trash2, Check, X, Pencil, Search } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 interface Comment {
@@ -30,7 +31,19 @@ export const CommentsManager = () => {
   const [editingComment, setEditingComment] = useState<Comment | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
+
+  const filteredComments = comments.filter(comment => {
+    const matchesSearch = comment.author_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      comment.author_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      comment.content.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'approved' && comment.approved) ||
+      (filterStatus === 'pending' && !comment.approved);
+    return matchesSearch && matchesStatus;
+  });
 
   const loadComments = async () => {
     const { data, error } = await supabase
@@ -120,6 +133,39 @@ export const CommentsManager = () => {
         <h2 className="text-2xl sm:text-3xl font-bold">Comments Management</h2>
       </div>
 
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search comments..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Filter status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
@@ -135,7 +181,7 @@ export const CommentsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {comments.map((comment) => (
+            {filteredComments.map((comment) => (
               <TableRow key={comment.id}>
                 <TableCell className="font-medium">{comment.author_name}</TableCell>
                 <TableCell className="hidden sm:table-cell">{comment.author_email}</TableCell>
