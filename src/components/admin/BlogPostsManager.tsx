@@ -57,7 +57,7 @@ export const BlogPostsManager = () => {
   const [featuredImage, setFeaturedImage] = useState<string | null>(null);
   const [contentHtml, setContentHtml] = useState<string>('');
   const [selectedTags, setSelectedTags] = useState<number[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('none');
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -141,7 +141,7 @@ export const BlogPostsManager = () => {
       excerpt: formData.get('excerpt') as string,
       content: contentHtml,
       featured_image: featuredImage || null,
-      category_id: selectedCategoryId ? parseInt(selectedCategoryId) : null,
+      category_id: selectedCategoryId && selectedCategoryId !== 'none' ? parseInt(selectedCategoryId) : null,
       read_time: parseInt(formData.get('read_time') as string) || 5,
       status: formData.get('status') as string,
       published: formData.get('published') === 'true',
@@ -194,7 +194,7 @@ export const BlogPostsManager = () => {
     setFeaturedImage(null);
     setContentHtml('');
     setSelectedTags([]);
-    setSelectedCategoryId('');
+    setSelectedCategoryId('none');
     loadPosts();
   };
 
@@ -202,7 +202,7 @@ export const BlogPostsManager = () => {
     setEditingPost(post);
     setFeaturedImage(post.featured_image || null);
     setContentHtml(post.content || '');
-    setSelectedCategoryId(post.category_id?.toString() || '');
+    setSelectedCategoryId(post.category_id?.toString() || 'none');
     const postTags = await loadPostTags(post.id);
     setSelectedTags(postTags);
     setIsDialogOpen(true);
@@ -213,7 +213,7 @@ export const BlogPostsManager = () => {
     setFeaturedImage(null);
     setContentHtml('');
     setSelectedTags([]);
-    setSelectedCategoryId('');
+    setSelectedCategoryId('none');
     setIsDialogOpen(true);
   };
 
@@ -365,7 +365,7 @@ export const BlogPostsManager = () => {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No Category</SelectItem>
+                          <SelectItem value="none">No Category</SelectItem>
                           {categories.map(cat => (
                             <SelectItem key={cat.id} value={cat.id.toString()}>
                               {cat.name}
