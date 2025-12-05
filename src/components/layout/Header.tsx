@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { useAuth } from '@/contexts/AuthContext';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ const Header = () => {
   const [navigation, setNavigation] = useState<NavigationItem[]>([]);
   const { user, signOut } = useAuth();
   const location = useLocation();
+  const { settings } = useSiteSettings();
 
   useEffect(() => {
     fetchNavigation();
@@ -57,7 +59,7 @@ const Header = () => {
   to="/" 
   className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent font-logo tracking-wide hover:opacity-80 transition duration-300"
 >
-  Leul Dev
+  {settings.site_name}
 </Link>
 
 

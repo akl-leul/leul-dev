@@ -4,10 +4,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Trash2, Pencil } from 'lucide-react';
+import { Eye, Trash2, Pencil, Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -27,7 +28,17 @@ export const MessagesManager = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editingMessage, setEditingMessage] = useState<Message | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
+
+  const filteredMessages = messages.filter(msg => {
+    const matchesSearch = msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      msg.subject.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || msg.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const loadMessages = async () => {
     const { data, error } = await supabase
@@ -123,6 +134,40 @@ export const MessagesManager = () => {
         <h2 className="text-2xl sm:text-3xl font-bold">Messages Management</h2>
       </div>
 
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search messages..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Filter status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="new">New</SelectItem>
+            <SelectItem value="read">Read</SelectItem>
+            <SelectItem value="resolved">Resolved</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
@@ -136,7 +181,7 @@ export const MessagesManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {messages.map((message) => (
+            {filteredMessages.map((message) => (
               <TableRow key={message.id}>
                 <TableCell className="font-medium">{message.name}</TableCell>
                 <TableCell className="hidden sm:table-cell">{message.email}</TableCell>

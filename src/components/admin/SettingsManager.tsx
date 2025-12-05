@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ export function SettingsManager() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [loadingSettings, setLoadingSettings] = useState(true);
 
   // Account settings
   const [email, setEmail] = useState(user?.email || "");
@@ -26,6 +27,34 @@ export function SettingsManager() {
   const [siteDescription, setSiteDescription] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [metaKeywords, setMetaKeywords] = useState("");
+
+  useEffect(() => {
+    loadSiteSettings();
+  }, []);
+
+  const loadSiteSettings = async () => {
+    try {
+      const { data } = await supabase
+        .from('app_settings')
+        .select('setting_key, setting_value')
+        .in('setting_key', ['site_name', 'site_description', 'site_url', 'meta_keywords']);
+
+      if (data) {
+        data.forEach((item) => {
+          switch (item.setting_key) {
+            case 'site_name': setSiteName(item.setting_value); break;
+            case 'site_description': setSiteDescription(item.setting_value); break;
+            case 'site_url': setSiteUrl(item.setting_value); break;
+            case 'meta_keywords': setMetaKeywords(item.setting_value); break;
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
 
   const handleEmailUpdate = async () => {
     if (!email) {

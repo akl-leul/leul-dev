@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Plus, X } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropUpload } from './ImageCropUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -39,7 +39,16 @@ export const ProjectsManager = () => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [contentHtml, setContentHtml] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
+
+  const filteredProjects = projects.filter(project => {
+    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
+    return matchesSearch && matchesStatus;
+  });
 
   const loadProjects = async () => {
     const { data, error } = await supabase
@@ -298,6 +307,40 @@ export const ProjectsManager = () => {
         </Dialog>
       </div>
 
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search projects..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 p-0"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
+        </div>
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-full sm:w-40">
+            <SelectValue placeholder="Filter status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="in-progress">In Progress</SelectItem>
+            <SelectItem value="planned">Planned</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
@@ -310,7 +353,7 @@ export const ProjectsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {projects.map((project) => (
+            {filteredProjects.map((project) => (
               <TableRow key={project.id}>
                 <TableCell className="font-medium">{project.title}</TableCell>
                 <TableCell className="hidden sm:table-cell">
