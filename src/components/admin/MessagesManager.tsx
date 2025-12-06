@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from './TablePagination';
 
 interface Message {
   id: string;
@@ -32,13 +34,27 @@ export const MessagesManager = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
 
-  const filteredMessages = messages.filter(msg => {
-    const matchesSearch = msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      msg.subject.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || msg.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredMessages = useMemo(() => {
+    return messages.filter(msg => {
+      const matchesSearch = msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        msg.subject.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || msg.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [messages, searchQuery, filterStatus]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredMessages, itemsPerPage: 10 });
 
   const loadMessages = async () => {
     const { data, error } = await supabase
@@ -181,7 +197,7 @@ export const MessagesManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredMessages.map((message) => (
+            {paginatedData.map((message) => (
               <TableRow key={message.id}>
                 <TableCell className="font-medium">{message.name}</TableCell>
                 <TableCell className="hidden sm:table-cell">{message.email}</TableCell>
@@ -194,41 +210,32 @@ export const MessagesManager = () => {
                 <TableCell className="hidden sm:table-cell">{new Date(message.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleView(message)}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(message)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="hidden sm:inline-flex"
-                      onClick={() => handleStatusChange(message.id, message.status === 'new' ? 'read' : 'resolved')}
-                    >
-                      {message.status === 'new' ? 'Mark Read' : 'Resolve'}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(message.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleView(message)}><Eye className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(message)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(message.id)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+            {paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  {searchQuery || filterStatus !== 'all' ? 'No messages match your filters' : 'No messages yet'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

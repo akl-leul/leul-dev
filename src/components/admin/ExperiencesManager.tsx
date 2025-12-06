@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -8,8 +8,10 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from './TablePagination';
 
 interface Experience {
   id: string;
@@ -33,6 +35,7 @@ export const ExperiencesManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const loadExperiences = async () => {
@@ -52,6 +55,29 @@ export const ExperiencesManager = () => {
   useEffect(() => {
     loadExperiences();
   }, []);
+
+  const filteredExperiences = useMemo(() => {
+    return experiences.filter(exp => {
+      const matchesSearch = searchQuery === '' ||
+        exp.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exp.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exp.location?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        exp.tech_used?.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()));
+      return matchesSearch;
+    });
+  }, [experiences, searchQuery]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredExperiences, itemsPerPage: 10 });
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this experience?')) return;
@@ -177,6 +203,19 @@ export const ExperiencesManager = () => {
         </Dialog>
       </div>
 
+      {/* Search */}
+      <div className="flex gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by company, role, location, tech..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
@@ -190,7 +229,7 @@ export const ExperiencesManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {experiences.map((exp) => (
+            {paginatedData.map((exp) => (
               <TableRow key={exp.id}>
                 <TableCell className="font-medium">
                   <div>{exp.company}</div>
@@ -226,8 +265,25 @@ export const ExperiencesManager = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? 'No experiences match your search' : 'No experiences yet'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
     </div>
   );

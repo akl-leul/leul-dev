@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { ImageCropUpload } from './ImageCropUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RichTextEditor } from './RichTextEditor';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from './TablePagination';
 
 interface Project {
   id: string;
@@ -43,12 +45,26 @@ export const ProjectsManager = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
 
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredProjects = useMemo(() => {
+    return projects.filter(project => {
+      const matchesSearch = project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        project.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || project.status === filterStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [projects, searchQuery, filterStatus]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredProjects, itemsPerPage: 10 });
 
   const loadProjects = async () => {
     const { data, error } = await supabase
@@ -353,7 +369,7 @@ export const ProjectsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProjects.map((project) => (
+            {paginatedData.map((project) => (
               <TableRow key={project.id}>
                 <TableCell className="font-medium">{project.title}</TableCell>
                 <TableCell className="hidden sm:table-cell">
@@ -363,26 +379,35 @@ export const ProjectsManager = () => {
                 <TableCell className="hidden sm:table-cell">{project.featured ? '✓' : '✗'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 sm:gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openDialog(project)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => openDialog(project)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(project.id)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(project.id)}>
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+            {paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                  {searchQuery || filterStatus !== 'all' ? 'No projects match your filters' : 'No projects yet'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
     </div>
   );

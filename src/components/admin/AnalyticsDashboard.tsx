@@ -1,10 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Users, Eye, Heart, FileText, FolderOpen, Mail, TrendingUp, Globe, Smartphone, Monitor, Tablet } from 'lucide-react';
+import { Eye, Heart, FileText, FolderOpen, Mail, TrendingUp, Globe, Smartphone, Monitor, Tablet, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, subDays, startOfDay } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface PageView {
   page_path: string;
@@ -34,6 +35,7 @@ interface AnalyticsDashboardProps {
 export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   const [pageViews, setPageViews] = useState<PageView[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
 
   useEffect(() => {
@@ -45,21 +47,31 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
 
   const fetchPageViews = async () => {
     try {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('page_views')
         .select('page_path, created_at, ip_address, device_type, browser, os, country, city, user_agent')
         .order('created_at', { ascending: false });
 
-      setPageViews(data || []);
-      setLastUpdate(new Date()); // Update the last update time
+      if (error) {
+        console.error('Error fetching page views:', error);
+      } else {
+        setPageViews(data || []);
+      }
+      setLastUpdate(new Date());
     } catch (error) {
       console.error('Error fetching page views:', error);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  // Process page views by date (last 7 days) - REAL DATA ONLY
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchPageViews();
+  };
+
+  // Process page views by date (last 7 days)
   const viewsByDate = Array.from({ length: 7 }, (_, i) => {
     const date = startOfDay(subDays(new Date(), 6 - i));
     const count = pageViews.filter(v => {
@@ -68,7 +80,7 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
     }).length;
     return {
       date: format(date, 'MMM dd'),
-      views: count, // REAL DATA ONLY
+      views: count,
     };
   });
 
@@ -80,9 +92,9 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }, {});
 
   const pageViewsData = Object.entries(viewsByPage)
-    .map(([name, value]) => ({ name, value })) // REAL DATA ONLY
+    .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 10); // Show top 10 pages
+    .slice(0, 10);
 
   // Process device analytics
   const deviceAnalytics = pageViews.reduce((acc: Record<string, number>, view) => {
@@ -92,8 +104,20 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }, {});
 
   const deviceData = Object.entries(deviceAnalytics)
-    .map(([name, value]) => ({ name, value })) // REAL DATA ONLY
+    .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
+
+  // Process browser analytics
+  const browserAnalytics = pageViews.reduce((acc: Record<string, number>, view) => {
+    const browser = view.browser || 'Unknown';
+    acc[browser] = (acc[browser] || 0) + 1;
+    return acc;
+  }, {});
+
+  const browserData = Object.entries(browserAnalytics)
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 5);
 
   // Process country analytics
   const countryAnalytics = pageViews.reduce((acc: Record<string, number>, view) => {
@@ -103,91 +127,80 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }, {});
 
   const countryData = Object.entries(countryAnalytics)
-    .map(([name, value]) => ({ name, value })) // REAL DATA ONLY
+    .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value)
-    .slice(0, 10); // Show top 10 countries
+    .slice(0, 10);
 
-  const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#f97316'];
+  const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', '#06b6d4', '#84cc16', '#f97316'];
 
   const stats = [
     { 
       label: 'Total Views', 
       value: analytics.totalViews, 
       icon: Eye, 
-      color: 'text-blue-600',
-      bgColor: 'bg-gradient-to-br from-blue-50 to-blue-100',
-      borderColor: 'border-blue-200'
     },
     { 
       label: 'Projects', 
       value: analytics.totalProjects, 
       icon: FolderOpen, 
-      color: 'text-purple-600',
-      bgColor: 'bg-gradient-to-br from-purple-50 to-purple-100',
-      borderColor: 'border-purple-200'
     },
     { 
       label: 'Blog Posts', 
       value: analytics.totalPosts, 
       icon: FileText, 
-      color: 'text-green-600',
-      bgColor: 'bg-gradient-to-br from-green-50 to-green-100',
-      borderColor: 'border-green-200'
     },
     { 
       label: 'Total Likes', 
       value: analytics.totalLikes, 
       icon: Heart, 
-      color: 'text-red-600',
-      bgColor: 'bg-gradient-to-br from-red-50 to-red-100',
-      borderColor: 'border-red-200'
     },
     { 
       label: 'Messages', 
       value: analytics.totalContacts, 
       icon: Mail, 
-      color: 'text-orange-600',
-      bgColor: 'bg-gradient-to-br from-orange-50 to-orange-100',
-      borderColor: 'border-orange-200'
     },
     { 
       label: 'Page Views', 
-      value: pageViews.length, // REAL PAGE VIEWS COUNT FROM DATABASE
+      value: pageViews.length,
       icon: TrendingUp, 
-      color: 'text-indigo-600',
-      bgColor: 'bg-gradient-to-br from-indigo-50 to-indigo-100',
-      borderColor: 'border-indigo-200'
     },
   ];
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
-      <div className="text-center mb-8">
-        <h2 className="text-4xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-          📊 Analytics Dashboard
-        </h2>
-        <p className="text-gray-600 text-lg">Comprehensive insights into your website performance</p>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold">Analytics Dashboard</h2>
+          <p className="text-muted-foreground">Comprehensive insights into your website performance</p>
+        </div>
+        <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat) => (
-          <Card key={stat.label} className={`${stat.bgColor} ${stat.borderColor} border-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 group`}>
+          <Card key={stat.label} className="hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-gray-700">{stat.label}</CardTitle>
-              <div className={`p-3 rounded-xl ${stat.bgColor} group-hover:scale-110 transition-transform duration-300`}>
-                <stat.icon className={`h-6 w-6 ${stat.color}`} />
-              </div>
+              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+              <stat.icon className="h-5 w-5 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className={`text-4xl font-bold ${stat.color} mb-2`}>
-                {stat.label === 'Page Views' ? pageViews.length.toLocaleString() : stat.value.toLocaleString()}
+              <div className="text-3xl font-bold">
+                {stat.value.toLocaleString()}
               </div>
-              <p className="text-xs text-gray-500">
-                {stat.label === 'Page Views' 
-                  ? `Live count • Updated every 30s • Last updated: ${format(lastUpdate, 'HH:mm:ss')}`
-                  : `Last updated: ${format(new Date(), 'MMM dd, yyyy')}`
-                }
+              <p className="text-xs text-muted-foreground mt-1">
+                Last updated: {format(lastUpdate, 'HH:mm:ss')}
               </p>
             </CardContent>
           </Card>
@@ -195,36 +208,35 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Views over time */}
-        <Card className="shadow-xl border-2 border-blue-100 hover:shadow-2xl transition-all duration-300">
-          <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 border-b-2 border-blue-200">
-            <CardTitle className="text-blue-800 text-xl font-bold flex items-center gap-2">
-              📈 Views Over Time (Last 7 Days)
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Views Over Time (Last 7 Days)
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
               <LineChart data={viewsByDate}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="date" className="text-xs" />
+                <YAxis className="text-xs" />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: '#ffffff',
-                    border: '2px solid #3b82f6',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    fontSize: '14px'
+                    backgroundColor: 'hsl(var(--popover))',
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px',
                   }}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="views" 
-                  stroke="#3b82f6" 
-                  strokeWidth={4}
-                  dot={{ fill: '#3b82f6', strokeWidth: 2, r: 6 }}
-                  activeDot={{ r: 10, stroke: '#3b82f6', strokeWidth: 3 }}
+                  stroke="hsl(var(--primary))" 
+                  strokeWidth={3}
+                  dot={{ fill: 'hsl(var(--primary))', strokeWidth: 2, r: 4 }}
+                  activeDot={{ r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -232,160 +244,203 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
         </Card>
 
         {/* Device Analytics */}
-        <Card className="shadow-xl border-2 border-purple-100 hover:shadow-2xl transition-all duration-300">
-          <CardHeader className="bg-gradient-to-r from-purple-50 to-purple-100 border-b-2 border-purple-200">
-            <CardTitle className="text-purple-800 text-xl font-bold flex items-center gap-2">
-              📱 Device Types
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Smartphone className="h-5 w-5" />
+              Device Types
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <PieChart>
-                <Pie
-                  data={deviceData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={100}
-                  fill="#8b5cf6"
-                  dataKey="value"
-                >
-                  {deviceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#ffffff',
-                    border: '2px solid #8b5cf6',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    fontSize: '14px'
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          <CardContent>
+            {deviceData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={deviceData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={100}
+                    fill="hsl(var(--primary))"
+                    dataKey="value"
+                  >
+                    {deviceData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No device data available
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
       {/* Additional Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Top Pages */}
-        <Card className="shadow-xl border-2 border-green-100 hover:shadow-2xl transition-all duration-300">
-          <CardHeader className="bg-gradient-to-r from-green-50 to-green-100 border-b-2 border-green-200">
-            <CardTitle className="text-green-800 text-xl font-bold flex items-center gap-2">
-              🌐 Top Pages
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Top Pages
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart data={pageViewsData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-                <YAxis stroke="#6b7280" fontSize={12} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#ffffff',
-                    border: '2px solid #10b981',
-                    borderRadius: '12px',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-                    fontSize: '14px'
-                  }}
-                />
-                <Bar dataKey="value" fill="#10b981" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+          <CardContent>
+            {pageViewsData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={pageViewsData} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis type="number" className="text-xs" />
+                  <YAxis type="category" dataKey="name" width={100} className="text-xs" />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--popover))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Bar dataKey="value" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                No page view data available
+              </div>
+            )}
           </CardContent>
         </Card>
 
-        {/* Country Analytics */}
-        <Card className="shadow-xl border-2 border-orange-100 hover:shadow-2xl transition-all duration-300">
-          <CardHeader className="bg-gradient-to-r from-orange-50 to-orange-100 border-b-2 border-orange-200">
-            <CardTitle className="text-orange-800 text-xl font-bold flex items-center gap-2">
-              🌍 Top Countries
+        {/* Top Countries */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Globe className="h-5 w-5" />
+              Top Countries
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
-            <div className="space-y-4">
-              {countryData.slice(0, 10).map((country, index) => ( // Show top 10 countries
-                <div key={country.name} className="flex items-center justify-between p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-xl border border-orange-200 hover:shadow-md transition-all duration-300">
+          <CardContent>
+            <div className="space-y-3 max-h-[300px] overflow-y-auto">
+              {countryData.length > 0 ? countryData.map((country, index) => (
+                <div key={country.name} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-orange-400 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold">
                       {index + 1}
                     </div>
-                    <Globe className="h-5 w-5 text-orange-600" />
-                    <span className="font-semibold text-gray-800">{country.name}</span>
+                    <span className="font-medium">{country.name}</span>
                   </div>
-                  <Badge variant="secondary" className="bg-orange-200 text-orange-800 px-3 py-1 text-sm font-semibold">
+                  <Badge variant="secondary">
                     {country.value} views
                   </Badge>
                 </div>
-              ))}
+              )) : (
+                <div className="flex items-center justify-center h-[200px] text-muted-foreground">
+                  No country data available
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Recent Page Views Table */}
-      <Card className="shadow-xl border-2 border-indigo-100 hover:shadow-2xl transition-all duration-300">
-        <CardHeader className="bg-gradient-to-r from-indigo-50 to-indigo-100 border-b-2 border-indigo-200">
-          <CardTitle className="text-indigo-800 text-xl font-bold flex items-center gap-2">
-            🔍 Recent Page Views with IP Addresses
+      {/* Browser Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Monitor className="h-5 w-5" />
+            Browser Distribution
           </CardTitle>
         </CardHeader>
-        <CardContent className="p-6">
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            {browserData.length > 0 ? browserData.map((browser) => (
+              <div key={browser.name} className="text-center p-4 bg-muted/50 rounded-lg">
+                <div className="text-2xl font-bold">{browser.value}</div>
+                <div className="text-sm text-muted-foreground">{browser.name}</div>
+              </div>
+            )) : (
+              <div className="col-span-full text-center py-8 text-muted-foreground">
+                No browser data available
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Page Views Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Eye className="h-5 w-5" />
+            Recent Page Views
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b-2 border-indigo-200">
-                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Page</th>
-                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">IP Address</th>
-                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Device</th>
-                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Browser</th>
-                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Location</th>
-                  <th className="text-left py-4 px-4 text-indigo-700 font-bold text-sm">Date</th>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Page</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden sm:table-cell">IP Address</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden md:table-cell">Device</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden lg:table-cell">Browser</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground hidden xl:table-cell">Location</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-muted-foreground">Date</th>
                 </tr>
               </thead>
               <tbody>
-                {pageViews.slice(0, 10).map((view, index) => ( // Show top 10 latest views
-                  <tr key={index} className="border-b border-indigo-100 hover:bg-indigo-50 transition-colors">
-                    <td className="py-4 px-4 font-semibold text-gray-800">{view.page_path}</td>
-                    <td className="py-4 px-4">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1">
+                {pageViews.slice(0, 20).map((view, index) => (
+                  <tr key={index} className="border-b hover:bg-muted/50 transition-colors">
+                    <td className="py-3 px-4 font-medium">{view.page_path}</td>
+                    <td className="py-3 px-4 hidden sm:table-cell">
+                      <Badge variant="outline" className="text-xs">
                         {view.ip_address || 'Unknown'}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       <div className="flex items-center gap-2">
-                        {view.device_type === 'mobile' && <Smartphone className="h-5 w-5 text-green-600" />}
-                        {view.device_type === 'desktop' && <Monitor className="h-5 w-5 text-blue-600" />}
-                        {view.device_type === 'tablet' && <Tablet className="h-5 w-5 text-purple-600" />}
-                        <span className="text-sm font-semibold capitalize">{view.device_type || 'Unknown'}</span>
+                        {view.device_type === 'mobile' && <Smartphone className="h-4 w-4" />}
+                        {view.device_type === 'desktop' && <Monitor className="h-4 w-4" />}
+                        {view.device_type === 'tablet' && <Tablet className="h-4 w-4" />}
+                        <span className="text-sm capitalize">{view.device_type || 'Unknown'}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4">
-                      <Badge variant="secondary" className="bg-gray-100 text-gray-700 px-3 py-1">
+                    <td className="py-3 px-4 hidden lg:table-cell">
+                      <Badge variant="secondary" className="text-xs">
                         {view.browser || 'Unknown'}
                       </Badge>
                     </td>
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-2">
-                        <Globe className="h-4 w-4 text-orange-600" />
-                        <span className="text-sm font-medium">
-                          {view.city && view.country 
-                            ? `${view.city}, ${view.country}` 
-                            : view.country || 'Unknown'
-                          }
-                        </span>
-                      </div>
+                    <td className="py-3 px-4 hidden xl:table-cell">
+                      <span className="text-sm">
+                        {view.city && view.country 
+                          ? `${view.city}, ${view.country}` 
+                          : view.country || 'Unknown'
+                        }
+                      </span>
                     </td>
-                    <td className="py-4 px-4 text-gray-600 font-medium">
+                    <td className="py-3 px-4 text-sm text-muted-foreground">
                       {format(new Date(view.created_at), 'MMM dd, HH:mm')}
                     </td>
                   </tr>
                 ))}
+                {pageViews.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      No page views recorded yet
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

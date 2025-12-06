@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Pencil, Trash2, Plus, Tag } from 'lucide-react';
+import { Pencil, Trash2, Plus, Tag, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from './TablePagination';
 
 interface TagType {
   id: number;
@@ -21,6 +23,7 @@ export const TagsManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingTag, setEditingTag] = useState<TagType | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
 
   const loadTags = async () => {
@@ -40,6 +43,27 @@ export const TagsManager = () => {
   useEffect(() => {
     loadTags();
   }, []);
+
+  const filteredTags = useMemo(() => {
+    return tags.filter(tag => {
+      const matchesSearch = searchQuery === '' ||
+        tag.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tag.slug.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesSearch;
+    });
+  }, [tags, searchQuery]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredTags, itemsPerPage: 10 });
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this tag?')) return;
@@ -105,9 +129,22 @@ export const TagsManager = () => {
         </Button>
       </div>
 
+      {/* Search */}
+      <div className="flex gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tags..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       {/* Tags Grid View */}
       <div className="flex flex-wrap gap-2 p-4 border rounded-lg bg-muted/50">
-        {tags.map((tag) => (
+        {filteredTags.map((tag) => (
           <Badge 
             key={tag.id} 
             variant="secondary"
@@ -121,8 +158,8 @@ export const TagsManager = () => {
             {tag.name}
           </Badge>
         ))}
-        {tags.length === 0 && (
-          <p className="text-muted-foreground">No tags yet. Create your first tag.</p>
+        {filteredTags.length === 0 && (
+          <p className="text-muted-foreground">{searchQuery ? 'No tags match your search' : 'No tags yet. Create your first tag.'}</p>
         )}
       </div>
 
@@ -138,7 +175,7 @@ export const TagsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tags.map((tag) => (
+            {paginatedData.map((tag) => (
               <TableRow key={tag.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
@@ -173,8 +210,25 @@ export const TagsManager = () => {
                 </TableCell>
               </TableRow>
             ))}
+            {paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                  {searchQuery ? 'No tags match your search' : 'No tags yet'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Plus, Search, X } from "lucide-react";
+import { usePagination } from "@/hooks/usePagination";
+import { TablePagination } from "./TablePagination";
 
 interface Skill {
   id: string;
@@ -159,15 +161,25 @@ export function SkillsManager() {
     }
   };
 
-  const getLevelBadgeVariant = (level: string) => {
-    switch (level) {
-      case "beginner": return "secondary";
-      case "intermediate": return "default";
-      case "advanced": return "default";
-      case "expert": return "default";
-      default: return "outline";
-    }
-  };
+  const filteredSkills = useMemo(() => {
+    return skills.filter(skill => {
+      const matchesSearch = skill.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = filterCategory === 'all' || skill.category === filterCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [skills, searchQuery, filterCategory]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredSkills, itemsPerPage: 10 });
 
   if (loading) {
     return <div>Loading skills...</div>;
@@ -316,54 +328,49 @@ export function SkillsManager() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {skills
-              .filter(skill => {
-                const matchesSearch = skill.name.toLowerCase().includes(searchQuery.toLowerCase());
-                const matchesCategory = filterCategory === 'all' || skill.category === filterCategory;
-                return matchesSearch && matchesCategory;
-              })
-              .map((skill) => (
+            {paginatedData.map((skill) => (
               <TableRow key={skill.id}>
                 <TableCell className="font-medium">{skill.name}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline">{skill.category}</Badge>
                 </TableCell>
                 <TableCell>
-                  <Badge variant={getLevelBadgeVariant(skill.level)}>
-                    {skill.level}
-                  </Badge>
+                  <Badge variant="secondary">{skill.level}</Badge>
                 </TableCell>
                 <TableCell className="hidden md:table-cell">{skill.years_experience || "N/A"}</TableCell>
                 <TableCell className="hidden md:table-cell">{skill.icon || "N/A"}</TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-1 sm:gap-2 justify-end">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(skill)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(skill)}>
                       <Pencil className="h-4 w-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(skill.id)}
-                    >
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(skill.id)}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+            {paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  {searchQuery || filterCategory !== 'all' ? 'No skills match your filters' : 'No skills found. Add your first skill to get started.'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
-
-      {skills.length === 0 && (
-        <div className="text-center py-12 text-muted-foreground">
-          No skills found. Add your first skill to get started.
-        </div>
-      )}
     </div>
   );
 }
