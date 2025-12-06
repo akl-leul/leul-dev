@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { ImageCropUpload } from './ImageCropUpload';
 import { RichTextEditor } from './RichTextEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from './TablePagination';
 
 interface BlogPost {
   id: number;
@@ -64,14 +66,28 @@ export const BlogPostsManager = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || post.status === filterStatus ||
-      (filterStatus === 'published' && post.published) ||
-      (filterStatus === 'unpublished' && !post.published);
-    return matchesSearch && matchesStatus;
-  });
+  const filteredPosts = useMemo(() => {
+    return posts.filter(post => {
+      const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || post.status === filterStatus ||
+        (filterStatus === 'published' && post.published) ||
+        (filterStatus === 'unpublished' && !post.published);
+      return matchesSearch && matchesStatus;
+    });
+  }, [posts, searchQuery, filterStatus]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredPosts, itemsPerPage: 10 });
 
   const loadPosts = async () => {
     const { data, error } = await supabase
@@ -318,7 +334,7 @@ export const BlogPostsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredPosts.map((post) => (
+            {paginatedData.map((post) => (
               <TableRow key={post.id}>
                 <TableCell className="font-medium max-w-[150px] truncate">{post.title}</TableCell>
                 <TableCell className="hidden sm:table-cell">
@@ -374,6 +390,16 @@ export const BlogPostsManager = () => {
             ))}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

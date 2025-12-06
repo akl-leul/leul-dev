@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Eye, Trash2, Check, X, Pencil, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import { usePagination } from '@/hooks/usePagination';
+import { TablePagination } from './TablePagination';
 
 interface Comment {
   id: number;
@@ -35,15 +37,29 @@ export const CommentsManager = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const { toast } = useToast();
 
-  const filteredComments = comments.filter(comment => {
-    const matchesSearch = comment.author_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      comment.author_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      comment.content.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || 
-      (filterStatus === 'approved' && comment.approved) ||
-      (filterStatus === 'pending' && !comment.approved);
-    return matchesSearch && matchesStatus;
-  });
+  const filteredComments = useMemo(() => {
+    return comments.filter(comment => {
+      const matchesSearch = comment.author_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        comment.author_email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        comment.content.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = filterStatus === 'all' || 
+        (filterStatus === 'approved' && comment.approved) ||
+        (filterStatus === 'pending' && !comment.approved);
+      return matchesSearch && matchesStatus;
+    });
+  }, [comments, searchQuery, filterStatus]);
+
+  const {
+    currentPage,
+    totalPages,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    itemsPerPage,
+    startIndex,
+    endIndex,
+    totalItems,
+  } = usePagination({ data: filteredComments, itemsPerPage: 10 });
 
   const loadComments = async () => {
     const { data, error } = await supabase
@@ -181,7 +197,7 @@ export const CommentsManager = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredComments.map((comment) => (
+            {paginatedData.map((comment) => (
               <TableRow key={comment.id}>
                 <TableCell className="font-medium">{comment.author_name}</TableCell>
                 <TableCell className="hidden sm:table-cell">{comment.author_email}</TableCell>
@@ -196,51 +212,35 @@ export const CommentsManager = () => {
                 <TableCell className="hidden md:table-cell">{new Date(comment.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 flex-wrap">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleView(comment)}
-                    >
-                      <Eye className="w-4 h-4" />
+                    <Button variant="ghost" size="sm" onClick={() => handleView(comment)}><Eye className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleEdit(comment)}><Pencil className="w-4 h-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleApprove(comment.id, !comment.approved)}>
+                      {comment.approved ? <X className="w-4 h-4 text-yellow-600" /> : <Check className="w-4 h-4 text-green-600" />}
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleEdit(comment)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    {!comment.approved && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleApprove(comment.id, true)}
-                      >
-                        <Check className="w-4 h-4 text-green-600" />
-                      </Button>
-                    )}
-                    {comment.approved && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleApprove(comment.id, false)}
-                      >
-                        <X className="w-4 h-4 text-yellow-600" />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDelete(comment.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => handleDelete(comment.id)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+            {paginatedData.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  {searchQuery || filterStatus !== 'all' ? 'No comments match your filters' : 'No comments yet'}
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
+        <TablePagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          startIndex={startIndex}
+          endIndex={endIndex}
+          totalItems={totalItems}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+          onItemsPerPageChange={setItemsPerPage}
+        />
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
