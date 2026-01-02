@@ -822,6 +822,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          metadata: Json | null
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          read?: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
@@ -1177,6 +1210,53 @@ export type Database = {
         }
         Relationships: []
       }
+      project_contributors: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_at: string
+          name: string
+          project_id: string
+          role: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_at?: string
+          name: string
+          project_id: string
+          role?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_at?: string
+          name?: string
+          project_id?: string
+          role?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_contributors_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_management_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_feedbacks: {
         Row: {
           approved: boolean
@@ -1368,6 +1448,104 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "project_shares_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_management_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_tasks: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          created_by: string
+          depends_on: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          is_milestone: boolean
+          is_recurring_instance: boolean | null
+          parent_task_id: string | null
+          priority: string | null
+          progress: number
+          project_id: string
+          recurrence_end_date: string | null
+          recurrence_interval: number | null
+          recurrence_type: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by: string
+          depends_on?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_milestone?: boolean
+          is_recurring_instance?: boolean | null
+          parent_task_id?: string | null
+          priority?: string | null
+          progress?: number
+          project_id: string
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          created_by?: string
+          depends_on?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_milestone?: boolean
+          is_recurring_instance?: boolean | null
+          parent_task_id?: string | null
+          priority?: string | null
+          progress?: number
+          project_id?: string
+          recurrence_end_date?: string | null
+          recurrence_interval?: number | null
+          recurrence_type?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "project_contributors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_depends_on_fkey"
+            columns: ["depends_on"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_parent_task_id_fkey"
+            columns: ["parent_task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_tasks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "project_management_projects"
@@ -1579,6 +1757,130 @@ export type Database = {
         }
         Relationships: []
       }
+      task_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_attachments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_comments: {
+        Row: {
+          author_email: string | null
+          author_name: string
+          content: string
+          created_at: string
+          id: string
+          task_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          author_email?: string | null
+          author_name: string
+          content: string
+          created_at?: string
+          id?: string
+          task_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          author_email?: string | null
+          author_name?: string
+          content?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "project_tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_notification_preferences: {
+        Row: {
+          created_at: string
+          due_date_reminders: boolean
+          email_notifications: boolean | null
+          id: string
+          push_notifications: boolean | null
+          reminder_time: string | null
+          task_assigned: boolean
+          task_commented: boolean
+          task_updated: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          due_date_reminders?: boolean
+          email_notifications?: boolean | null
+          id?: string
+          push_notifications?: boolean | null
+          reminder_time?: string | null
+          task_assigned?: boolean
+          task_commented?: boolean
+          task_updated?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          due_date_reminders?: boolean
+          email_notifications?: boolean | null
+          id?: string
+          push_notifications?: boolean | null
+          reminder_time?: string | null
+          task_assigned?: boolean
+          task_commented?: boolean
+          task_updated?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           created_at: string
@@ -1629,7 +1931,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_current_user_email: { Args: never; Returns: string }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_project_contributor: {
+        Args: {
+          project_id_param: string
+          user_email_param: string
+          user_id_param: string
+        }
+        Returns: boolean
+      }
+      is_project_contributor_simple: {
+        Args: { project_id_param: string }
+        Returns: boolean
+      }
+      is_project_owner: { Args: { project_id_param: string }; Returns: boolean }
+      is_task_assigned_to_user:
+        | { Args: { task_assigned_to_param: string }; Returns: boolean }
+        | {
+            Args: {
+              task_assigned_to_param: string
+              user_email_param: string
+              user_id_param: string
+            }
+            Returns: boolean
+          }
     }
     Enums: {
       project_status: "not_started" | "in_progress" | "blocked" | "done"
