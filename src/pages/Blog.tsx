@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePageView } from '@/hooks/usePageView';
 import { Calendar, Clock, Search, Tag, ArrowRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { SITE_OWNER_ID } from '@/config/owner';
 import {
   Pagination,
   PaginationContent,
@@ -50,6 +51,7 @@ const Blog = () => {
           .from('posts')
           .select('id, title, slug, excerpt, featured_image, published_at, read_time, views')
           .eq('published', true)
+          .eq('user_id', SITE_OWNER_ID)
           .order('published_at', { ascending: false });
 
         setPosts(postsData || []);

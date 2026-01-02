@@ -7,6 +7,7 @@ import { usePageView } from '@/hooks/usePageView';
 import { Download, MapPin, Mail, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { FaXTwitter } from "react-icons/fa6";
+import { SITE_OWNER_ID } from '@/config/owner';
 
 interface Profile {
   name: string;
@@ -60,7 +61,7 @@ const About = () => {
         const { data: profileData } = await supabase
           .from('profiles')
           .select('*')
-          .limit(1)
+          .eq('id', SITE_OWNER_ID)
           .maybeSingle();
         
         if (profileData) {
@@ -83,6 +84,7 @@ const About = () => {
         const { data: experiencesData } = await supabase
           .from('experiences')
           .select('*')
+          .eq('user_id', SITE_OWNER_ID)
           .order('start_date', { ascending: false });
         setExperiences(experiencesData || []);
       } catch (error) {

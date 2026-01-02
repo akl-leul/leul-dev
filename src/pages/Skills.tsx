@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { usePageView } from '@/hooks/usePageView';
+import { SITE_OWNER_ID } from '@/config/owner';
 
 import {
   SiJavascript, SiTypescript, SiReact, SiNextdotjs, SiNodedotjs, SiPython,
@@ -83,7 +84,11 @@ const Skills = () => {
   useEffect(() => {
     const fetchSkills = async () => {
       try {
-        const { data } = await supabase.from('skills').select('*').order('category', { ascending: true });
+        const { data } = await supabase
+          .from('skills')
+          .select('*')
+          .eq('user_id', SITE_OWNER_ID)
+          .order('category', { ascending: true });
         setSkills(data || []);
       } catch (error) {
         console.error('Error fetching skills:', error);

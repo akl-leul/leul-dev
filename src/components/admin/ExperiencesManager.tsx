@@ -39,9 +39,16 @@ export const ExperiencesManager = () => {
   const { toast } = useToast();
 
   const loadExperiences = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      setLoading(false);
+      return;
+    }
+    
     const { data, error } = await supabase
       .from('experiences')
       .select('*')
+      .eq('user_id', userData.user.id)
       .order('start_date', { ascending: false });
     
     if (error) {

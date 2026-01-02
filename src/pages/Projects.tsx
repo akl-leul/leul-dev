@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePageView } from "@/hooks/usePageView";
 import { ExternalLink, Github, Search, Star, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SITE_OWNER_ID } from "@/config/owner";
 import {
   Pagination,
   PaginationContent,
@@ -51,6 +52,7 @@ const Projects = () => {
         const { data } = await supabase
           .from("projects")
           .select("*")
+          .eq("user_id", SITE_OWNER_ID)
           .order("created_at", { ascending: false });
         setProjects(data || []);
         setFilteredProjects(data || []);
