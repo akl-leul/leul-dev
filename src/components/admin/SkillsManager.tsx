@@ -46,9 +46,16 @@ export function SkillsManager() {
 
   const loadSkills = async () => {
     try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
+        setLoading(false);
+        return;
+      }
+      
       const { data, error } = await supabase
         .from("skills")
         .select("*")
+        .eq("user_id", userData.user.id)
         .order("category", { ascending: true })
         .order("name", { ascending: true });
 

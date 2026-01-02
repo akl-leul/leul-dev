@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { motion, Variants } from 'framer-motion';
+import { SITE_OWNER_ID } from '@/config/owner';
 
 interface Project {
   id: string;
@@ -82,12 +83,14 @@ const Home = () => {
           .from('projects')
           .select('*')
           .eq('featured', true)
+          .eq('user_id', SITE_OWNER_ID)
           .limit(3);
 
         const { data: posts } = await supabase
           .from('posts')
           .select('id, title, excerpt, slug, created_at, read_time')
           .eq('published', true)
+          .eq('user_id', SITE_OWNER_ID)
           .order('created_at', { ascending: false })
           .limit(3);
 

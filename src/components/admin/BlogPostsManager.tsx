@@ -90,9 +90,16 @@ export const BlogPostsManager = () => {
   } = usePagination({ data: filteredPosts, itemsPerPage: 10 });
 
   const loadPosts = async () => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) {
+      setLoading(false);
+      return;
+    }
+    
     const { data, error } = await supabase
       .from('posts')
       .select('*')
+      .eq('user_id', userData.user.id)
       .order('created_at', { ascending: false });
     
     if (error) {

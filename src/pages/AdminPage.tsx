@@ -35,6 +35,16 @@ const AdminPage = () => {
     phone: '',
     location: '',
   });
+  
+  // Analytics state
+  const [analytics, setAnalytics] = useState({
+    totalProjects: 0,
+    totalPosts: 0,
+    totalViews: 0,
+    totalLikes: 0,
+    totalContacts: 0,
+    totalComments: 0,
+  });
 
   // Check if user is admin by querying admin_roles table
   useEffect(() => {
@@ -103,14 +113,45 @@ const AdminPage = () => {
       });
     }
   };
+  
+  // Load analytics data
+  const loadAnalytics = async () => {
+    if (!user) return;
+    
+    try {
+      // Fetch counts in parallel - filter by user_id where applicable
+      const [projectsRes, postsRes, viewsRes, contactsRes, commentsRes] = await Promise.all([
+        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+        supabase.from('posts').select('id, likes_count', { count: 'exact' }).eq('user_id', user.id),
+        supabase.from('page_views').select('id', { count: 'exact', head: true }),
+        supabase.from('contact_submissions').select('id', { count: 'exact', head: true }),
+        supabase.from('comments').select('id', { count: 'exact', head: true }),
+      ]);
+
+      // Calculate total likes from posts
+      const totalLikes = postsRes.data?.reduce((sum, post) => sum + (post.likes_count || 0), 0) || 0;
+
+      setAnalytics({
+        totalProjects: projectsRes.count || 0,
+        totalPosts: postsRes.count || 0,
+        totalViews: viewsRes.count || 0,
+        totalLikes,
+        totalContacts: contactsRes.count || 0,
+        totalComments: commentsRes.count || 0,
+      });
+    } catch (error) {
+      console.error('Error loading analytics:', error);
+    }
+  };
 
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && user) {
       loadHomeContent();
       loadAboutContent();
       loadContactContent();
+      loadAnalytics();
     }
-  }, [isAdmin]);
+  }, [isAdmin, user]);
 
   if (loading || checkingAdmin) {
     return (
@@ -129,16 +170,7 @@ const AdminPage = () => {
       case 'analytics':
         return (
           <div className="p-6">
-            <AnalyticsDashboard
-              analytics={{
-                totalProjects: 0,
-                totalPosts: 0,
-                totalViews: 0,
-                totalLikes: 0,
-                totalContacts: 0,
-                totalComments: 0,
-              }}
-            />
+            <AnalyticsDashboard analytics={analytics} />
           </div>
         );
       case 'home':
