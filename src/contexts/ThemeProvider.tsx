@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useEffect, useState, useRef } from "react"
+import { trackThemeChange } from "@/utils/analyticsTracker"
 
 type Theme = "dark" | "light" | "system"
 
@@ -26,9 +27,11 @@ export function ThemeProvider({
   storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
+  const [theme, setThemeState] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
+  const previousThemeRef = useRef<Theme | null>(null)
+  const isInitialMount = useRef(true)
 
   useEffect(() => {
     const root = window.document.documentElement
@@ -48,12 +51,21 @@ export function ThemeProvider({
     root.classList.add(theme)
   }, [theme])
 
+  const setTheme = (newTheme: Theme) => {
+    // Track theme change (skip initial mount)
+    if (!isInitialMount.current && previousThemeRef.current !== newTheme) {
+      trackThemeChange(newTheme, previousThemeRef.current)
+    }
+    isInitialMount.current = false
+    previousThemeRef.current = newTheme
+    
+    localStorage.setItem(storageKey, newTheme)
+    setThemeState(newTheme)
+  }
+
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
+    setTheme,
   }
 
   return (
