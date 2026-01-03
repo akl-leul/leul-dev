@@ -1,11 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Eye, Heart, FileText, FolderOpen, Mail, TrendingUp, Globe, Smartphone, Monitor, Tablet, RefreshCw } from 'lucide-react';
+import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
+import { Eye, Heart, FileText, FolderOpen, Mail, TrendingUp, Globe, Smartphone, Monitor, Tablet, RefreshCw, Users, MapPin, Activity, Clock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { format, subDays, startOfDay } from 'date-fns';
+import { format, subDays, startOfDay, isAfter, isWithinInterval } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { WorldMap } from './WorldMap';
 
 interface PageView {
   page_path: string;
@@ -131,40 +133,87 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
     .sort((a, b) => b.value - a.value)
     .slice(0, 10);
 
-  const COLORS = ['hsl(var(--primary))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))', '#06b6d4', '#84cc16', '#f97316'];
+  const COLORS = [
+    'hsl(var(--primary))', 
+    'hsl(var(--chart-2))', 
+    'hsl(var(--chart-3))', 
+    'hsl(var(--chart-4))', 
+    'hsl(var(--chart-5))', 
+    '#06b6d4', 
+    '#84cc16', 
+    '#f97316',
+    '#ec4899',
+    '#8b5cf6'
+  ];
 
   const stats = [
     { 
       label: 'Total Views', 
       value: analytics.totalViews, 
       icon: Eye, 
+      trend: pageViews.length > 0 ? 'up' : 'stable',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-50 dark:bg-blue-950'
     },
     { 
       label: 'Projects', 
       value: analytics.totalProjects, 
       icon: FolderOpen, 
+      trend: 'stable',
+      color: 'text-green-500',
+      bgColor: 'bg-green-50 dark:bg-green-950'
     },
     { 
       label: 'Blog Posts', 
       value: analytics.totalPosts, 
       icon: FileText, 
+      trend: 'stable',
+      color: 'text-purple-500',
+      bgColor: 'bg-purple-50 dark:bg-purple-950'
     },
     { 
       label: 'Total Likes', 
       value: analytics.totalLikes, 
       icon: Heart, 
+      trend: 'up',
+      color: 'text-red-500',
+      bgColor: 'bg-red-50 dark:bg-red-950'
     },
     { 
       label: 'Messages', 
       value: analytics.totalContacts, 
       icon: Mail, 
+      trend: 'stable',
+      color: 'text-orange-500',
+      bgColor: 'bg-orange-50 dark:bg-orange-950'
     },
     { 
       label: 'Page Views', 
       value: pageViews.length,
       icon: TrendingUp, 
+      trend: pageViews.length > 10 ? 'up' : 'stable',
+      color: 'text-indigo-500',
+      bgColor: 'bg-indigo-50 dark:bg-indigo-950'
     },
   ];
+
+  // Calculate percentage change for last 7 days vs previous 7 days
+  const calculateGrowth = () => {
+    const now = new Date();
+    const last7Days = subDays(now, 7);
+    const previous7Days = subDays(last7Days, 7);
+    
+    const recentViews = pageViews.filter(v => isAfter(new Date(v.created_at), last7Days)).length;
+    const previousViews = pageViews.filter(v => {
+      const viewDate = new Date(v.created_at);
+      return isWithinInterval(viewDate, { start: previous7Days, end: last7Days });
+    }).length;
+    
+    if (previousViews === 0) return recentViews > 0 ? 100 : 0;
+    return Math.round(((recentViews - previousViews) / previousViews) * 100);
+  };
+
+  const growthPercentage = calculateGrowth();
 
   if (loading) {
     return (
@@ -175,33 +224,72 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold">Analytics Dashboard</h2>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Analytics Dashboard</h2>
           <p className="text-muted-foreground">Comprehensive insights into your website performance</p>
+          <div className="flex items-center gap-4 mt-2">
+            <Badge variant="outline" className="text-xs">
+              <Activity className="w-3 h-3 mr-1" />
+              Live
+            </Badge>
+            <Badge variant="secondary" className="text-xs">
+              <Clock className="w-3 h-3 mr-1" />
+              Updated: {format(lastUpdate, 'HH:mm:ss')}
+            </Badge>
+            {growthPercentage > 0 && (
+              <Badge variant="default" className="text-xs bg-green-500">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                +{growthPercentage}% growth
+              </Badge>
+            )}
+          </div>
         </div>
-        <Button variant="outline" onClick={handleRefresh} disabled={refreshing}>
+        <Button 
+          variant="outline" 
+          onClick={handleRefresh} 
+          disabled={refreshing}
+          className="shrink-0"
+        >
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
       
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="hover:shadow-lg transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
-              <stat.icon className="h-5 w-5 text-muted-foreground" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {stats.map((stat, index) => (
+          <Card 
+            key={stat.label} 
+            className="hover:shadow-lg transition-all duration-300 hover:scale-105 border-0 shadow-md bg-gradient-to-br from-background to-muted/20"
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+              <div className="flex items-center gap-2">
+                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                </div>
+                <div>
+                  <CardTitle className="text-sm font-medium text-muted-foreground">{stat.label}</CardTitle>
+                  {stat.trend === 'up' && (
+                    <div className="flex items-center text-xs text-green-500">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Growing
+                    </div>
+                  )}
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className="text-3xl font-bold bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
                 {stat.value.toLocaleString()}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Last updated: {format(lastUpdate, 'HH:mm:ss')}
-              </p>
+              <div className="mt-3">
+                <Progress 
+                  value={Math.min((stat.value / Math.max(...stats.map(s => s.value))) * 100, 100)} 
+                  className="h-2" 
+                />
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -377,6 +465,9 @@ export function AnalyticsDashboard({ analytics }: AnalyticsDashboardProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* World Map */}
+      <WorldMap pageViews={pageViews} />
 
       {/* Recent Page Views Table */}
       <Card>

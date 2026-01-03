@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "@/contexts/ThemeProvider";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -39,40 +40,43 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const [contentOpen, setContentOpen] = useState(true);
+  const { theme } = useTheme();
 
   const contentItems = [
-    { id: "home", label: "Home", icon: Home, color: "text-blue-600", bgColor: "bg-blue-50" },
-    { id: "about", label: "About", icon: Info, color: "text-green-600", bgColor: "bg-green-50" },
-    { id: "contact", label: "Contact", icon: Phone, color: "text-purple-600", bgColor: "bg-purple-50" },
+    { id: "home", label: "Home", icon: Home, color: "text-blue-600 dark:text-blue-400", bgColor: "bg-blue-50 dark:bg-blue-950" },
+    { id: "about", label: "About", icon: Info, color: "text-green-600 dark:text-green-400", bgColor: "bg-green-50 dark:bg-green-950" },
+    { id: "contact", label: "Contact", icon: Phone, color: "text-purple-600 dark:text-purple-400", bgColor: "bg-purple-50 dark:bg-purple-950" },
   ];
 
   const managementItems = [
-    { id: "projects", label: "Projects", icon: FolderOpen, color: "text-orange-600", bgColor: "bg-orange-50" },
-    { id: "posts", label: "Blog Posts", icon: PenLine, color: "text-pink-600", bgColor: "bg-pink-50" },
-    { id: "skills", label: "Skills", icon: Award, color: "text-yellow-600", bgColor: "bg-yellow-50" },
-    { id: "experiences", label: "Experience", icon: Briefcase, color: "text-indigo-600", bgColor: "bg-indigo-50" },
-    { id: "dynamic-pages", label: "Dynamic Pages", icon: FileCode, color: "text-violet-600", bgColor: "bg-violet-50" },
-    { id: "navigation", label: "Navigation", icon: Navigation, color: "text-emerald-600", bgColor: "bg-emerald-50" },
+    { id: "projects", label: "Projects", icon: FolderOpen, color: "text-orange-600 dark:text-orange-400", bgColor: "bg-orange-50 dark:bg-orange-950" },
+    { id: "posts", label: "Blog Posts", icon: PenLine, color: "text-pink-600 dark:text-pink-400", bgColor: "bg-pink-50 dark:bg-pink-950" },
+    { id: "skills", label: "Skills", icon: Award, color: "text-yellow-600 dark:text-yellow-400", bgColor: "bg-yellow-50 dark:bg-yellow-950" },
+    { id: "experiences", label: "Experience", icon: Briefcase, color: "text-indigo-600 dark:text-indigo-400", bgColor: "bg-indigo-50 dark:bg-indigo-950" },
+    { id: "dynamic-pages", label: "Dynamic Pages", icon: FileCode, color: "text-violet-600 dark:text-violet-400", bgColor: "bg-violet-50 dark:bg-violet-950" },
+    { id: "navigation", label: "Navigation", icon: Navigation, color: "text-emerald-600 dark:text-emerald-400", bgColor: "bg-emerald-50 dark:bg-emerald-950" },
   ];
 
   const communicationItems = [
-    { id: "contacts", label: "Messages", icon: Mail, color: "text-red-600", bgColor: "bg-red-50" },
-    { id: "comments", label: "Comments", icon: MessageCircle, color: "text-teal-600", bgColor: "bg-teal-50" },
-    { id: "feedback", label: "Feedback", icon: MessageCircle, color: "text-cyan-600", bgColor: "bg-cyan-50" },
+    { id: "contacts", label: "Messages", icon: Mail, color: "text-red-600 dark:text-red-400", bgColor: "bg-red-50 dark:bg-red-950" },
+    { id: "comments", label: "Comments", icon: MessageCircle, color: "text-teal-600 dark:text-teal-400", bgColor: "bg-teal-50 dark:bg-teal-950" },
+    { id: "feedback", label: "Feedback", icon: MessageCircle, color: "text-cyan-600 dark:text-cyan-400", bgColor: "bg-cyan-50 dark:bg-cyan-950" },
   ];
 
   const getItemStyle = (item: any, isActive: boolean) => {
     if (isActive) {
       return `${item.bgColor} ${item.color} border-l-4 border-current shadow-md`;
     }
-    return "hover:bg-gray-50 hover:text-gray-700";
+    return theme === 'dark' 
+      ? "hover:bg-gray-800 hover:text-gray-200"
+      : "hover:bg-gray-50 hover:text-gray-700";
   };
 
   return (
-    <Sidebar className="pt-16 bg-gradient-to-b from-gray-50 to-white border-r-2 border-gray-200">
+    <Sidebar className="pt-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-r-2 border-gray-200 dark:border-gray-700">
       <SidebarContent className="p-4">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-indigo-700 font-bold text-sm uppercase tracking-wider mb-3">
+          <SidebarGroupLabel className="text-indigo-700 dark:text-indigo-300 font-bold text-sm uppercase tracking-wider mb-3">
             📊 Analytics
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -82,8 +86,8 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                   onClick={() => onTabChange("analytics")}
                   isActive={activeTab === "analytics"}
                   className={`${activeTab === "analytics" 
-                    ? "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border-l-4 border-indigo-500 shadow-md" 
-                    : "hover:bg-indigo-50 hover:text-indigo-600"
+                    ? "bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 dark:from-indigo-900 dark:to-indigo-800 border-l-4 border-indigo-500 dark:border-indigo-400 shadow-md" 
+                    : "hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-800 dark:hover:text-indigo-300"
                   } transition-all duration-200`}
                 >
                   <BarChart3 className="h-5 w-5" />
@@ -97,7 +101,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         <Collapsible open={contentOpen} onOpenChange={setContentOpen}>
           <SidebarGroup>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex items-center justify-between w-full text-purple-700 font-bold text-sm uppercase tracking-wider mb-3 hover:text-purple-800 transition-colors">
+              <CollapsibleTrigger className="flex items-center justify-between w-full text-purple-700 dark:text-purple-300 font-bold text-sm uppercase tracking-wider mb-3 hover:text-purple-800 dark:hover:text-purple-200 transition-colors">
                 📝 Content Management
                 <ChevronDown
                   className={`h-4 w-4 transition-transform ${contentOpen ? "rotate-180" : ""}`}
@@ -126,7 +130,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         </Collapsible>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-orange-700 font-bold text-sm uppercase tracking-wider mb-3">
+          <SidebarGroupLabel className="text-orange-700 dark:text-orange-300 font-bold text-sm uppercase tracking-wider mb-3">
             🛠️ Management
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -148,7 +152,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-green-700 font-bold text-sm uppercase tracking-wider mb-3">
+          <SidebarGroupLabel className="text-green-700 dark:text-green-300 font-bold text-sm uppercase tracking-wider mb-3">
             💬 Communication
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -170,7 +174,7 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-700 font-bold text-sm uppercase tracking-wider mb-3">
+          <SidebarGroupLabel className="text-gray-700 dark:text-gray-300 font-bold text-sm uppercase tracking-wider mb-3">
             ⚙️ Settings
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -180,8 +184,8 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
                   onClick={() => onTabChange("settings")}
                   isActive={activeTab === "settings"}
                   className={`${activeTab === "settings" 
-                    ? "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-l-4 border-gray-500 shadow-md" 
-                    : "hover:bg-gray-50 hover:text-gray-600"
+                    ? "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 dark:from-gray-800 dark:to-gray-700 border-l-4 border-gray-500 dark:border-gray-400 shadow-md" 
+                    : "hover:bg-gray-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                   } transition-all duration-200 font-medium`}
                 >
                   <Settings className="h-5 w-5" />

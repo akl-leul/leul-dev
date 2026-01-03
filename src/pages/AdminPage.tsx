@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useSiteSettings } from '@/hooks/useSiteSettings';
 import { WordPressAdminLayout } from '@/components/admin/WordPressAdminLayout';
 import { WordPressPageEditor } from '@/components/admin/WordPressPageEditor';
 import { NavigationManager } from '@/components/admin/NavigationManager';
@@ -23,6 +24,9 @@ import { TagsManager } from '@/components/admin/TagsManager';
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
+  const { refetch: refetchSettings } = useSiteSettings();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [selectedSection, setSelectedSection] = useState('analytics');
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
@@ -153,6 +157,14 @@ const AdminPage = () => {
     }
   }, [isAdmin, user]);
 
+  // Handle URL parameter changes
+  useEffect(() => {
+    const sectionParam = searchParams.get('section');
+    if (sectionParam) {
+      setSelectedSection(sectionParam);
+    }
+  }, [searchParams]);
+
   if (loading || checkingAdmin) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -267,7 +279,7 @@ const AdminPage = () => {
       case 'settings':
         return (
           <div className="p-6">
-            <SettingsManager />
+            <SettingsManager onSettingsUpdate={refetchSettings} />
           </div>
         );
       case 'categories':
@@ -293,12 +305,14 @@ const AdminPage = () => {
   };
 
   return (
-    <WordPressAdminLayout
-      activeSection={selectedSection}
-      onSectionChange={setSelectedSection}
-    >
-      {renderSection()}
-    </WordPressAdminLayout>
+    <div className="pt-20">
+      <WordPressAdminLayout
+        activeSection={selectedSection}
+        onSectionChange={setSelectedSection}
+      >
+        {renderSection()}
+      </WordPressAdminLayout>
+    </div>
   );
 };
 

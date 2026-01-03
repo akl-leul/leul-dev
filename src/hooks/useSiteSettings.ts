@@ -6,6 +6,8 @@ interface SiteSettings {
   site_description: string;
   site_url: string;
   meta_keywords: string;
+  favicon_url: string;
+  og_image_url: string;
 }
 
 const defaultSettings: SiteSettings = {
@@ -13,6 +15,8 @@ const defaultSettings: SiteSettings = {
   site_description: 'Portfolio & Blog',
   site_url: '',
   meta_keywords: '',
+  favicon_url: '',
+  og_image_url: '',
 };
 
 export function useSiteSettings() {
@@ -24,7 +28,7 @@ export function useSiteSettings() {
       const { data } = await supabase
         .from('app_settings')
         .select('setting_key, setting_value')
-        .in('setting_key', ['site_name', 'site_description', 'site_url', 'meta_keywords']);
+        .in('setting_key', ['site_name', 'site_description', 'site_url', 'meta_keywords', 'favicon_url', 'og_image_url']);
 
       if (data && data.length > 0) {
         const settingsMap: Partial<SiteSettings> = {};

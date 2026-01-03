@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -20,7 +21,6 @@ import {
   Moon,
   LogOut,
   User,
-  Link,
   MessageSquare,
   Home,
   Info,
@@ -33,6 +33,7 @@ import {
   MessageCircle,
   FileCode,
   BarChart3,
+  Link as LinkIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -52,6 +53,7 @@ export function WordPressAdminLayout({
   const [isMobile, setIsMobile] = useState(false);
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
+  const location = useLocation();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -90,7 +92,7 @@ export function WordPressAdminLayout({
         { id: 'skills', icon: Award, label: 'Skills' },
         { id: 'experiences', icon: Briefcase, label: 'Experience' },
         { id: 'dynamic-pages', icon: FileCode, label: 'Dynamic Pages' },
-        { id: 'navigation', icon: Link, label: 'Navigation' },
+        { id: 'navigation', icon: LinkIcon, label: 'Navigation' },
       ],
     },
     {
@@ -116,6 +118,11 @@ export function WordPressAdminLayout({
 
   const handleSectionChange = (section: string) => {
     onSectionChange(section);
+    // Update URL parameters
+    const url = new URL(window.location.href);
+    url.searchParams.set('section', section);
+    window.history.pushState({}, '', url.toString());
+    
     if (isMobile) {
       setMobileSheetOpen(false);
     }
@@ -131,20 +138,22 @@ export function WordPressAdminLayout({
           <div className="space-y-1">
             {section.items.map((item) => {
               const Icon = item.icon;
+              const isActive = activeSection === item.id;
               return (
-                <Button
+                <Link
                   key={item.id}
-                  variant={activeSection === item.id ? 'secondary' : 'ghost'}
+                  to={`/admin?section=${item.id}`}
                   className={cn(
-                    'w-full justify-start text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-accent-foreground))]',
-                    activeSection === item.id &&
+                    'flex items-center w-full px-3 py-2 text-sm rounded-md transition-colors',
+                    'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-accent-foreground))]',
+                    isActive &&
                       'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
                   )}
                   onClick={() => handleSectionChange(item.id)}
                 >
                   <Icon className="h-4 w-4 mr-3" />
                   {item.label}
-                </Button>
+                </Link>
               );
             })}
           </div>
@@ -206,7 +215,10 @@ export function WordPressAdminLayout({
                 className="flex items-center gap-2 text-white hover:bg-white/10 px-2"
               >
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="" />
+                  <AvatarImage 
+                    src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ''} 
+                    alt={user?.email || 'User'} 
+                  />
                   <AvatarFallback className="bg-[hsl(var(--wp-blue))] text-white text-xs">
                     {getUserInitials()}
                   </AvatarFallback>
@@ -217,11 +229,11 @@ export function WordPressAdminLayout({
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSectionChange('settings')}>
                 <User className="h-4 w-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleSectionChange('settings')}>
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </DropdownMenuItem>

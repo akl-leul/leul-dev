@@ -52,7 +52,11 @@ function ThemeSelector() {
   );
 }
 
-export function SettingsManager() {
+interface SettingsManagerProps {
+  onSettingsUpdate?: () => void;
+}
+
+export function SettingsManager({ onSettingsUpdate }: SettingsManagerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
@@ -133,6 +137,11 @@ export function SettingsManager() {
       await saveSetting(`${type}_url`, publicUrl.publicUrl);
       
       toast({ title: `${type === 'favicon' ? 'Favicon' : 'OG Image'} uploaded successfully` });
+      
+      // Trigger settings update callback if provided
+      if (onSettingsUpdate) {
+        onSettingsUpdate();
+      }
     } catch (error: any) {
       toast({
         title: `Error uploading ${type === 'favicon' ? 'favicon' : 'OG image'}`,
@@ -168,6 +177,11 @@ export function SettingsManager() {
     setUrl('');
     await saveSetting(`${type}_url`, '');
     toast({ title: `${type === 'favicon' ? 'Favicon' : 'OG Image'} removed` });
+    
+    // Trigger settings update callback if provided
+    if (onSettingsUpdate) {
+      onSettingsUpdate();
+    }
   };
 
   const handleEmailUpdate = async () => {
@@ -263,6 +277,11 @@ export function SettingsManager() {
       }
 
       toast({ title: "Site settings saved successfully" });
+      
+      // Trigger settings update callback if provided
+      if (onSettingsUpdate) {
+        onSettingsUpdate();
+      }
     } catch (error: any) {
       toast({
         title: "Error saving settings",
