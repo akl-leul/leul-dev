@@ -177,12 +177,19 @@ const Home = () => {
       {/* Hero Section */}
     
 <section
-  className="relative min-h-screen flex items-center justify-center overflow-hidden "
+  className="relative min-h-screen flex items-center justify-center overflow-hidden"
   style={{
-    background: homeContent?.background_gradient || 'linear-gradient(135deg, hsl(15, 100%, 60%), hsl(0, 85%, 50%))',
+    background: homeContent?.background_image 
+      ? `url(${homeContent.background_image}) center/cover no-repeat`
+      : homeContent?.background_gradient || 'linear-gradient(135deg, hsl(15, 100%, 60%), hsl(0, 85%, 50%))',
   }}
   aria-label="Hero section introducing the developer"
 >
+  {/* Overlay for background image readability */}
+  {homeContent?.background_image && (
+    <div className="absolute inset-0 bg-black/40" />
+  )}
+  
   {/* Animated background canvas */}
   <canvas
     ref={canvasRef}

@@ -7,8 +7,50 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Save, RefreshCw, User, Lock, Globe, Palette } from "lucide-react";
+import { Save, RefreshCw, User, Lock, Globe, Palette, Moon, Sun, Monitor } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import { useTheme } from "@/contexts/ThemeProvider";
+
+function ThemeSelector() {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <div className="space-y-3">
+      <Label>Theme Mode</Label>
+      <div className="grid grid-cols-3 gap-3">
+        <Button
+          variant={theme === "light" ? "default" : "outline"}
+          className="flex flex-col items-center gap-2 h-auto py-4"
+          onClick={() => setTheme("light")}
+        >
+          <Sun className="h-5 w-5" />
+          <span className="text-xs">Light</span>
+        </Button>
+        <Button
+          variant={theme === "dark" ? "default" : "outline"}
+          className="flex flex-col items-center gap-2 h-auto py-4"
+          onClick={() => setTheme("dark")}
+        >
+          <Moon className="h-5 w-5" />
+          <span className="text-xs">Dark</span>
+        </Button>
+        <Button
+          variant={theme === "system" ? "default" : "outline"}
+          className="flex flex-col items-center gap-2 h-auto py-4"
+          onClick={() => setTheme("system")}
+        >
+          <Monitor className="h-5 w-5" />
+          <span className="text-xs">System</span>
+        </Button>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {theme === "system" 
+          ? "Theme will match your system preference" 
+          : `Currently using ${theme} mode`}
+      </p>
+    </div>
+  );
+}
 
 export function SettingsManager() {
   const { user } = useAuth();
@@ -322,14 +364,17 @@ export function SettingsManager() {
               <CardTitle>Theme & Appearance</CardTitle>
               <CardDescription>Customize the look of your website</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                Theme settings are managed from the Home Content section. 
-                You can customize colors, gradients, and images there.
-              </p>
-              <Button variant="outline" onClick={() => window.location.hash = '#home'}>
-                Go to Home Content
-              </Button>
+            <CardContent className="space-y-6">
+              <ThemeSelector />
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-3">
+                  For more customization options like colors, gradients, and hero images, 
+                  visit the Home Content section.
+                </p>
+                <Button variant="outline" onClick={() => window.location.hash = '#home'}>
+                  Go to Home Content
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
