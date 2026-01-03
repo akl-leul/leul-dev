@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-import { Save, RefreshCw, User, Lock, Globe, Palette, Moon, Sun, Monitor } from "lucide-react";
+import { Save, RefreshCw, User, Lock, Globe, Palette, Moon, Sun, Monitor, Upload, X, Image } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useTheme } from "@/contexts/ThemeProvider";
 
@@ -57,6 +57,8 @@ export function SettingsManager() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [loadingSettings, setLoadingSettings] = useState(true);
+  const faviconInputRef = useRef<HTMLInputElement>(null);
+  const ogImageInputRef = useRef<HTMLInputElement>(null);
 
   // Account settings
   const [email, setEmail] = useState(user?.email || "");
@@ -69,6 +71,10 @@ export function SettingsManager() {
   const [siteDescription, setSiteDescription] = useState("");
   const [siteUrl, setSiteUrl] = useState("");
   const [metaKeywords, setMetaKeywords] = useState("");
+  const [faviconUrl, setFaviconUrl] = useState("");
+  const [ogImageUrl, setOgImageUrl] = useState("");
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+  const [uploadingOgImage, setUploadingOgImage] = useState(false);
 
   useEffect(() => {
     loadSiteSettings();
@@ -79,7 +85,7 @@ export function SettingsManager() {
       const { data } = await supabase
         .from('app_settings')
         .select('setting_key, setting_value')
-        .in('setting_key', ['site_name', 'site_description', 'site_url', 'meta_keywords']);
+        .in('setting_key', ['site_name', 'site_description', 'site_url', 'meta_keywords', 'favicon_url', 'og_image_url']);
 
       if (data) {
         data.forEach((item) => {
@@ -88,6 +94,8 @@ export function SettingsManager() {
             case 'site_description': setSiteDescription(item.setting_value); break;
             case 'site_url': setSiteUrl(item.setting_value); break;
             case 'meta_keywords': setMetaKeywords(item.setting_value); break;
+            case 'favicon_url': setFaviconUrl(item.setting_value); break;
+            case 'og_image_url': setOgImageUrl(item.setting_value); break;
           }
         });
       }
@@ -96,6 +104,70 @@ export function SettingsManager() {
     } finally {
       setLoadingSettings(false);
     }
+  };
+
+  const handleImageUpload = async (file: File, type: 'favicon' | 'og_image') => {
+    if (!user) return;
+    
+    const setUploading = type === 'favicon' ? setUploadingFavicon : setUploadingOgImage;
+    const setUrl = type === 'favicon' ? setFaviconUrl : setOgImageUrl;
+    
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('home-images')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrl } = supabase.storage
+        .from('home-images')
+        .getPublicUrl(fileName);
+
+      setUrl(publicUrl.publicUrl);
+      
+      // Save to app_settings
+      await saveSetting(`${type}_url`, publicUrl.publicUrl);
+      
+      toast({ title: `${type === 'favicon' ? 'Favicon' : 'OG Image'} uploaded successfully` });
+    } catch (error: any) {
+      toast({
+        title: `Error uploading ${type === 'favicon' ? 'favicon' : 'OG image'}`,
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const saveSetting = async (key: string, value: string) => {
+    const { data: existing } = await supabase
+      .from('app_settings')
+      .select('id')
+      .eq('setting_key', key)
+      .maybeSingle();
+
+    if (existing) {
+      await supabase
+        .from('app_settings')
+        .update({ setting_value: value })
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('app_settings')
+        .insert([{ setting_key: key, setting_value: value, category: 'seo' }]);
+    }
+  };
+
+  const handleRemoveImage = async (type: 'favicon' | 'og_image') => {
+    const setUrl = type === 'favicon' ? setFaviconUrl : setOgImageUrl;
+    setUrl('');
+    await saveSetting(`${type}_url`, '');
+    toast({ title: `${type === 'favicon' ? 'Favicon' : 'OG Image'} removed` });
   };
 
   const handleEmailUpdate = async () => {
@@ -309,7 +381,7 @@ export function SettingsManager() {
               <CardTitle>Website Settings</CardTitle>
               <CardDescription>Configure your website details and SEO</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="siteName">Site Name</Label>
                 <Input
@@ -347,7 +419,115 @@ export function SettingsManager() {
                   placeholder="portfolio, developer, web design"
                 />
               </div>
-              <Button onClick={handleSiteSettingsSave} disabled={saving}>
+
+              {/* Favicon Upload */}
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Favicon
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Recommended size: 32x32 or 64x64 pixels. PNG, ICO, or SVG format.
+                </p>
+                <div className="flex items-center gap-4">
+                  {faviconUrl ? (
+                    <div className="relative group">
+                      <img 
+                        src={faviconUrl} 
+                        alt="Favicon" 
+                        className="w-12 h-12 rounded border bg-muted object-contain"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage('favicon')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded border border-dashed flex items-center justify-center text-muted-foreground">
+                      <Image className="h-5 w-5" />
+                    </div>
+                  )}
+                  <input
+                    ref={faviconInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'favicon')}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => faviconInputRef.current?.click()}
+                    disabled={uploadingFavicon}
+                  >
+                    {uploadingFavicon ? (
+                      <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="mr-2 h-4 w-4" /> Upload Favicon</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Open Graph Image Upload */}
+              <div className="space-y-2 pt-4 border-t">
+                <Label className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  Open Graph / Social Share Image
+                </Label>
+                <p className="text-xs text-muted-foreground">
+                  Recommended size: 1200x630 pixels. This image appears when your site is shared on social media.
+                </p>
+                <div className="flex flex-col gap-4">
+                  {ogImageUrl ? (
+                    <div className="relative group w-fit">
+                      <img 
+                        src={ogImageUrl} 
+                        alt="OG Image" 
+                        className="max-w-xs h-auto rounded border bg-muted object-cover"
+                      />
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleRemoveImage('og_image')}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-48 h-24 rounded border border-dashed flex items-center justify-center text-muted-foreground">
+                      <Image className="h-8 w-8" />
+                    </div>
+                  )}
+                  <input
+                    ref={ogImageInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'og_image')}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-fit"
+                    onClick={() => ogImageInputRef.current?.click()}
+                    disabled={uploadingOgImage}
+                  >
+                    {uploadingOgImage ? (
+                      <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Uploading...</>
+                    ) : (
+                      <><Upload className="mr-2 h-4 w-4" /> Upload OG Image</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <Button onClick={handleSiteSettingsSave} disabled={saving} className="mt-4">
                 {saving ? (
                   <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Saving...</>
                 ) : (
