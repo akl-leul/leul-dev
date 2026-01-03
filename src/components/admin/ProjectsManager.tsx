@@ -210,7 +210,7 @@ export const ProjectsManager = () => {
                 </TabsList>
                 
                 <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
-                  <TabsContent value="basic" className="space-y-4">
+                  <TabsContent value="basic" className="space-y-4 mt-0 data-[state=inactive]:hidden" forceMount>
                     <div>
                       <Label htmlFor="title">Title *</Label>
                       <Input id="title" name="title" placeholder="Project title" defaultValue={editingProject?.title} required />
@@ -250,7 +250,7 @@ export const ProjectsManager = () => {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="content" className="space-y-4">
+                  <TabsContent value="content" className="space-y-4 mt-0 data-[state=inactive]:hidden" forceMount>
                     <div>
                       <Label>Project Content</Label>
                       <RichTextEditor
@@ -261,7 +261,7 @@ export const ProjectsManager = () => {
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="media" className="space-y-4">
+                  <TabsContent value="media" className="space-y-4 mt-0 data-[state=inactive]:hidden" forceMount>
                     <div>
                       <Label>Featured Image</Label>
                       <ImageCropUpload
