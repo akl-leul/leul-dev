@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Plus, X, Search } from 'lucide-react';
+import { Pencil, Trash2, Plus, X, Search, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropUpload } from './ImageCropUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,6 +38,8 @@ export const ProjectsManager = () => {
   const [loading, setLoading] = useState(true);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewProject, setPreviewProject] = useState<Project | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
   const [contentHtml, setContentHtml] = useState<string>('');
@@ -386,6 +388,12 @@ export const ProjectsManager = () => {
                 <TableCell className="hidden sm:table-cell">{project.featured ? '✓' : '✗'}</TableCell>
                 <TableCell>
                   <div className="flex gap-1 sm:gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => {
+                      setPreviewProject(project);
+                      setIsPreviewOpen(true);
+                    }}>
+                      <Eye className="w-4 h-4" />
+                    </Button>
                     <Button variant="ghost" size="sm" onClick={() => openDialog(project)}>
                       <Pencil className="w-4 h-4" />
                     </Button>
@@ -416,6 +424,99 @@ export const ProjectsManager = () => {
           onItemsPerPageChange={setItemsPerPage}
         />
       </div>
+
+      {/* Project Preview Dialog */}
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Project Preview</DialogTitle>
+          </DialogHeader>
+          {previewProject && (
+            <div className="space-y-6">
+              {/* Featured Image */}
+              {previewProject.image_url && (
+                <div className="aspect-video overflow-hidden rounded-lg">
+                  <img 
+                    src={previewProject.image_url} 
+                    alt={previewProject.title} 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              
+              {/* Title and Status */}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">{previewProject.title}</h2>
+                  <p className="text-muted-foreground mt-1">{previewProject.description}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Badge>{previewProject.status}</Badge>
+                  {previewProject.featured && <Badge variant="secondary">Featured</Badge>}
+                </div>
+              </div>
+
+              {/* Tech Stack */}
+              {previewProject.tech_stack && previewProject.tech_stack.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {previewProject.tech_stack.map((tech, i) => (
+                    <Badge key={i} variant="outline">{tech}</Badge>
+                  ))}
+                </div>
+              )}
+
+              {/* Links */}
+              <div className="flex gap-3">
+                {previewProject.github_url && (
+                  <a 
+                    href={previewProject.github_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    View on GitHub →
+                  </a>
+                )}
+                {previewProject.demo_url && (
+                  <a 
+                    href={previewProject.demo_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-sm text-primary hover:underline"
+                  >
+                    Live Demo →
+                  </a>
+                )}
+              </div>
+
+              {/* Content */}
+              {previewProject.content && (
+                <div 
+                  className="prose prose-sm dark:prose-invert max-w-none"
+                  dangerouslySetInnerHTML={{ __html: previewProject.content }}
+                />
+              )}
+
+              {/* Gallery Images */}
+              {previewProject.gallery_images && previewProject.gallery_images.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Gallery</Label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {previewProject.gallery_images.map((img, i) => (
+                      <img 
+                        key={i} 
+                        src={img} 
+                        alt={`Gallery ${i + 1}`} 
+                        className="w-full h-24 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

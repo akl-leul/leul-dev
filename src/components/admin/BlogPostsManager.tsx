@@ -423,7 +423,7 @@ export const BlogPostsManager = () => {
               </TabsList>
               
               <div className="max-h-[60vh] overflow-y-auto px-1 mt-4">
-                <TabsContent value="basic" className="space-y-4">
+                <TabsContent value="basic" className="space-y-4 mt-0 data-[state=inactive]:hidden" forceMount>
                   <div>
                     <Label htmlFor="title">Title *</Label>
                     <Input id="title" name="title" defaultValue={editingPost?.title || ''} required />
@@ -447,7 +447,7 @@ export const BlogPostsManager = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="content" className="space-y-4">
+                <TabsContent value="content" className="space-y-4 mt-0 data-[state=inactive]:hidden" forceMount>
                   <div>
                     <Label>Blog Post Content</Label>
                     <RichTextEditor
@@ -458,7 +458,7 @@ export const BlogPostsManager = () => {
                   </div>
                 </TabsContent>
 
-                  <TabsContent value="meta" className="space-y-4">
+                  <TabsContent value="meta" className="space-y-4 mt-0 data-[state=inactive]:hidden" forceMount>
                     <div>
                       <Label>Category</Label>
                       <Select value={selectedCategoryId} onValueChange={setSelectedCategoryId}>
