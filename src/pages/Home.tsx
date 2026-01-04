@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, Suspense, lazy } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,9 +15,6 @@ import {
 import { format } from 'date-fns';
 import { motion, Variants } from 'framer-motion';
 import { SITE_OWNER_ID } from '@/config/owner';
-
-// Lazy load Three.js scene for better performance
-const ThreeScene = lazy(() => import('@/components/ThreeScene'));
 
 interface Project {
   id: string;
@@ -193,12 +190,6 @@ const Home = () => {
     <div className="absolute inset-0 bg-black/40" />
   )}
   
-  {/* Three.js 3D Scene Background with mouse interaction */}
-  <div className="absolute inset-0" style={{ zIndex: 2 }}>
-    <Suspense fallback={null}>
-      <ThreeScene />
-    </Suspense>
-  </div>
   
   {/* Animated background canvas - now as additional layer */}
   <canvas
