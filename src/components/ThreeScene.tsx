@@ -517,14 +517,16 @@ export default function ThreeScene() {
   }, [theme]);
 
   return (
-    <div className="absolute inset-0" style={{ zIndex: 0 }}>
+    <div className="fixed inset-0 w-full h-full" style={{ zIndex: 0 }}>
       <Canvas
         camera={{ position: [0, 0, 8], fov: 50 }}
         gl={{ antialias: true, alpha: true }}
-        style={{ background: 'transparent' }}
+        style={{ background: 'transparent', width: '100%', height: '100%' }}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
         }}
+        eventSource={document.documentElement}
+        eventPrefix="client"
       >
         <SceneContent isDarkMode={isDarkMode} />
       </Canvas>
