@@ -193,10 +193,12 @@ const Home = () => {
     <div className="absolute inset-0 bg-black/40" />
   )}
   
-  {/* Three.js 3D Scene Background */}
-  <Suspense fallback={null}>
-    <ThreeScene />
-  </Suspense>
+  {/* Three.js 3D Scene Background with mouse interaction */}
+  <div className="absolute inset-0" style={{ zIndex: 2 }}>
+    <Suspense fallback={null}>
+      <ThreeScene />
+    </Suspense>
+  </div>
   
   {/* Animated background canvas - now as additional layer */}
   <canvas
