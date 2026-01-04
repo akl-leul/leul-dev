@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,6 +15,9 @@ import {
 import { format } from 'date-fns';
 import { motion, Variants } from 'framer-motion';
 import { SITE_OWNER_ID } from '@/config/owner';
+
+// Lazy load Three.js scene for better performance
+const ThreeScene = lazy(() => import('@/components/ThreeScene'));
 
 interface Project {
   id: string;
@@ -190,14 +193,20 @@ const Home = () => {
     <div className="absolute inset-0 bg-black/40" />
   )}
   
-  {/* Animated background canvas */}
+  {/* Three.js 3D Scene Background */}
+  <Suspense fallback={null}>
+    <ThreeScene />
+  </Suspense>
+  
+  {/* Animated background canvas - now as additional layer */}
   <canvas
     ref={canvasRef}
-    className="absolute inset-0 w-full h-full opacity-20 pointer-events-none"
+    className="absolute inset-0 w-full h-full opacity-10 pointer-events-none"
     aria-hidden="true"
+    style={{ zIndex: 1 }}
   />
 
-  <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24">
+  <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24" style={{ zIndex: 10 }}>
     <div className="grid lg:grid-cols-2 gap-6 items-center">
       {/* Left Content */}
       <motion.div
@@ -305,7 +314,8 @@ const Home = () => {
 
   {/* Scroll Down Icon */}
   <motion.div
-    className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer z-20"
+    className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
+    style={{ zIndex: 20 }}
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{
