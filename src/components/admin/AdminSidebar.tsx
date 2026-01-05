@@ -13,6 +13,7 @@ import {
   Phone,
   Navigation,
   FileCode,
+  ChevronDown,
 } from "lucide-react";
 import {
   Sidebar,
@@ -29,7 +30,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "@/contexts/ThemeProvider";
 
@@ -40,6 +40,9 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
   const [contentOpen, setContentOpen] = useState(true);
+  const [managementOpen, setManagementOpen] = useState(true);
+  const [communicationOpen, setCommunicationOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(true);
   const { theme } = useTheme();
 
   const contentItems = [
@@ -72,9 +75,57 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
       : "hover:bg-gray-50 hover:text-gray-700";
   };
 
+  const CollapsibleSection = ({
+    title,
+    emoji,
+    items,
+    open,
+    onOpenChange,
+    colorClass,
+  }: {
+    title: string;
+    emoji: string;
+    items: typeof contentItems;
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    colorClass: string;
+  }) => (
+    <Collapsible open={open} onOpenChange={onOpenChange}>
+      <SidebarGroup>
+        <SidebarGroupLabel asChild>
+          <CollapsibleTrigger className={`flex items-center justify-between w-full ${colorClass} font-bold text-sm uppercase tracking-wider mb-3 hover:opacity-80 transition-colors cursor-pointer`}>
+            <span>{emoji} {title}</span>
+            <ChevronDown
+              className={`h-4 w-4 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            />
+          </CollapsibleTrigger>
+        </SidebarGroupLabel>
+        <CollapsibleContent className="transition-all duration-200">
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {items.map((item) => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    onClick={() => onTabChange(item.id)}
+                    isActive={activeTab === item.id}
+                    className={`${getItemStyle(item, activeTab === item.id)} transition-all duration-200 font-medium`}
+                  >
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </Collapsible>
+  );
+
   return (
     <Sidebar className="pt-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 border-r-2 border-gray-200 dark:border-gray-700">
       <SidebarContent className="p-4">
+        {/* Analytics - Always visible */}
         <SidebarGroup>
           <SidebarGroupLabel className="text-indigo-700 dark:text-indigo-300 font-bold text-sm uppercase tracking-wider mb-3">
             📊 Analytics
@@ -98,103 +149,68 @@ export function AdminSidebar({ activeTab, onTabChange }: AdminSidebarProps) {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <Collapsible open={contentOpen} onOpenChange={setContentOpen}>
+        {/* Content Management - Collapsible */}
+        <CollapsibleSection
+          title="Content"
+          emoji="📝"
+          items={contentItems}
+          open={contentOpen}
+          onOpenChange={setContentOpen}
+          colorClass="text-purple-700 dark:text-purple-300"
+        />
+
+        {/* Management - Collapsible */}
+        <CollapsibleSection
+          title="Management"
+          emoji="🛠️"
+          items={managementItems}
+          open={managementOpen}
+          onOpenChange={setManagementOpen}
+          colorClass="text-orange-700 dark:text-orange-300"
+        />
+
+        {/* Communication - Collapsible */}
+        <CollapsibleSection
+          title="Communication"
+          emoji="💬"
+          items={communicationItems}
+          open={communicationOpen}
+          onOpenChange={setCommunicationOpen}
+          colorClass="text-green-700 dark:text-green-300"
+        />
+
+        {/* Settings - Collapsible */}
+        <Collapsible open={settingsOpen} onOpenChange={setSettingsOpen}>
           <SidebarGroup>
             <SidebarGroupLabel asChild>
-              <CollapsibleTrigger className="flex items-center justify-between w-full text-purple-700 dark:text-purple-300 font-bold text-sm uppercase tracking-wider mb-3 hover:text-purple-800 dark:hover:text-purple-200 transition-colors">
-                📝 Content Management
+              <CollapsibleTrigger className="flex items-center justify-between w-full text-gray-700 dark:text-gray-300 font-bold text-sm uppercase tracking-wider mb-3 hover:opacity-80 transition-colors cursor-pointer">
+                <span>⚙️ Settings</span>
                 <ChevronDown
-                  className={`h-4 w-4 transition-transform ${contentOpen ? "rotate-180" : ""}`}
+                  className={`h-4 w-4 transition-transform duration-200 ${settingsOpen ? "rotate-180" : ""}`}
                 />
               </CollapsibleTrigger>
             </SidebarGroupLabel>
-            <CollapsibleContent>
+            <CollapsibleContent className="transition-all duration-200">
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {contentItems.map((item) => (
-                    <SidebarMenuItem key={item.id}>
-                      <SidebarMenuButton
-                        onClick={() => onTabChange(item.id)}
-                        isActive={activeTab === item.id}
-                        className={`${getItemStyle(item, activeTab === item.id)} transition-all duration-200 font-medium`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      onClick={() => onTabChange("settings")}
+                      isActive={activeTab === "settings"}
+                      className={`${activeTab === "settings" 
+                        ? "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 dark:from-gray-800 dark:to-gray-700 border-l-4 border-gray-500 dark:border-gray-400 shadow-md" 
+                        : "hover:bg-gray-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                      } transition-all duration-200 font-medium`}
+                    >
+                      <Settings className="h-5 w-5" />
+                      <span>Settings</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 </SidebarMenu>
               </SidebarGroupContent>
             </CollapsibleContent>
           </SidebarGroup>
         </Collapsible>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-orange-700 dark:text-orange-300 font-bold text-sm uppercase tracking-wider mb-3">
-            🛠️ Management
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {managementItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => onTabChange(item.id)}
-                    isActive={activeTab === item.id}
-                    className={`${getItemStyle(item, activeTab === item.id)} transition-all duration-200 font-medium`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-green-700 dark:text-green-300 font-bold text-sm uppercase tracking-wider mb-3">
-            💬 Communication
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {communicationItems.map((item) => (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton
-                    onClick={() => onTabChange(item.id)}
-                    isActive={activeTab === item.id}
-                    className={`${getItemStyle(item, activeTab === item.id)} transition-all duration-200 font-medium`}
-                  >
-                    <item.icon className="h-5 w-5" />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-700 dark:text-gray-300 font-bold text-sm uppercase tracking-wider mb-3">
-            ⚙️ Settings
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => onTabChange("settings")}
-                  isActive={activeTab === "settings"}
-                  className={`${activeTab === "settings" 
-                    ? "bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 dark:from-gray-800 dark:to-gray-700 border-l-4 border-gray-500 dark:border-gray-400 shadow-md" 
-                    : "hover:bg-gray-50 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                  } transition-all duration-200 font-medium`}
-                >
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
     </Sidebar>
   );

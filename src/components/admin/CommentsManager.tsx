@@ -6,12 +6,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Eye, Trash2, Check, X, Pencil, Search } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { TablePagination } from './TablePagination';
+import { BulkActions, useBulkSelection, createBulkDeleteAction, createBulkApproveAction, createBulkRejectAction } from './BulkActions';
 
 interface Comment {
   id: number;
@@ -61,6 +63,16 @@ export const CommentsManager = () => {
     totalItems,
   } = usePagination({ data: filteredComments, itemsPerPage: 10 });
 
+  const {
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+  } = useBulkSelection(paginatedData);
+
   const loadComments = async () => {
     const { data, error } = await supabase
       .from('comments')
@@ -104,6 +116,36 @@ export const CommentsManager = () => {
       loadComments();
     }
   };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    const numericIds = ids.map(id => parseInt(id));
+    const { error } = await supabase.from('comments').delete().in('id', numericIds);
+    if (error) {
+      toast({ title: 'Error deleting comments', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} comments deleted successfully` });
+      clearSelection();
+      loadComments();
+    }
+  };
+
+  const handleBulkApprove = async (ids: string[], approved: boolean) => {
+    const numericIds = ids.map(id => parseInt(id));
+    const { error } = await supabase.from('comments').update({ approved }).in('id', numericIds);
+    if (error) {
+      toast({ title: 'Error updating comments', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} comments ${approved ? 'approved' : 'rejected'}` });
+      clearSelection();
+      loadComments();
+    }
+  };
+
+  const bulkActions = [
+    createBulkDeleteAction(handleBulkDelete, 'comments'),
+    createBulkApproveAction(handleBulkApprove),
+    createBulkRejectAction(handleBulkApprove),
+  ];
 
   const handleView = (comment: Comment) => {
     setSelectedComment(comment);
@@ -182,10 +224,27 @@ export const CommentsManager = () => {
         </Select>
       </div>
 
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedIds={selectedIds}
+        onSelectAll={selectAll}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        actions={bulkActions}
+        totalCount={paginatedData.length}
+      />
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Author</TableHead>
               <TableHead className="hidden sm:table-cell">Email</TableHead>
               <TableHead className="hidden md:table-cell">Content</TableHead>
@@ -198,7 +257,14 @@ export const CommentsManager = () => {
           </TableHeader>
           <TableBody>
             {paginatedData.map((comment) => (
-              <TableRow key={comment.id}>
+              <TableRow key={comment.id} className={isSelected(comment.id) ? "bg-muted/50" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(comment.id)}
+                    onCheckedChange={() => toggleSelect(comment.id)}
+                    aria-label={`Select comment by ${comment.author_name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{comment.author_name}</TableCell>
                 <TableCell className="hidden sm:table-cell">{comment.author_email}</TableCell>
                 <TableCell className="hidden md:table-cell max-w-[150px] truncate">{comment.content}</TableCell>
@@ -224,7 +290,7 @@ export const CommentsManager = () => {
             ))}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                   {searchQuery || filterStatus !== 'all' ? 'No comments match your filters' : 'No comments yet'}
                 </TableCell>
               </TableRow>

@@ -8,14 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Trash2, Plus, X, Search, Eye } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Pencil, Trash2, Plus, X, Search, Eye, Star, StarOff, Check } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ImageCropUpload } from './ImageCropUpload';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { RichTextEditor } from './RichTextEditor';
 import { usePagination } from '@/hooks/usePagination';
 import { TablePagination } from './TablePagination';
-
+import { BulkActions, useBulkSelection, createBulkDeleteAction, createBulkStatusAction } from './BulkActions';
 interface Project {
   id: string;
   title: string;
@@ -68,6 +69,16 @@ export const ProjectsManager = () => {
     totalItems,
   } = usePagination({ data: filteredProjects, itemsPerPage: 10 });
 
+  const {
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+  } = useBulkSelection(paginatedData);
+
   const loadProjects = async () => {
     const { data: userData } = await supabase.auth.getUser();
     if (!userData.user) {
@@ -104,6 +115,57 @@ export const ProjectsManager = () => {
       loadProjects();
     }
   };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    const { error } = await supabase.from('projects').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error deleting projects', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} projects deleted successfully` });
+      clearSelection();
+      loadProjects();
+    }
+  };
+
+  const handleBulkStatusChange = async (ids: string[], status: string) => {
+    const { error } = await supabase.from('projects').update({ status }).in('id', ids);
+    if (error) {
+      toast({ title: 'Error updating projects', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} projects updated to ${status}` });
+      clearSelection();
+      loadProjects();
+    }
+  };
+
+  const handleBulkFeatured = async (ids: string[], featured: boolean) => {
+    const { error } = await supabase.from('projects').update({ featured }).in('id', ids);
+    if (error) {
+      toast({ title: 'Error updating projects', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} projects ${featured ? 'featured' : 'unfeatured'}` });
+      clearSelection();
+      loadProjects();
+    }
+  };
+
+  const bulkActions = [
+    createBulkDeleteAction(handleBulkDelete, 'projects'),
+    createBulkStatusAction('completed', 'Mark as Completed', <Check className="h-4 w-4" />, handleBulkStatusChange),
+    createBulkStatusAction('in-progress', 'Mark as In Progress', <Eye className="h-4 w-4" />, handleBulkStatusChange),
+    {
+      id: 'feature',
+      label: 'Feature selected',
+      icon: <Star className="h-4 w-4" />,
+      onClick: (ids: string[]) => handleBulkFeatured(ids, true),
+    },
+    {
+      id: 'unfeature',
+      label: 'Unfeature selected',
+      icon: <StarOff className="h-4 w-4" />,
+      onClick: (ids: string[]) => handleBulkFeatured(ids, false),
+    },
+  ];
 
   const handleAddGalleryImage = (url: string | null) => {
     if (url && galleryImages.length < 5) {
@@ -366,10 +428,27 @@ export const ProjectsManager = () => {
         </Select>
       </div>
 
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedIds={selectedIds}
+        onSelectAll={selectAll}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        actions={bulkActions}
+        totalCount={paginatedData.length}
+      />
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Title</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
               <TableHead className="hidden md:table-cell">Tech Stack</TableHead>
@@ -379,7 +458,14 @@ export const ProjectsManager = () => {
           </TableHeader>
           <TableBody>
             {paginatedData.map((project) => (
-              <TableRow key={project.id}>
+              <TableRow key={project.id} className={isSelected(project.id) ? "bg-muted/50" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(project.id)}
+                    onCheckedChange={() => toggleSelect(project.id)}
+                    aria-label={`Select ${project.title}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{project.title}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge>{project.status}</Badge>
@@ -406,7 +492,7 @@ export const ProjectsManager = () => {
             ))}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   {searchQuery || filterStatus !== 'all' ? 'No projects match your filters' : 'No projects yet'}
                 </TableCell>
               </TableRow>

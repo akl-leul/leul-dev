@@ -12,6 +12,7 @@ import { Pencil, Trash2, Plus, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { TablePagination } from './TablePagination';
+import { BulkActions, useBulkSelection, createBulkDeleteAction } from './BulkActions';
 
 interface Experience {
   id: string;
@@ -86,6 +87,16 @@ export const ExperiencesManager = () => {
     totalItems,
   } = usePagination({ data: filteredExperiences, itemsPerPage: 10 });
 
+  const {
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+  } = useBulkSelection(paginatedData);
+
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this experience?')) return;
     
@@ -97,6 +108,21 @@ export const ExperiencesManager = () => {
       loadExperiences();
     }
   };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    const { error } = await supabase.from('experiences').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error deleting experiences', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} experiences deleted successfully` });
+      clearSelection();
+      loadExperiences();
+    }
+  };
+
+  const bulkActions = [
+    createBulkDeleteAction(handleBulkDelete, 'experiences'),
+  ];
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -223,10 +249,27 @@ export const ExperiencesManager = () => {
         </div>
       </div>
 
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedIds={selectedIds}
+        onSelectAll={selectAll}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        actions={bulkActions}
+        totalCount={paginatedData.length}
+      />
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Company</TableHead>
               <TableHead className="hidden sm:table-cell">Role</TableHead>
               <TableHead className="hidden md:table-cell">Period</TableHead>
@@ -237,7 +280,14 @@ export const ExperiencesManager = () => {
           </TableHeader>
           <TableBody>
             {paginatedData.map((exp) => (
-              <TableRow key={exp.id}>
+              <TableRow key={exp.id} className={isSelected(exp.id) ? "bg-muted/50" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(exp.id)}
+                    onCheckedChange={() => toggleSelect(exp.id)}
+                    aria-label={`Select ${exp.company}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">
                   <div>{exp.company}</div>
                   <div className="sm:hidden text-xs text-muted-foreground">{exp.role}</div>
@@ -274,7 +324,7 @@ export const ExperiencesManager = () => {
             ))}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   {searchQuery ? 'No experiences match your search' : 'No experiences yet'}
                 </TableCell>
               </TableRow>
