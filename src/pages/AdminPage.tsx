@@ -305,14 +305,12 @@ const AdminPage = () => {
   };
 
   return (
-    <div className="pt-20">
-      <WordPressAdminLayout
-        activeSection={selectedSection}
-        onSectionChange={setSelectedSection}
-      >
-        {renderSection()}
-      </WordPressAdminLayout>
-    </div>
+    <WordPressAdminLayout
+      activeSection={selectedSection}
+      onSectionChange={setSelectedSection}
+    >
+      {renderSection()}
+    </WordPressAdminLayout>
   );
 };
 
