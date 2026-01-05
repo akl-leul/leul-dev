@@ -3,8 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Eye, Trash2, Pencil, Search, X } from 'lucide-react';
+import { Eye, Trash2, Pencil, Search, X, CheckCircle, MailOpen, Archive } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { usePagination } from '@/hooks/usePagination';
 import { TablePagination } from './TablePagination';
+import { BulkActions, useBulkSelection, createBulkDeleteAction, createBulkStatusAction } from './BulkActions';
 
 interface Message {
   id: string;
@@ -55,6 +57,16 @@ export const MessagesManager = () => {
     endIndex,
     totalItems,
   } = usePagination({ data: filteredMessages, itemsPerPage: 10 });
+
+  const {
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+  } = useBulkSelection(paginatedData);
 
   const loadMessages = async () => {
     const { data, error } = await supabase
@@ -112,6 +124,34 @@ export const MessagesManager = () => {
       loadMessages();
     }
   };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    const { error } = await supabase.from('contact_submissions').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error deleting messages', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} messages deleted successfully` });
+      clearSelection();
+      loadMessages();
+    }
+  };
+
+  const handleBulkStatusChange = async (ids: string[], status: string) => {
+    const { error } = await supabase.from('contact_submissions').update({ status }).in('id', ids);
+    if (error) {
+      toast({ title: 'Error updating messages', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} messages marked as ${status}` });
+      clearSelection();
+      loadMessages();
+    }
+  };
+
+  const bulkActions = [
+    createBulkDeleteAction(handleBulkDelete, 'messages'),
+    createBulkStatusAction('read', 'Mark as Read', <MailOpen className="h-4 w-4" />, handleBulkStatusChange),
+    createBulkStatusAction('resolved', 'Mark as Resolved', <CheckCircle className="h-4 w-4" />, handleBulkStatusChange),
+  ];
 
   const handleEdit = (message: Message) => {
     setEditingMessage(message);
@@ -184,10 +224,27 @@ export const MessagesManager = () => {
         </Select>
       </div>
 
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedIds={selectedIds}
+        onSelectAll={selectAll}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        actions={bulkActions}
+        totalCount={paginatedData.length}
+      />
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead className="hidden sm:table-cell">Email</TableHead>
               <TableHead className="hidden md:table-cell">Subject</TableHead>
@@ -198,7 +255,14 @@ export const MessagesManager = () => {
           </TableHeader>
           <TableBody>
             {paginatedData.map((message) => (
-              <TableRow key={message.id}>
+              <TableRow key={message.id} className={isSelected(message.id) ? "bg-muted/50" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(message.id)}
+                    onCheckedChange={() => toggleSelect(message.id)}
+                    aria-label={`Select message from ${message.name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{message.name}</TableCell>
                 <TableCell className="hidden sm:table-cell">{message.email}</TableCell>
                 <TableCell className="hidden md:table-cell max-w-[150px] truncate">{message.subject}</TableCell>
@@ -219,7 +283,7 @@ export const MessagesManager = () => {
             ))}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   {searchQuery || filterStatus !== 'all' ? 'No messages match your filters' : 'No messages yet'}
                 </TableCell>
               </TableRow>

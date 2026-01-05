@@ -17,6 +17,7 @@ import { RichTextEditor } from './RichTextEditor';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { usePagination } from '@/hooks/usePagination';
 import { TablePagination } from './TablePagination';
+import { BulkActions, useBulkSelection, createBulkDeleteAction, createBulkPublishAction, createBulkUnpublishAction } from './BulkActions';
 
 interface BlogPost {
   id: number;
@@ -88,6 +89,16 @@ export const BlogPostsManager = () => {
     endIndex,
     totalItems,
   } = usePagination({ data: filteredPosts, itemsPerPage: 10 });
+
+  const {
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+  } = useBulkSelection(paginatedData);
 
   const loadPosts = async () => {
     const { data: userData } = await supabase.auth.getUser();
@@ -162,6 +173,39 @@ export const BlogPostsManager = () => {
       loadPosts();
     }
   };
+
+  const handleBulkDelete = async (ids: string[]) => {
+    const numericIds = ids.map(id => parseInt(id));
+    const { error } = await supabase.from('posts').delete().in('id', numericIds);
+    if (error) {
+      toast({ title: 'Error deleting posts', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} posts deleted successfully` });
+      clearSelection();
+      loadPosts();
+    }
+  };
+
+  const handleBulkPublish = async (ids: string[], published: boolean) => {
+    const numericIds = ids.map(id => parseInt(id));
+    const { error } = await supabase.from('posts').update({ 
+      published,
+      published_at: published ? new Date().toISOString() : null
+    }).in('id', numericIds);
+    if (error) {
+      toast({ title: 'Error updating posts', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} posts ${published ? 'published' : 'unpublished'}` });
+      clearSelection();
+      loadPosts();
+    }
+  };
+
+  const bulkActions = [
+    createBulkDeleteAction(handleBulkDelete, 'posts'),
+    createBulkPublishAction(handleBulkPublish),
+    createBulkUnpublishAction(handleBulkPublish),
+  ];
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -327,10 +371,27 @@ export const BlogPostsManager = () => {
         </Select>
       </div>
 
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedIds={selectedIds}
+        onSelectAll={selectAll}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        actions={bulkActions}
+        totalCount={paginatedData.length}
+      />
+
       <div className="border rounded-lg overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Title</TableHead>
               <TableHead className="hidden sm:table-cell">Category</TableHead>
               <TableHead className="hidden sm:table-cell">Status</TableHead>
@@ -342,7 +403,14 @@ export const BlogPostsManager = () => {
           </TableHeader>
           <TableBody>
             {paginatedData.map((post) => (
-              <TableRow key={post.id}>
+              <TableRow key={post.id} className={isSelected(post.id) ? "bg-muted/50" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(post.id)}
+                    onCheckedChange={() => toggleSelect(post.id)}
+                    aria-label={`Select ${post.title}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium max-w-[150px] truncate">{post.title}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline">

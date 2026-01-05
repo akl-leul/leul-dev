@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Plus, Search, X } from "lucide-react";
 import { usePagination } from "@/hooks/usePagination";
 import { TablePagination } from "./TablePagination";
+import { BulkActions, useBulkSelection, createBulkDeleteAction } from "./BulkActions";
 
 interface Skill {
   id: string;
@@ -188,6 +190,31 @@ export function SkillsManager() {
     totalItems,
   } = usePagination({ data: filteredSkills, itemsPerPage: 10 });
 
+  const {
+    selectedIds,
+    toggleSelect,
+    selectAll,
+    clearSelection,
+    isSelected,
+    allSelected,
+    someSelected,
+  } = useBulkSelection(paginatedData);
+
+  const handleBulkDelete = async (ids: string[]) => {
+    const { error } = await supabase.from('skills').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error deleting skills', variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} skills deleted successfully` });
+      clearSelection();
+      loadSkills();
+    }
+  };
+
+  const bulkActions = [
+    createBulkDeleteAction(handleBulkDelete, 'skills'),
+  ];
+
   if (loading) {
     return <div>Loading skills...</div>;
   }
@@ -322,10 +349,27 @@ export function SkillsManager() {
         </Select>
       </div>
 
+      {/* Bulk Actions */}
+      <BulkActions
+        selectedIds={selectedIds}
+        onSelectAll={selectAll}
+        allSelected={allSelected}
+        someSelected={someSelected}
+        actions={bulkActions}
+        totalCount={paginatedData.length}
+      />
+
       <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12">
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={selectAll}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead className="hidden sm:table-cell">Category</TableHead>
               <TableHead>Level</TableHead>
@@ -336,7 +380,14 @@ export function SkillsManager() {
           </TableHeader>
           <TableBody>
             {paginatedData.map((skill) => (
-              <TableRow key={skill.id}>
+              <TableRow key={skill.id} className={isSelected(skill.id) ? "bg-muted/50" : ""}>
+                <TableCell>
+                  <Checkbox
+                    checked={isSelected(skill.id)}
+                    onCheckedChange={() => toggleSelect(skill.id)}
+                    aria-label={`Select ${skill.name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">{skill.name}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <Badge variant="outline">{skill.category}</Badge>
@@ -360,7 +411,7 @@ export function SkillsManager() {
             ))}
             {paginatedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                   {searchQuery || filterCategory !== 'all' ? 'No skills match your filters' : 'No skills found. Add your first skill to get started.'}
                 </TableCell>
               </TableRow>
