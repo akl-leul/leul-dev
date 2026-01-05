@@ -1,8 +1,27 @@
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect, useContext, createContext } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { useTheme } from '@/contexts/ThemeProvider';
+
+// Performance context for use within Three.js scene
+interface PerformanceSettings {
+  particleCount: number;
+  animationSpeed: number;
+  enableBloom: boolean;
+  enableShadows: boolean;
+  maxObjects: number;
+}
+
+const defaultSettings: PerformanceSettings = {
+  particleCount: 100,
+  animationSpeed: 1,
+  enableBloom: true,
+  enableShadows: true,
+  maxObjects: 20,
+};
+
+const PerformanceSettingsContext = createContext<PerformanceSettings>(defaultSettings);
 
 // Theme-aware color palettes
 const lightThemeColors = {
@@ -44,20 +63,21 @@ function InteractiveBox({
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [clicked, setClicked] = useState(false);
+  const settings = useContext(PerformanceSettingsContext);
   
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * speed * 0.5) * 0.3;
-      meshRef.current.rotation.y += 0.005 * speed;
+      const animSpeed = speed * settings.animationSpeed;
+      meshRef.current.rotation.x = Math.sin(state.clock.elapsedTime * animSpeed * 0.5) * 0.3;
+      meshRef.current.rotation.y += 0.005 * animSpeed;
       
-      // Scale animation on click
       const targetScale = clicked ? scale * 1.3 : hovered ? scale * 1.15 : scale;
       meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
     }
   });
 
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
+    <Float speed={2 * settings.animationSpeed} rotationIntensity={0.5} floatIntensity={1}>
       <mesh 
         ref={meshRef} 
         position={position} 
@@ -96,10 +116,11 @@ function InteractiveSphere({
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const baseY = position[1];
+  const settings = useContext(PerformanceSettingsContext);
   
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.position.y = baseY + Math.sin(state.clock.elapsedTime * 0.8) * 0.3;
+      meshRef.current.position.y = baseY + Math.sin(state.clock.elapsedTime * 0.8 * settings.animationSpeed) * 0.3;
       
       const targetScale = hovered ? scale * 1.2 : scale;
       meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
@@ -107,7 +128,7 @@ function InteractiveSphere({
   });
 
   return (
-    <Float speed={1.5} rotationIntensity={0.3} floatIntensity={0.8}>
+    <Float speed={1.5 * settings.animationSpeed} rotationIntensity={0.3} floatIntensity={0.8}>
       <mesh 
         ref={meshRef} 
         position={position} 
@@ -115,7 +136,7 @@ function InteractiveSphere({
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
       >
-        <sphereGeometry args={[0.5, 32, 32]} />
+        <sphereGeometry args={[0.5, settings.maxObjects > 10 ? 32 : 16, settings.maxObjects > 10 ? 32 : 16]} />
         <meshStandardMaterial 
           color={hovered ? hoverColor : color} 
           emissive={hovered ? hoverColor : color}
@@ -133,6 +154,7 @@ function InteractiveSphere({
 // Connected nodes with proper line rendering
 function ConnectedNodes({ colors }: { colors: typeof lightThemeColors }) {
   const groupRef = useRef<THREE.Group>(null);
+  const settings = useContext(PerformanceSettingsContext);
   
   const nodes = useMemo(() => [
     { pos: [2, 1.5, 0] as [number, number, number], color: colors.primary },
@@ -143,11 +165,10 @@ function ConnectedNodes({ colors }: { colors: typeof lightThemeColors }) {
 
   useFrame((state) => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2) * 0.1;
+      groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.2 * settings.animationSpeed) * 0.1;
     }
   });
 
-  // Create line geometry
   const lineGeometry = useMemo(() => {
     const geometry = new THREE.BufferGeometry();
     const positions: number[] = [];
@@ -165,7 +186,7 @@ function ConnectedNodes({ colors }: { colors: typeof lightThemeColors }) {
   return (
     <group ref={groupRef}>
       {nodes.map((node, i) => (
-        <Float key={i} speed={1} rotationIntensity={0} floatIntensity={0.5}>
+        <Float key={i} speed={settings.animationSpeed} rotationIntensity={0} floatIntensity={0.5}>
           <mesh position={node.pos}>
             <octahedronGeometry args={[0.15, 0]} />
             <meshStandardMaterial 
@@ -194,9 +215,10 @@ function IsometricPlatform({
   color?: string;
 }) {
   const [hovered, setHovered] = useState(false);
+  const settings = useContext(PerformanceSettingsContext);
   
   return (
-    <Float speed={0.5} rotationIntensity={0} floatIntensity={0.3}>
+    <Float speed={0.5 * settings.animationSpeed} rotationIntensity={0} floatIntensity={0.3}>
       <mesh 
         position={position} 
         rotation={[0, Math.PI / 4, 0]}
@@ -229,10 +251,11 @@ function DecorativeRing({
 }) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
+  const settings = useContext(PerformanceSettingsContext);
   
   useFrame((state) => {
     if (meshRef.current) {
-      const speedMult = hovered ? 2 : 1;
+      const speedMult = (hovered ? 2 : 1) * settings.animationSpeed;
       meshRef.current.rotation.x = state.clock.elapsedTime * 0.3 * speedMult;
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.2 * speedMult;
     }
@@ -245,7 +268,7 @@ function DecorativeRing({
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
     >
-      <torusGeometry args={[0.5, 0.1, 16, 32]} />
+      <torusGeometry args={[0.5, 0.1, settings.maxObjects > 10 ? 16 : 8, settings.maxObjects > 10 ? 32 : 16]} />
       <meshStandardMaterial 
         color={hovered ? hoverColor : color} 
         transparent 
@@ -268,7 +291,8 @@ function ParticleSystem({
   mousePosition: { x: number; y: number };
 }) {
   const particlesRef = useRef<THREE.Points>(null);
-  const particleCount = 100;
+  const settings = useContext(PerformanceSettingsContext);
+  const particleCount = settings.particleCount;
   
   const { positions, velocities } = useMemo(() => {
     const pos = new Float32Array(particleCount * 3);
@@ -285,30 +309,28 @@ function ParticleSystem({
     }
     
     return { positions: pos, velocities: vel };
-  }, []);
+  }, [particleCount]);
 
   useFrame(() => {
     if (particlesRef.current) {
       const posAttr = particlesRef.current.geometry.attributes.position;
       const posArray = posAttr.array as Float32Array;
+      const animSpeed = settings.animationSpeed;
       
       for (let i = 0; i < particleCount; i++) {
-        // Apply base velocity
-        posArray[i * 3] += velocities[i * 3];
-        posArray[i * 3 + 1] += velocities[i * 3 + 1];
-        posArray[i * 3 + 2] += velocities[i * 3 + 2];
+        posArray[i * 3] += velocities[i * 3] * animSpeed;
+        posArray[i * 3 + 1] += velocities[i * 3 + 1] * animSpeed;
+        posArray[i * 3 + 2] += velocities[i * 3 + 2] * animSpeed;
         
-        // Mouse attraction
         const dx = mousePosition.x * 5 - posArray[i * 3];
         const dy = mousePosition.y * 3 - posArray[i * 3 + 1];
         const dist = Math.sqrt(dx * dx + dy * dy);
         
         if (dist < 4) {
-          posArray[i * 3] += dx * 0.005;
-          posArray[i * 3 + 1] += dy * 0.005;
+          posArray[i * 3] += dx * 0.005 * animSpeed;
+          posArray[i * 3 + 1] += dy * 0.005 * animSpeed;
         }
         
-        // Boundary wrap
         if (posArray[i * 3] > 8) posArray[i * 3] = -8;
         if (posArray[i * 3] < -8) posArray[i * 3] = 8;
         if (posArray[i * 3 + 1] > 5) posArray[i * 3 + 1] = -5;
@@ -354,14 +376,15 @@ function MouseTracker({ onMouseMove }: { onMouseMove: (pos: { x: number; y: numb
   return null;
 }
 
-// Main scene content with theme support
+// Main scene content with theme and performance support
 function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
   const colors = isDarkMode ? darkThemeColors : lightThemeColors;
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const settings = useContext(PerformanceSettingsContext);
 
-  // Stable positions for small cubes
   const cubePositions = useMemo(() => {
-    return Array.from({ length: 8 }, (_, i) => ({
+    const count = Math.min(8, settings.maxObjects);
+    return Array.from({ length: count }, (_, i) => ({
       position: [
         (Math.sin(i * 1.5) * 4) + (i % 2 === 0 ? 1 : -1),
         (Math.cos(i * 1.2) * 3),
@@ -370,11 +393,12 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
       scale: 0.15 + (i * 0.02),
       color: [colors.primary, colors.highlight, colors.success, colors.accent][i % 4]
     }));
-  }, [colors]);
+  }, [colors, settings.maxObjects]);
+
+  const showExtras = settings.maxObjects > 10;
 
   return (
     <>
-      {/* Mouse tracker */}
       <MouseTracker onMouseMove={setMousePos} />
       
       {/* Lighting */}
@@ -389,11 +413,13 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
         intensity={0.5} 
         color={colors.primary} 
       />
-      <pointLight 
-        position={[5, -5, 5]} 
-        intensity={0.3} 
-        color={colors.accent} 
-      />
+      {showExtras && (
+        <pointLight 
+          position={[5, -5, 5]} 
+          intensity={0.3} 
+          color={colors.accent} 
+        />
+      )}
 
       {/* Particle system */}
       <ParticleSystem colors={colors} mousePosition={mousePos} />
@@ -413,20 +439,24 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
         scale={0.6} 
         speed={0.8} 
       />
-      <InteractiveBox 
-        position={[-2, -2, -1]} 
-        color={colors.success} 
-        hoverColor={colors.primary}
-        scale={0.5} 
-        speed={1} 
-      />
-      <InteractiveBox 
-        position={[3, 3, -4]} 
-        color={colors.accent} 
-        hoverColor={colors.highlight}
-        scale={0.7} 
-        speed={0.9} 
-      />
+      {showExtras && (
+        <>
+          <InteractiveBox 
+            position={[-2, -2, -1]} 
+            color={colors.success} 
+            hoverColor={colors.primary}
+            scale={0.5} 
+            speed={1} 
+          />
+          <InteractiveBox 
+            position={[3, 3, -4]} 
+            color={colors.accent} 
+            hoverColor={colors.highlight}
+            scale={0.7} 
+            speed={0.9} 
+          />
+        </>
+      )}
 
       {/* Interactive glowing spheres */}
       <InteractiveSphere 
@@ -435,18 +465,22 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
         hoverColor={colors.primary}
         scale={0.6} 
       />
-      <InteractiveSphere 
-        position={[2, -2, -2]} 
-        color={colors.primary} 
-        hoverColor={colors.highlight}
-        scale={0.4} 
-      />
-      <InteractiveSphere 
-        position={[0, 3, -3]} 
-        color={colors.highlight} 
-        hoverColor={colors.success}
-        scale={0.5} 
-      />
+      {showExtras && (
+        <>
+          <InteractiveSphere 
+            position={[2, -2, -2]} 
+            color={colors.primary} 
+            hoverColor={colors.highlight}
+            scale={0.4} 
+          />
+          <InteractiveSphere 
+            position={[0, 3, -3]} 
+            color={colors.highlight} 
+            hoverColor={colors.success}
+            scale={0.5} 
+          />
+        </>
+      )}
 
       {/* Connected nodes network */}
       <ConnectedNodes colors={colors} />
@@ -457,16 +491,20 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
         size={[1.5, 0.15, 1.5]} 
         color={isDarkMode ? '#334155' : '#e2e8f0'} 
       />
-      <IsometricPlatform 
-        position={[1, -2.5, -3]} 
-        size={[1, 0.1, 1]} 
-        color={isDarkMode ? '#475569' : '#f1f5f9'} 
-      />
-      <IsometricPlatform 
-        position={[3, -2, -4]} 
-        size={[1.2, 0.12, 1.2]} 
-        color={isDarkMode ? '#1e293b' : '#cbd5e1'} 
-      />
+      {showExtras && (
+        <>
+          <IsometricPlatform 
+            position={[1, -2.5, -3]} 
+            size={[1, 0.1, 1]} 
+            color={isDarkMode ? '#475569' : '#f1f5f9'} 
+          />
+          <IsometricPlatform 
+            position={[3, -2, -4]} 
+            size={[1.2, 0.12, 1.2]} 
+            color={isDarkMode ? '#1e293b' : '#cbd5e1'} 
+          />
+        </>
+      )}
 
       {/* Interactive decorative rings */}
       <DecorativeRing 
@@ -474,15 +512,17 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
         color={colors.primary} 
         hoverColor={colors.accent}
       />
-      <DecorativeRing 
-        position={[4, 2, -2]} 
-        color={colors.accent} 
-        hoverColor={colors.primary}
-      />
+      {showExtras && (
+        <DecorativeRing 
+          position={[4, 2, -2]} 
+          color={colors.accent} 
+          hoverColor={colors.primary}
+        />
+      )}
 
       {/* Small floating cubes with stable positions */}
       {cubePositions.map((cube, i) => (
-        <Float key={i} speed={1 + i * 0.2} rotationIntensity={0.5} floatIntensity={0.5}>
+        <Float key={i} speed={(1 + i * 0.2) * settings.animationSpeed} rotationIntensity={0.5} floatIntensity={0.5}>
           <mesh position={cube.position} scale={cube.scale}>
             <boxGeometry args={[1, 1, 1]} />
             <meshStandardMaterial 
@@ -497,13 +537,21 @@ function SceneContent({ isDarkMode }: { isDarkMode: boolean }) {
   );
 }
 
+// Props for ThreeScene
+interface ThreeSceneProps {
+  performanceSettings?: PerformanceSettings;
+  enabled?: boolean;
+}
+
 // Main ThreeScene component
-export default function ThreeScene() {
+export default function ThreeScene({ 
+  performanceSettings = defaultSettings,
+  enabled = true 
+}: ThreeSceneProps) {
   const { theme } = useTheme();
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   useEffect(() => {
-    // Check actual theme
     if (theme === 'system') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setIsDarkMode(mediaQuery.matches);
@@ -516,20 +564,26 @@ export default function ThreeScene() {
     }
   }, [theme]);
 
+  if (!enabled) {
+    return null;
+  }
+
   return (
     <div className="fixed inset-0 w-full h-full" style={{ zIndex: 0 }}>
-      <Canvas
-        camera={{ position: [0, 0, 8], fov: 50 }}
-        gl={{ antialias: true, alpha: true }}
-        style={{ background: 'transparent', width: '100%', height: '100%' }}
-        onCreated={({ gl }) => {
-          gl.setClearColor(0x000000, 0);
-        }}
-        eventSource={document.documentElement}
-        eventPrefix="client"
-      >
-        <SceneContent isDarkMode={isDarkMode} />
-      </Canvas>
+      <PerformanceSettingsContext.Provider value={performanceSettings}>
+        <Canvas
+          camera={{ position: [0, 0, 8], fov: 50 }}
+          gl={{ antialias: performanceSettings.maxObjects > 10, alpha: true }}
+          style={{ background: 'transparent', width: '100%', height: '100%' }}
+          onCreated={({ gl }) => {
+            gl.setClearColor(0x000000, 0);
+          }}
+          eventSource={document.documentElement}
+          eventPrefix="client"
+        >
+          <SceneContent isDarkMode={isDarkMode} />
+        </Canvas>
+      </PerformanceSettingsContext.Provider>
     </div>
   );
 }

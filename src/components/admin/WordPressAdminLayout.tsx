@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTheme } from '@/contexts/ThemeProvider';
+import { PerformanceToggle } from '@/components/PerformanceToggle';
 import {
   Settings,
   Menu,
@@ -34,6 +35,9 @@ import {
   FileCode,
   BarChart3,
   Link as LinkIcon,
+  ChevronRight,
+  Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -53,7 +57,6 @@ export function WordPressAdminLayout({
   const [isMobile, setIsMobile] = useState(false);
   const { user, signOut } = useAuth();
   const { theme, setTheme } = useTheme();
-  const location = useLocation();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -69,7 +72,7 @@ export function WordPressAdminLayout({
 
   const menuSections = [
     {
-      title: 'Analytics',
+      title: 'Overview',
       items: [
         { id: 'analytics', icon: BarChart3, label: 'Analytics' },
       ],
@@ -89,9 +92,9 @@ export function WordPressAdminLayout({
         { id: 'posts', icon: PenLine, label: 'Blog Posts' },
         { id: 'categories', icon: FolderOpen, label: 'Categories' },
         { id: 'tags', icon: Award, label: 'Tags' },
-        { id: 'skills', icon: Award, label: 'Skills' },
+        { id: 'skills', icon: Sparkles, label: 'Skills' },
         { id: 'experiences', icon: Briefcase, label: 'Experience' },
-        { id: 'dynamic-pages', icon: FileCode, label: 'Dynamic Pages' },
+        { id: 'dynamic-pages', icon: FileCode, label: 'Pages' },
         { id: 'navigation', icon: LinkIcon, label: 'Navigation' },
       ],
     },
@@ -104,7 +107,7 @@ export function WordPressAdminLayout({
       ],
     },
     {
-      title: 'Settings',
+      title: 'System',
       items: [
         { id: 'settings', icon: Settings, label: 'Settings' },
       ],
@@ -118,7 +121,6 @@ export function WordPressAdminLayout({
 
   const handleSectionChange = (section: string) => {
     onSectionChange(section);
-    // Update URL parameters
     const url = new URL(window.location.href);
     url.searchParams.set('section', section);
     window.history.pushState({}, '', url.toString());
@@ -129,31 +131,50 @@ export function WordPressAdminLayout({
   };
 
   const SidebarContent = () => (
-    <nav className="p-4 space-y-6">
+    <nav className="py-4 space-y-6">
+      {/* Logo/Brand */}
+      <div className="px-4 mb-6">
+        <Link 
+          to="/" 
+          className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-primary transition-colors"
+        >
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(var(--sidebar-primary))] to-[hsl(280_65%_60%)] flex items-center justify-center">
+            <Sparkles className="h-4 w-4 text-white" />
+          </div>
+          <span className="font-semibold text-lg">Admin</span>
+          <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+        </Link>
+      </div>
+
       {menuSections.map((section) => (
-        <div key={section.title} className="space-y-2">
-          <h3 className="px-3 text-xs font-semibold text-[hsl(var(--sidebar-foreground))]/60 uppercase tracking-wider">
+        <div key={section.title} className="space-y-1">
+          <h3 className="px-4 text-[10px] font-medium text-sidebar-foreground/40 uppercase tracking-widest mb-2">
             {section.title}
           </h3>
-          <div className="space-y-1">
+          <div className="space-y-0.5 px-2">
             {section.items.map((item) => {
               const Icon = item.icon;
               const isActive = activeSection === item.id;
               return (
-                <Link
+                <button
                   key={item.id}
-                  to={`/admin?section=${item.id}`}
-                  className={cn(
-                    'flex items-center w-full px-3 py-2 text-sm rounded-md transition-colors',
-                    'text-[hsl(var(--sidebar-foreground))] hover:bg-[hsl(var(--sidebar-accent))] hover:text-[hsl(var(--sidebar-accent-foreground))]',
-                    isActive &&
-                      'bg-[hsl(var(--sidebar-accent))] text-[hsl(var(--sidebar-accent-foreground))]'
-                  )}
                   onClick={() => handleSectionChange(item.id)}
+                  className={cn(
+                    'flex items-center w-full px-3 py-2.5 text-sm rounded-lg transition-all duration-200 group',
+                    isActive
+                      ? 'bg-sidebar-accent text-sidebar-primary font-medium sidebar-active'
+                      : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                  )}
                 >
-                  <Icon className="h-4 w-4 mr-3" />
-                  {item.label}
-                </Link>
+                  <Icon className={cn(
+                    "h-4 w-4 mr-3 transition-colors",
+                    isActive ? "text-sidebar-primary" : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground/70"
+                  )} />
+                  <span>{item.label}</span>
+                  {isActive && (
+                    <ChevronRight className="h-4 w-4 ml-auto text-sidebar-primary" />
+                  )}
+                </button>
               );
             })}
           </div>
@@ -164,22 +185,22 @@ export function WordPressAdminLayout({
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
-      {/* Top admin bar */}
-      <header className="h-14 bg-[hsl(var(--wp-admin-bar))] text-white flex items-center justify-between px-2 sm:px-4 border-b border-black/20 shrink-0">
-        <div className="flex items-center gap-2 sm:gap-4">
+      {/* Top admin bar - sleek and minimal */}
+      <header className="h-16 bg-card/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 shrink-0">
+        <div className="flex items-center gap-4">
           {/* Mobile menu */}
           {isMobile ? (
             <Sheet open={mobileSheetOpen} onOpenChange={setMobileSheetOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="text-white hover:bg-white/10"
+                  size="icon"
+                  className="hover:bg-accent"
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0 bg-[hsl(var(--sidebar-background))]">
+              <SheetContent side="left" className="w-72 p-0 bg-[hsl(var(--sidebar-background))] border-sidebar-border">
                 <ScrollArea className="h-full">
                   <SidebarContent />
                 </ScrollArea>
@@ -188,57 +209,81 @@ export function WordPressAdminLayout({
           ) : (
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-white hover:bg-white/10"
+              className="hover:bg-accent"
             >
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          <h1 className="text-sm sm:text-lg font-semibold truncate">Admin Dashboard</h1>
+          
+          <div className="hidden sm:block">
+            <h1 className="text-lg font-semibold gradient-text">Dashboard</h1>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-4">
+        <div className="flex items-center gap-2">
+          {/* Performance toggle */}
+          <PerformanceToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
+          
+          {/* Theme toggle */}
           <Button
             variant="ghost"
-            size="sm"
+            size="icon"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-white hover:bg-white/10"
+            className="text-muted-foreground hover:text-foreground hover:bg-accent"
           >
             {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
 
+          {/* User dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 text-white hover:bg-white/10 px-2"
+                className="flex items-center gap-3 px-2 hover:bg-accent rounded-xl"
               >
-                <Avatar className="h-8 w-8">
+                <Avatar className="h-8 w-8 border-2 border-primary/20">
                   <AvatarImage 
                     src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ''} 
                     alt={user?.email || 'User'} 
                   />
-                  <AvatarFallback className="bg-[hsl(var(--wp-blue))] text-white text-xs">
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-xs font-medium">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
-                <span className="hidden md:inline text-sm truncate max-w-[150px]">{user?.email}</span>
+                <span className="hidden md:inline text-sm font-medium truncate max-w-[120px]">
+                  {user?.email?.split('@')[0]}
+                </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleSectionChange('settings')}>
+            <DropdownMenuContent align="end" className="w-56 p-2">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium">{user?.email?.split('@')[0]}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem 
+                onClick={() => handleSectionChange('settings')}
+                className="cursor-pointer rounded-lg"
+              >
                 <User className="h-4 w-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleSectionChange('settings')}>
+              <DropdownMenuItem 
+                onClick={() => handleSectionChange('settings')}
+                className="cursor-pointer rounded-lg"
+              >
                 <Settings className="h-4 w-4 mr-2" />
                 Settings
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => signOut()}>
+              <DropdownMenuSeparator className="my-2" />
+              <DropdownMenuItem 
+                onClick={() => signOut()}
+                className="cursor-pointer rounded-lg text-destructive focus:text-destructive"
+              >
                 <LogOut className="h-4 w-4 mr-2" />
                 Sign Out
               </DropdownMenuItem>
@@ -252,7 +297,7 @@ export function WordPressAdminLayout({
         {!isMobile && (
           <aside
             className={cn(
-              'bg-[hsl(var(--sidebar-background))] text-[hsl(var(--sidebar-foreground))] border-r border-[hsl(var(--sidebar-border))] transition-all duration-300 shrink-0',
+              'bg-[hsl(var(--sidebar-background))] border-r border-sidebar-border transition-all duration-300 shrink-0',
               sidebarOpen ? 'w-64' : 'w-0 overflow-hidden'
             )}
           >
@@ -263,8 +308,10 @@ export function WordPressAdminLayout({
         )}
 
         {/* Main content */}
-        <main className="flex-1 overflow-auto bg-background">
-          {children}
+        <main className="flex-1 overflow-auto bg-muted/30">
+          <div className="animate-fade-up">
+            {children}
+          </div>
         </main>
       </div>
     </div>
