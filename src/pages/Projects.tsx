@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card3D, Card3DContent, Card3DHeader, Card3DTitle, Card3DImage } from "@/components/ui/card-3d";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { usePageView } from "@/hooks/usePageView";
 import { ExternalLink, Github, Search, Star, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SITE_OWNER_ID } from "@/config/owner";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -169,31 +170,22 @@ const Projects = () => {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentProjects.map((project) => (
-                <Card key={project.id} className="group">
-                  {project.image_url ? (
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img
-                        src={project.image_url}
-                        alt={project.title}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center text-muted-foreground text-sm">
-                      No Image
-                    </div>
-                  )}
+                <Card3D key={project.id} className="overflow-hidden">
+                  <Card3DImage
+                    src={project.image_url || undefined}
+                    alt={project.title}
+                  />
 
-                  <CardHeader>
+                  <Card3DHeader>
                     <div className="flex items-start justify-between">
-                      <CardTitle className="text-lg cursor-default group-hover:text-primary transition-colors">
+                      <Card3DTitle className="group-hover:text-primary transition-colors">
                         {project.title}
                         {project.featured && (
                           <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />
                         )}
-                      </CardTitle>
+                      </Card3DTitle>
                       <Badge
                         variant={
                           project.status === "completed"
@@ -204,9 +196,9 @@ const Projects = () => {
                         {project.status}
                       </Badge>
                     </div>
-                  </CardHeader>
+                  </Card3DHeader>
 
-                  <CardContent className="space-y-4">
+                  <Card3DContent className="space-y-4">
                     <p className="text-muted-foreground text-sm line-clamp-3">
                       {project.description}
                     </p>
@@ -267,8 +259,8 @@ const Projects = () => {
                         </Button>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
+                  </Card3DContent>
+                </Card3D>
               ))}
             </div>
 

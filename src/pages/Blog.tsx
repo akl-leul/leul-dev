@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card3D, Card3DContent, Card3DHeader, Card3DTitle, Card3DDescription, Card3DImage } from '@/components/ui/card-3d';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -178,24 +179,15 @@ const Blog = () => {
           </Card>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentPosts.map((post) => (
-                <Card key={post.id} className="group hover:shadow-lg transition-all duration-300">
-                  {post.featured_image ? (
-                    <div className="aspect-video overflow-hidden rounded-t-lg">
-                      <img
-                        src={post.featured_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                  ) : (
-                    <div className="aspect-video bg-muted rounded-t-lg flex items-center justify-center text-muted-foreground text-sm">
-                      No Image
-                    </div>
-                  )}
+                <Card3D key={post.id} className="overflow-hidden">
+                  <Card3DImage
+                    src={post.featured_image || undefined}
+                    alt={post.title}
+                  />
 
-                  <CardHeader>
+                  <Card3DHeader>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-2">
                       <div className="flex items-center gap-1">
                         <Calendar className="h-4 w-4" />
@@ -207,24 +199,24 @@ const Blog = () => {
                       </div>
                     </div>
 
-                    <CardTitle className="group-hover:text-primary transition-colors text-lg font-semibold">
+                    <Card3DTitle className="group-hover:text-primary transition-colors">
                       <Link to={`/blog/${post.slug}`}>{post.title}</Link>
-                    </CardTitle>
+                    </Card3DTitle>
 
                     {post.excerpt && (
-                      <CardDescription className="line-clamp-3 text-muted-foreground">{post.excerpt}</CardDescription>
+                      <Card3DDescription className="line-clamp-3">{post.excerpt}</Card3DDescription>
                     )}
-                  </CardHeader>
+                  </Card3DHeader>
 
-                  <CardContent>
-                    <Button variant="outline" size="sm" asChild className="w-full group">
+                  <Card3DContent>
+                    <Button variant="outline" size="sm" asChild className="w-full group/btn">
                       <Link to={`/blog/${post.slug}`} className="flex items-center justify-center gap-2">
                         Read More
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
                       </Link>
                     </Button>
-                  </CardContent>
-                </Card>
+                  </Card3DContent>
+                </Card3D>
               ))}
             </div>
 
