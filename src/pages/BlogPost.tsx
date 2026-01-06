@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Card3D, Card3DContent, Card3DHeader, Card3DTitle, Card3DImage } from "@/components/ui/card-3d";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,11 +14,8 @@ import {
   Calendar,
   Clock,
   Eye,
-  Share2,
-  Copy,
   Heart,
   UserRoundPen,
-  SquareArrowOutUpRight,
   MessageCircle,
   Reply,
   ThumbsUp,
@@ -28,15 +26,8 @@ import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import '@/components/admin/blog-editor.css';
 import '@/components/admin/blog-content.css';
-import {
-  FaXTwitter,
-  FaLinkedin,
-  FaFacebook,
-  FaWhatsapp,
-  FaTelegram,
-  FaReddit,
-  FaEnvelope,
-} from "react-icons/fa6";
+import { ShareDropdown } from "@/components/ui/share-dropdown";
+import { motion } from "framer-motion";
 
 interface Post {
   id: number;
@@ -463,27 +454,50 @@ const BlogPost = () => {
   return (
     <div className="min-h-screen py-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Back Button */}
-          <Button variant="ghost" asChild className="mb-8 mt-8">
-            <Link to="/blog">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Blog
-            </Link>
-          </Button>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Button variant="ghost" asChild className="mb-8 mt-8">
+              <Link to="/blog">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Blog
+              </Link>
+            </Button>
+          </motion.div>
 
           <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2">
               <article>
-                {/* Post Header */}
-                <header className="mb-12">
-                  <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+                {/* Post Header with Featured Image */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  {post.featured_image && (
+                    <Card3D className="mb-8 overflow-hidden">
+                      <Card3DImage src={post.featured_image} alt={post.title} className="aspect-video" />
+                    </Card3D>
+                  )}
+                </motion.div>
+
+                <motion.header 
+                  className="mb-8"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.5 }}
+                >
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-6">
                     {post.title}
                   </h1>
 
                   {/* Post Meta */}
-                  <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
+                  <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>
@@ -499,163 +513,62 @@ const BlogPost = () => {
                       <span>{post.views} views</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <UserRoundPen className="h-4 w-4" />{" "}
+                      <UserRoundPen className="h-4 w-4" />
                       <span>by Leul Ayfokru</span>
                     </div>
                   </div>
-
-                  {/* Tags - Remove for now until we implement proper tag relationships */}
-
-                  {/* Featured Image */}
-                  {post.featured_image && (
-                    <div className="aspect-video overflow-hidden rounded-lg mb-8">
-                      <img
-                        src={post.featured_image}
-                        alt={post.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                </header>
+                </motion.header>
 
                 {/* Post Content */}
-                <Card>
-                  <CardContent className="p-4 sm:p-6 md:p-8">
-                    <div 
-                      className="blog-content prose prose-neutral dark:prose-invert prose-lg max-w-none"
-                      dangerouslySetInnerHTML={{ 
-                        __html: DOMPurify.sanitize(
-                          // Check if content is HTML or Markdown and convert accordingly
-                          post.content.trim().startsWith('<') 
-                            ? post.content 
-                            : marked.parse(post.content, { async: false }) as string,
-                          {
-                            ADD_TAGS: ['iframe', 'video', 'audio', 'source'],
-                            ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'type', 'controls', 'width', 'height', 'style']
-                          }
-                        )
-                      }}
-                    />
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                >
+                  <Card3D className="mb-8">
+                    <Card3DContent className="p-6 sm:p-8">
+                      <div 
+                        className="blog-content prose prose-neutral dark:prose-invert prose-lg max-w-none"
+                        dangerouslySetInnerHTML={{ 
+                          __html: DOMPurify.sanitize(
+                            post.content.trim().startsWith('<') 
+                              ? post.content 
+                              : marked.parse(post.content, { async: false }) as string,
+                            {
+                              ADD_TAGS: ['iframe', 'video', 'audio', 'source'],
+                              ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'scrolling', 'src', 'type', 'controls', 'width', 'height', 'style']
+                            }
+                          )
+                        }}
+                      />
+                    </Card3DContent>
+                  </Card3D>
+                </motion.div>
 
-                {/* Share Section */}
-                <section className="mt-8">
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <Share2 className="h-4 w-4" /> Share this post
-                  </h3>
+                {/* Share & Like Section */}
+                <section className="mt-8 flex items-center gap-4 flex-wrap">
+                  <ShareDropdown
+                    title={post.title}
+                    description={post.excerpt || ""}
+                    size="sm"
+                  />
 
-                  <div className="flex flex-wrap gap-2">
-                    {/* Twitter/X */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FaXTwitter className="h-4 w-4" />
-                      </a>
-                    </Button>
-
-                    {/* LinkedIn */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FaLinkedin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                      </a>
-                    </Button>
-
-                    {/* Facebook */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FaFacebook className="h-4 w-4 text-blue-500" />
-                      </a>
-                    </Button>
-
-                    {/* WhatsApp */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`https://wa.me/?text=${encodeURIComponent(post.title + " " + window.location.href)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FaWhatsapp className="h-4 w-4 text-green-500" />
-                      </a>
-                    </Button>
-
-                    {/* Telegram */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(post.title)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FaTelegram className="h-4 w-4 text-sky-500" />
-                      </a>
-                    </Button>
-
-                    {/* Reddit */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`https://www.reddit.com/submit?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(post.title)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2"
-                      >
-                        <FaReddit className="h-4 w-4 text-orange-500" />
-                      </a>
-                    </Button>
-
-                    {/* Email */}
-                    <Button variant="outline" size="sm" asChild>
-                      <a
-                        href={`mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(window.location.href)}`}
-                        className="flex items-center gap-2"
-                      >
-                        <FaEnvelope className="h-4 w-4" />
-                      </a>
-                    </Button>
-
-                    {/* Copy Link */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        navigator.clipboard.writeText(window.location.href)
-                      }
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-
-                    {/* Like Button */}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleLike}
-                      className={`flex items-center gap-2 ${
-                        liked ? "text-red-500" : "text-muted-foreground"
-                      } hover:text-red-500`}
-                    >
-                      {liked ? (
-                        <Heart className="h-4 w-4 fill-current" />
-                      ) : (
-                        <Heart className="h-4 w-4" />
-                      )}
-                      <span>{likesCount}</span>
-                    </Button>
-                  </div>
+                  {/* Like Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLike}
+                    className={`flex items-center gap-2 ${
+                      liked ? "text-red-500 border-red-500/50" : "text-muted-foreground"
+                    } hover:text-red-500`}
+                  >
+                    {liked ? (
+                      <Heart className="h-4 w-4 fill-current" />
+                    ) : (
+                      <Heart className="h-4 w-4" />
+                    )}
+                    <span>{likesCount} likes</span>
+                  </Button>
                 </section>
 
                 {/* Comments Section */}
@@ -989,52 +902,63 @@ const BlogPost = () => {
 
             {/* Sidebar */}
             <aside className="lg:col-span-1">
-              <div className="sticky top-24">
-                <Card>
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold mb-4">
-                      Related Posts
-                    </h3>
+              <motion.div 
+                className="sticky top-24"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+              >
+                <Card3D>
+                  <Card3DHeader>
+                    <Card3DTitle className="text-lg">Related Posts</Card3DTitle>
+                  </Card3DHeader>
+                  <Card3DContent>
                     {relatedPosts.length === 0 ? (
                       <p className="text-sm text-muted-foreground">
                         No related posts yet.
                       </p>
                     ) : (
                       <div className="space-y-4">
-                        {relatedPosts.map((relatedPost) => (
-                          <Link
+                        {relatedPosts.map((relatedPost, index) => (
+                          <motion.div
                             key={relatedPost.id}
-                            to={`/blog/${relatedPost.slug}`}
-                            className="block group"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 + index * 0.1 }}
                           >
-                            <div className="space-y-2">
-                              {relatedPost.featured_image && (
-                                <div className="aspect-video rounded overflow-hidden">
-                                  <img
-                                    src={relatedPost.featured_image}
-                                    alt={relatedPost.title}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                                  />
-                                </div>
-                              )}
-                              <h4 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2">
-                                {relatedPost.title}
-                              </h4>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Calendar className="h-3 w-3" />
-                                {format(
-                                  new Date(relatedPost.published_at),
-                                  "MMM dd, yyyy",
+                            <Link
+                              to={`/blog/${relatedPost.slug}`}
+                              className="block group"
+                            >
+                              <div className="space-y-2 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+                                {relatedPost.featured_image && (
+                                  <div className="aspect-video rounded-lg overflow-hidden">
+                                    <img
+                                      src={relatedPost.featured_image}
+                                      alt={relatedPost.title}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    />
+                                  </div>
                                 )}
+                                <h4 className="font-semibold text-sm group-hover:text-primary transition-colors line-clamp-2">
+                                  {relatedPost.title}
+                                </h4>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <Calendar className="h-3 w-3" />
+                                  {format(
+                                    new Date(relatedPost.published_at),
+                                    "MMM dd, yyyy",
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </Link>
+                            </Link>
+                          </motion.div>
                         ))}
                       </div>
                     )}
-                  </CardContent>
-                </Card>
-              </div>
+                  </Card3DContent>
+                </Card3D>
+              </motion.div>
             </aside>
           </div>
         </div>
