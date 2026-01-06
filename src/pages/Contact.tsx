@@ -3,13 +3,14 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card3D, Card3DContent, Card3DHeader, Card3DTitle, Card3DDescription } from '@/components/ui/card-3d';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { usePageView } from '@/hooks/usePageView';
-import { Mail, MapPin, Phone, Send } from 'lucide-react';
+import { Mail, MapPin, Phone, Send, Sparkles } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -36,7 +37,6 @@ const Contact = () => {
 
   useEffect(() => {
     const fetchContactInfo = async () => {
-      // First try to get from contact_content table
       const { data: content } = await supabase
         .from('contact_content')
         .select('*')
@@ -54,7 +54,6 @@ const Contact = () => {
           location: content.location || contactInfo.location
         });
       } else {
-        // Fallback to profiles table
         const { data: profile } = await supabase
           .from('profiles')
           .select('email, location')
@@ -103,88 +102,102 @@ const Contact = () => {
     }
   };
 
+  const contactItems = [
+    { icon: Mail, label: 'Email', value: contactInfo.email },
+    { icon: Phone, label: 'Phone', value: contactInfo.phone },
+    { icon: MapPin, label: 'Location', value: contactInfo.location },
+  ];
+
   return (
     <main className="min-h-screen bg-background py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <header className="text-center mb-10 sm:mb-16 mt-6 sm:mt-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground">
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Header */}
+        <motion.header 
+          className="text-center mb-12 sm:mb-16 mt-8 sm:mt-12"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 mb-6"
+          >
+            <Sparkles className="w-8 h-8 text-primary" />
+          </motion.div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-foreground mb-4">
             {pageContent.title}
           </h1>
-          <p className="mt-4 max-w-xl mx-auto text-base sm:text-lg text-muted-foreground px-4">
+          <p className="max-w-xl mx-auto text-lg sm:text-xl text-muted-foreground">
             {pageContent.description}
           </p>
-        </header>
+        </motion.header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-          {/* Contact Info */}
-          <section>
-            <Card className="rounded-lg shadow-md">
-              <CardHeader>
-                <CardTitle className="text-2xl font-semibold">Contact Information</CardTitle>
-                <CardDescription>
-                  Feel free to reach out through any of these channels
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-8 pt-0 pb-8">
-                <div className="flex items-center space-x-4">
-                  <Mail className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="font-medium text-foreground">Email</p>
-                    <p className="text-sm text-muted-foreground break-words">{contactInfo.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <Phone className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="font-medium text-foreground">Phone</p>
-                    <p className="text-sm text-muted-foreground">{contactInfo.phone}</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <MapPin className="h-6 w-6 text-primary" />
-                  <div>
-                    <p className="font-medium text-foreground">Location</p>
-                    <p className="text-sm text-muted-foreground">{contactInfo.location}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </section>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Contact Info Cards */}
+          <motion.section 
+            className="space-y-4"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            {contactItems.map((item, index) => (
+              <motion.div
+                key={item.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + index * 0.1 }}
+              >
+                <Card3D className="h-full">
+                  <Card3DContent className="p-6 flex items-center gap-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <item.icon className="h-6 w-6 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-foreground">{item.label}</p>
+                      <p className="text-sm text-muted-foreground truncate">{item.value}</p>
+                    </div>
+                  </Card3DContent>
+                </Card3D>
+              </motion.div>
+            ))}
+          </motion.section>
 
           {/* Contact Form */}
-          <section className="lg:col-span-2">
-            <Card className="rounded-lg shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-2xl font-semibold">Send Me a Message</CardTitle>
-                <CardDescription>
+          <motion.section 
+            className="lg:col-span-2"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.4, duration: 0.5 }}
+          >
+            <Card3D>
+              <Card3DHeader>
+                <Card3DTitle className="text-2xl">Send Me a Message</Card3DTitle>
+                <Card3DDescription>
                   Fill out the form below and I'll get back to you as soon as possible
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="pt-0">
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                </Card3DDescription>
+              </Card3DHeader>
+              <Card3DContent>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="space-y-2">
+                      <label htmlFor="name" className="block text-sm font-medium text-foreground">
                         Name *
                       </label>
                       <Input
                         id="name"
                         {...register('name')}
                         placeholder="Your full name"
-                        className={`${errors.name ? 'border-red-600 focus:ring-red-600' : 'border-gray-300 focus:ring-indigo-500'} rounded-md shadow-sm w-full`}
-                        aria-invalid={!!errors.name}
-                        aria-describedby="name-error"
+                        className={errors.name ? 'border-destructive focus-visible:ring-destructive' : ''}
                       />
                       {errors.name && (
-                        <p id="name-error" className="text-sm text-red-600 mt-1">
-                          {errors.name.message}
-                        </p>
+                        <p className="text-sm text-destructive">{errors.name.message}</p>
                       )}
                     </div>
 
-                    <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <div className="space-y-2">
+                      <label htmlFor="email" className="block text-sm font-medium text-foreground">
                         Email *
                       </label>
                       <Input
@@ -192,39 +205,31 @@ const Contact = () => {
                         type="email"
                         {...register('email')}
                         placeholder="your.email@example.com"
-                        className={`${errors.email ? 'border-red-600 focus:ring-red-600' : 'border-gray-300 focus:ring-indigo-500'} rounded-md shadow-sm w-full`}
-                        aria-invalid={!!errors.email}
-                        aria-describedby="email-error"
+                        className={errors.email ? 'border-destructive focus-visible:ring-destructive' : ''}
                       />
                       {errors.email && (
-                        <p id="email-error" className="text-sm text-red-600 mt-1">
-                          {errors.email.message}
-                        </p>
+                        <p className="text-sm text-destructive">{errors.email.message}</p>
                       )}
                     </div>
                   </div>
 
-                  <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label htmlFor="subject" className="block text-sm font-medium text-foreground">
                       Subject *
                     </label>
                     <Input
                       id="subject"
                       {...register('subject')}
                       placeholder="What's this about?"
-                      className={`${errors.subject ? 'border-red-600 focus:ring-red-600' : 'border-gray-300 focus:ring-indigo-500'} rounded-md shadow-sm w-full`}
-                      aria-invalid={!!errors.subject}
-                      aria-describedby="subject-error"
+                      className={errors.subject ? 'border-destructive focus-visible:ring-destructive' : ''}
                     />
                     {errors.subject && (
-                      <p id="subject-error" className="text-sm text-red-600 mt-1">
-                        {errors.subject.message}
-                      </p>
+                      <p className="text-sm text-destructive">{errors.subject.message}</p>
                     )}
                   </div>
 
-                  <div>
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                  <div className="space-y-2">
+                    <label htmlFor="message" className="block text-sm font-medium text-foreground">
                       Message *
                     </label>
                     <Textarea
@@ -232,14 +237,10 @@ const Contact = () => {
                       {...register('message')}
                       placeholder="Tell me about your project or just say hello..."
                       rows={6}
-                      className={`${errors.message ? 'border-red-600 focus:ring-red-600' : 'border-gray-300 focus:ring-indigo-500'} rounded-md shadow-sm w-full resize-y`}
-                      aria-invalid={!!errors.message}
-                      aria-describedby="message-error"
+                      className={errors.message ? 'border-destructive focus-visible:ring-destructive' : ''}
                     />
                     {errors.message && (
-                      <p id="message-error" className="text-sm text-red-600 mt-1">
-                        {errors.message.message}
-                      </p>
+                      <p className="text-sm text-destructive">{errors.message.message}</p>
                     )}
                   </div>
 
@@ -247,24 +248,24 @@ const Contact = () => {
                     type="submit"
                     size="lg"
                     disabled={isSubmitting}
-                    className="w-full flex justify-center items-center space-x-2 bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500 text-white font-semibold rounded-md shadow-md transition-colors duration-200"
+                    className="w-full"
                   >
                     {isSubmitting ? (
                       <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white" />
-                        <span>Sending...</span>
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-current mr-2" />
+                        Sending...
                       </>
                     ) : (
                       <>
-                        <Send className="h-5 w-5" />
-                        <span>Send Message</span>
+                        <Send className="h-5 w-5 mr-2" />
+                        Send Message
                       </>
                     )}
                   </Button>
                 </form>
-              </CardContent>
-            </Card>
-          </section>
+              </Card3DContent>
+            </Card3D>
+          </motion.section>
         </div>
       </div>
     </main>

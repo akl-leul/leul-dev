@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card3D, Card3DContent, Card3DHeader, Card3DTitle } from "@/components/ui/card-3d";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Github, Star, ArrowLeft, Share2, Copy, ChevronLeft, ChevronRight, Expand } from "lucide-react";
-import { FaXTwitter, FaLinkedin, FaFacebook, FaWhatsapp, FaTelegram, FaReddit, FaEnvelope } from "react-icons/fa6";
+import { ExternalLink, Github, Star, ArrowLeft, ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectFeedback } from "@/components/ProjectFeedback";
 import { Link } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { ImageLightbox } from "@/components/ui/image-lightbox";
+import { ShareDropdown } from "@/components/ui/share-dropdown";
+import { motion } from "framer-motion";
 
 interface Project {
   id: string;
@@ -35,9 +36,7 @@ const ProjectDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
-  const { toast } = useToast();
 
-  // Combine featured image + gallery images for carousel
   const allImages = project ? [
     ...(project.image_url ? [project.image_url] : []),
     ...(project.gallery_images || [])
@@ -82,14 +81,13 @@ const ProjectDetail = () => {
   if (loading) {
     return (
       <main className="min-h-screen py-16 bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-          <div className="animate-pulse space-y-6">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+          <div className="animate-pulse space-y-6 mt-16">
             <div className="h-8 bg-muted rounded w-1/3" />
-            <div className="h-64 bg-muted rounded" />
+            <div className="h-96 bg-muted rounded-xl" />
             <div className="space-y-3">
               <div className="h-4 bg-muted rounded w-full" />
               <div className="h-4 bg-muted rounded w-3/4" />
-              <div className="h-4 bg-muted rounded w-1/2" />
             </div>
           </div>
         </div>
@@ -100,9 +98,9 @@ const ProjectDetail = () => {
   if (!project) {
     return (
       <main className="min-h-screen py-16 bg-background">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
-          <Card>
-            <CardContent className="p-8 text-center">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
+          <Card3D className="mt-24">
+            <Card3DContent className="p-8 text-center">
               <h1 className="text-2xl font-bold mb-4">Project Not Found</h1>
               <p className="text-muted-foreground mb-6">
                 The project you're looking for doesn't exist or has been removed.
@@ -113,8 +111,8 @@ const ProjectDetail = () => {
                   Back to Projects
                 </Link>
               </Button>
-            </CardContent>
-          </Card>
+            </Card3DContent>
+          </Card3D>
         </div>
       </main>
     );
@@ -122,161 +120,121 @@ const ProjectDetail = () => {
 
   return (
     <main className="min-h-screen py-16 bg-background">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-4xl">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-5xl">
         {/* Back Button */}
-        <div className="mb-6 mt-16">
+        <motion.div 
+          className="mb-6 mt-16"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.3 }}
+        >
           <Button variant="outline" asChild>
             <Link to="/projects">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Projects
             </Link>
           </Button>
-        </div>
+        </motion.div>
 
-        {/* Project Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h1 className="text-4xl font-bold mb-2">
-                {project.title}
-                {project.featured && (
-                  <Star className="inline ml-2 h-8 w-8 text-yellow-500 fill-current" />
+        {/* Hero Section with Image */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          {allImages.length > 0 && (
+            <Card3D className="mb-8 overflow-hidden">
+              <div className="relative group">
+                <motion.img
+                  src={allImages[currentImageIndex]}
+                  alt={`${project.title} - Image ${currentImageIndex + 1}`}
+                  className="w-full h-72 sm:h-96 lg:h-[28rem] object-cover cursor-pointer"
+                  onClick={() => openLightbox(currentImageIndex)}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ duration: 0.3 }}
+                />
+                
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="absolute top-4 left-4 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => openLightbox(currentImageIndex)}
+                >
+                  <Expand className="h-4 w-4" />
+                </Button>
+                
+                {allImages.length > 1 && (
+                  <>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-lg"
+                      onClick={prevImage}
+                    >
+                      <ChevronLeft className="h-5 w-5" />
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="icon"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background shadow-lg"
+                      onClick={nextImage}
+                    >
+                      <ChevronRight className="h-5 w-5" />
+                    </Button>
+                    
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      {allImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setCurrentImageIndex(index)}
+                          className={`w-2.5 h-2.5 rounded-full transition-all ${
+                            index === currentImageIndex 
+                              ? 'bg-primary scale-125' 
+                              : 'bg-muted-foreground/50 hover:bg-muted-foreground'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    
+                    <div className="absolute top-4 right-4 bg-background/80 px-3 py-1.5 rounded-full text-sm font-medium">
+                      {currentImageIndex + 1} / {allImages.length}
+                    </div>
+                  </>
                 )}
-              </h1>
-              <Badge
-                variant={project.status === "completed" ? "default" : "secondary"}
-                className="mb-4"
-              >
-                {project.status}
-              </Badge>
-            </div>
-          </div>
-          
-          <p className="text-xl text-muted-foreground mb-6">
-            {project.description}
-          </p>
-
-          {/* Action Buttons */}
-          <div className="flex gap-4 mb-6">
-            {project.github_url && (
-              <Button asChild>
-                <a
-                  href={project.github_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <Github className="h-4 w-4" />
-                  View Code
-                </a>
-              </Button>
-            )}
-            {project.demo_url && (
-              <Button variant="outline" asChild>
-                <a
-                  href={project.demo_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Live Demo
-                </a>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* Image Carousel */}
-        {allImages.length > 0 && (
-          <Card className="mb-8 overflow-hidden">
-            <CardContent className="p-0 relative group">
-              <img
-                src={allImages[currentImageIndex]}
-                alt={`${project.title} - Image ${currentImageIndex + 1}`}
-                className="w-full h-64 sm:h-80 md:h-96 object-cover cursor-pointer"
-                onClick={() => openLightbox(currentImageIndex)}
-              />
-              
-              {/* Expand button */}
-              <Button
-                variant="secondary"
-                size="icon"
-                className="absolute top-4 left-4 bg-background/80 hover:bg-background opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={() => openLightbox(currentImageIndex)}
-              >
-                <Expand className="h-4 w-4" />
-              </Button>
-              
-              {allImages.length > 1 && (
-                <>
-                  {/* Navigation Arrows */}
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
-                    onClick={prevImage}
-                  >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 hover:bg-background"
-                    onClick={nextImage}
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                  
-                  {/* Dots Indicator */}
-                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                    {allImages.map((_, index) => (
-                      <button
-                        key={index}
-                        onClick={() => setCurrentImageIndex(index)}
-                        className={`w-2 h-2 rounded-full transition-colors ${
-                          index === currentImageIndex 
-                            ? 'bg-primary' 
-                            : 'bg-muted-foreground/50 hover:bg-muted-foreground'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Image Counter */}
-                  <div className="absolute top-4 right-4 bg-background/80 px-2 py-1 rounded text-sm">
-                    {currentImageIndex + 1} / {allImages.length}
-                  </div>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        )}
+              </div>
+            </Card3D>
+          )}
+        </motion.div>
 
         {/* Thumbnail Strip */}
         {allImages.length > 1 && (
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+          <motion.div 
+            className="mb-8 flex gap-3 overflow-x-auto pb-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
             {allImages.map((img, index) => (
-              <button
+              <motion.button
                 key={index}
                 onClick={() => setCurrentImageIndex(index)}
                 onDoubleClick={() => openLightbox(index)}
-                className={`shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${
-                  index === currentImageIndex ? 'border-primary' : 'border-transparent'
+                className={`shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
+                  index === currentImageIndex ? 'border-primary shadow-lg scale-105' : 'border-transparent hover:border-muted-foreground/30'
                 }`}
+                whileHover={{ scale: 1.05 }}
                 title="Double-click to open fullscreen"
               >
                 <img
                   src={img}
                   alt={`Thumbnail ${index + 1}`}
-                  className="w-20 h-14 object-cover"
+                  className="w-24 h-16 object-cover"
                 />
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
         )}
 
-        {/* Image Lightbox */}
         <ImageLightbox
           images={allImages}
           initialIndex={lightboxIndex}
@@ -285,161 +243,141 @@ const ProjectDetail = () => {
           alt={project.title}
         />
 
+        {/* Project Header Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.5 }}
+        >
+          <Card3D className="mb-8">
+            <Card3DHeader>
+              <div className="flex items-start justify-between flex-wrap gap-4">
+                <div className="flex-1">
+                  <Card3DTitle className="text-3xl md:text-4xl mb-3">
+                    {project.title}
+                    {project.featured && (
+                      <Star className="inline ml-3 h-7 w-7 text-yellow-500 fill-current" />
+                    )}
+                  </Card3DTitle>
+                  <Badge
+                    variant={project.status === "completed" ? "default" : "secondary"}
+                    className="text-sm"
+                  >
+                    {project.status}
+                  </Badge>
+                </div>
+                <ShareDropdown
+                  title={project.title}
+                  description={project.description}
+                />
+              </div>
+            </Card3DHeader>
+            <Card3DContent className="space-y-6">
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                {project.description}
+              </p>
+
+              <div className="flex flex-wrap gap-3">
+                {project.github_url && (
+                  <Button asChild size="lg">
+                    <a
+                      href={project.github_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <Github className="h-5 w-5" />
+                      View Code
+                    </a>
+                  </Button>
+                )}
+                {project.demo_url && (
+                  <Button variant="outline" asChild size="lg">
+                    <a
+                      href={project.demo_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2"
+                    >
+                      <ExternalLink className="h-5 w-5" />
+                      Live Demo
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </Card3DContent>
+          </Card3D>
+        </motion.div>
+
         {/* Tech Stack */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Technologies Used</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {project.tech_stack.map((tech) => (
-                <Badge key={tech} variant="secondary">
-                  {tech}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5 }}
+        >
+          <Card3D className="mb-8">
+            <Card3DHeader>
+              <Card3DTitle>Technologies Used</Card3DTitle>
+            </Card3DHeader>
+            <Card3DContent>
+              <div className="flex flex-wrap gap-2">
+                {project.tech_stack.map((tech, index) => (
+                  <motion.div
+                    key={tech}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 + index * 0.05 }}
+                  >
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      {tech}
+                    </Badge>
+                  </motion.div>
+                ))}
+              </div>
+            </Card3DContent>
+          </Card3D>
+        </motion.div>
 
         {/* Project Content */}
         {project.content && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>About This Project</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div 
-                className="prose prose-sm max-w-none dark:prose-invert"
-                dangerouslySetInnerHTML={{ 
-                  __html: DOMPurify.sanitize(
-                    project.content.startsWith('<') 
-                      ? project.content 
-                      : marked(project.content) as string
-                  )
-                }}
-              />
-            </CardContent>
-          </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+          >
+            <Card3D className="mb-8">
+              <Card3DHeader>
+                <Card3DTitle>About This Project</Card3DTitle>
+              </Card3DHeader>
+              <Card3DContent>
+                <div 
+                  className="prose prose-sm max-w-none dark:prose-invert"
+                  dangerouslySetInnerHTML={{ 
+                    __html: DOMPurify.sanitize(
+                      project.content.startsWith('<') 
+                        ? project.content 
+                        : marked(project.content) as string
+                    )
+                  }}
+                />
+              </Card3DContent>
+            </Card3D>
+          </motion.div>
         )}
 
-        {/* Share Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Share2 className="h-5 w-5" />
-              Share This Project
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Check out this project: ${project.title}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FaXTwitter className="h-4 w-4" />
-                  Twitter
-                </a>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FaLinkedin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                  LinkedIn
-                </a>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FaFacebook className="h-4 w-4 text-blue-500" />
-                  Facebook
-                </a>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(`Check out this project: ${project.title} - ${window.location.href}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FaWhatsapp className="h-4 w-4 text-green-500" />
-                  WhatsApp
-                </a>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(`Check out this project: ${project.title}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FaTelegram className="h-4 w-4 text-sky-500" />
-                  Telegram
-                </a>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`https://www.reddit.com/submit?url=${encodeURIComponent(window.location.href)}&title=${encodeURIComponent(`Check out this project: ${project.title}`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2"
-                >
-                  <FaReddit className="h-4 w-4 text-orange-500" />
-                  Reddit
-                </a>
-              </Button>
-
-              <Button variant="outline" size="sm" asChild>
-                <a
-                  href={`mailto:?subject=${encodeURIComponent(`Check out this project: ${project.title}`)}&body=${encodeURIComponent(`I found this interesting project and thought you might like it:\n\n${project.title}\n${project.description}\n\nView it here: ${window.location.href}`)}`}
-                  className="flex items-center gap-2"
-                >
-                  <FaEnvelope className="h-4 w-4" />
-                  Email
-                </a>
-              </Button>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast({
-                    title: "Link copied!",
-                    description: "Project link has been copied to clipboard.",
-                  });
-                }}
-                className="flex items-center gap-2"
-              >
-                <Copy className="h-4 w-4" />
-                Copy Link
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Feedback Section */}
-        <ProjectFeedback 
-          projectId={project.id} 
-          projectTitle={project.title}
-          showForm={true}
-          showFeedbacks={true}
-        />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          <ProjectFeedback 
+            projectId={project.id} 
+            projectTitle={project.title}
+            showForm={true}
+            showFeedbacks={true}
+          />
+        </motion.div>
       </div>
     </main>
   );
