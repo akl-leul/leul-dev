@@ -399,6 +399,7 @@ export type Database = {
       }
       dynamic_pages: {
         Row: {
+          builder_content: Json | null
           content: string
           created_at: string
           created_by: string
@@ -409,8 +410,10 @@ export type Database = {
           slug: string
           title: string
           updated_at: string
+          use_builder: boolean | null
         }
         Insert: {
+          builder_content?: Json | null
           content: string
           created_at?: string
           created_by: string
@@ -421,8 +424,10 @@ export type Database = {
           slug: string
           title: string
           updated_at?: string
+          use_builder?: boolean | null
         }
         Update: {
+          builder_content?: Json | null
           content?: string
           created_at?: string
           created_by?: string
@@ -433,6 +438,7 @@ export type Database = {
           slug?: string
           title?: string
           updated_at?: string
+          use_builder?: boolean | null
         }
         Relationships: []
       }
@@ -935,6 +941,80 @@ export type Database = {
           total_amount?: number
         }
         Relationships: []
+      }
+      page_templates: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean | null
+          name: string
+          thumbnail_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name: string
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean | null
+          name?: string
+          thumbnail_url?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      page_versions: {
+        Row: {
+          content: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          page_id: string
+          version_number: number
+        }
+        Insert: {
+          content: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          page_id: string
+          version_number: number
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          page_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_versions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       page_views: {
         Row: {
