@@ -329,5 +329,3 @@ export function PageBuilder({
     </TooltipProvider>
   );
 }
-
-export { PageSection } from './types';

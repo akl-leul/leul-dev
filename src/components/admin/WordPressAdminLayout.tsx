@@ -184,7 +184,7 @@ export function WordPressAdminLayout({
   );
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background">
+    <div className="h-screen flex flex-col overflow-hidden bg-background mt-16">
       {/* Top admin bar - sleek and minimal */}
       <header className="h-16 bg-card/80 backdrop-blur-xl border-b border-border flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-4">

@@ -36,6 +36,9 @@ import {
   Eye as Preview,
 } from 'lucide-react';
 import { WordPressBlockEditor } from './WordPressBlockEditor';
+// Import directly from types to avoid any re-export issues
+import type { PageSection } from './page-builder/types';
+import { PageBuilder } from './page-builder';
 
 interface DynamicPage {
   id: string;
@@ -47,6 +50,8 @@ interface DynamicPage {
   meta_description: string | null;
   created_at: string;
   updated_at: string;
+  use_builder?: boolean;
+  builder_content?: PageSection[];
 }
 
 interface WordPressPageEditorProps {
@@ -60,6 +65,7 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
   const [viewMode, setViewMode] = useState<'list' | 'edit'>('list');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [editorType, setEditorType] = useState<'classic' | 'block'>('classic');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -70,6 +76,8 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
     password: '',
     is_published: true,
     meta_description: '',
+    use_builder: false,
+    builder_content: [] as PageSection[],
   });
 
   useEffect(() => {
@@ -112,6 +120,8 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
         password: formData.password || null,
         is_published: publish || formData.is_published,
         created_by: user.id,
+        use_builder: editorType === 'block',
+        builder_content: editorType === 'block' ? formData.builder_content : null,
       };
 
       if (editingPage) {
@@ -257,13 +267,18 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
       password: '',
       is_published: true,
       meta_description: '',
+      use_builder: false,
+      builder_content: [],
     });
     setEditingPage(null);
+    setEditorType('classic');
   };
 
   const openEditView = (page?: DynamicPage) => {
     if (page) {
       setEditingPage(page);
+      const pageEditorType = page.use_builder ? 'block' : 'classic';
+      setEditorType(pageEditorType);
       setFormData({
         slug: page.slug,
         title: page.title,
@@ -271,6 +286,8 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
         password: page.password || '',
         is_published: page.is_published,
         meta_description: page.meta_description || '',
+        use_builder: page.use_builder || false,
+        builder_content: page.builder_content || [],
       });
     } else {
       resetForm();
@@ -324,6 +341,24 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Editor Type Toggle */}
+            <div className="flex items-center gap-2 mr-4">
+              <Button
+                variant={editorType === 'classic' ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={() => setEditorType('classic')}
+              >
+                Classic Editor
+              </Button>
+              <Button
+                variant={editorType === 'block' ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={() => setEditorType('block')}
+              >
+                Block Builder
+              </Button>
+            </div>
+            
             <Button
               variant="outline"
               size="sm"
@@ -354,80 +389,92 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
         <div className="flex-1 flex overflow-hidden">
           {/* Main editor area */}
           <div className="flex-1 overflow-auto">
-            <div className="max-w-4xl mx-auto py-8 px-4">
-              <WordPressBlockEditor
-                content={formData.content}
-                onChange={(content) => setFormData({ ...formData, content })}
+            {editorType === 'classic' ? (
+              <div className="max-w-4xl mx-auto py-8 px-4">
+                <WordPressBlockEditor
+                  content={formData.content}
+                  onChange={(content) => setFormData({ ...formData, content })}
+                />
+              </div>
+            ) : (
+              <PageBuilder
+                initialContent={formData.builder_content}
+                pageId={editingPage?.id}
+                onSave={(sections) => setFormData({ ...formData, builder_content: sections })}
+                onPreview={() => window.open(`/page/${formData.slug}`, '_blank')}
+                onBack={() => setViewMode('list')}
               />
-            </div>
+            )}
           </div>
 
-          {/* Sidebar settings */}
-          <div className="w-80 border-l bg-card overflow-auto">
-            <ScrollArea className="h-full">
-              <div className="p-4 space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-4">Page Settings</h3>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="slug" className="text-sm">URL Slug</Label>
-                      <Input
-                        id="slug"
-                        value={formData.slug}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            slug: e.target.value.toLowerCase().replace(/\s+/g, '-'),
-                          })
-                        }
-                        placeholder="page-url"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        /page/{formData.slug || 'page-url'}
-                      </p>
-                    </div>
+          {/* Sidebar settings - only show for classic editor */}
+          {editorType === 'classic' && (
+            <div className="w-80 border-l bg-card overflow-auto">
+              <ScrollArea className="h-full">
+                <div className="p-4 space-y-6">
+                  <div>
+                    <h3 className="font-semibold mb-4">Page Settings</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="slug" className="text-sm">URL Slug</Label>
+                        <Input
+                          id="slug"
+                          value={formData.slug}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              slug: e.target.value.toLowerCase().replace(/\s+/g, '-'),
+                            })
+                          }
+                          placeholder="page-url"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          /page/{formData.slug || 'page-url'}
+                        </p>
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="meta" className="text-sm">Meta Description</Label>
-                      <Input
-                        id="meta"
-                        value={formData.meta_description}
-                        onChange={(e) =>
-                          setFormData({ ...formData, meta_description: e.target.value })
-                        }
-                        placeholder="SEO description"
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="meta" className="text-sm">Meta Description</Label>
+                        <Input
+                          id="meta"
+                          value={formData.meta_description}
+                          onChange={(e) =>
+                            setFormData({ ...formData, meta_description: e.target.value })
+                          }
+                          placeholder="SEO description"
+                        />
+                      </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="password" className="text-sm">Password Protection</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) =>
-                          setFormData({ ...formData, password: e.target.value })
-                        }
-                        placeholder="Optional password"
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="password" className="text-sm">Password Protection</Label>
+                        <Input
+                          id="password"
+                          type="password"
+                          value={formData.password}
+                          onChange={(e) =>
+                            setFormData({ ...formData, password: e.target.value })
+                          }
+                          placeholder="Optional password"
+                        />
+                      </div>
 
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="published"
-                        checked={formData.is_published}
-                        onCheckedChange={(checked) =>
-                          setFormData({ ...formData, is_published: checked })
-                        }
-                      />
-                      <Label htmlFor="published" className="text-sm">Published</Label>
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="published"
+                          checked={formData.is_published}
+                          onCheckedChange={(checked) =>
+                            setFormData({ ...formData, is_published: checked })
+                          }
+                        />
+                        <Label htmlFor="published" className="text-sm">Published</Label>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </ScrollArea>
-          </div>
+              </ScrollArea>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -499,6 +546,11 @@ export function WordPressPageEditor({ onNewPage }: WordPressPageEditorProps) {
                         {page.title}
                       </button>
                       {page.password && <Lock className="h-3 w-3 text-muted-foreground" />}
+                      {page.use_builder && (
+                        <Badge variant="secondary" className="text-xs">
+                          Blocks
+                        </Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-sm">
