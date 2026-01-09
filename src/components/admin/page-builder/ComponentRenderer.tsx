@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { PageComponent, ComponentStyle } from './types';
+import { IconByName } from './IconPicker';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -375,13 +376,12 @@ export function ComponentRenderer({
     case 'icon': {
       const { name, size = 24, color = 'currentColor' } = component.content;
       return (
-        <div style={getResponsiveStyles()}>
-          <span 
-            className="inline-flex items-center justify-center"
-            style={{ width: size, height: size, color }}
-          >
-            ★
-          </span>
+        <div style={getResponsiveStyles()} className="flex items-center justify-center">
+          <IconByName 
+            name={name || 'Star'} 
+            size={size} 
+            color={color}
+          />
         </div>
       );
     }

@@ -34,8 +34,9 @@ import {
   Copy,
   Upload,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { ImageUploader, GalleryUploader } from './ImageUploader';
+import { IconPicker, IconByName } from './IconPicker';
 
 interface StyleEditorProps {
   selectedItem: PageComponent | PageSection | null;
@@ -81,7 +82,6 @@ export function StyleEditor({
   onDuplicate,
 }: StyleEditorProps) {
   const { toast } = useToast();
-  const [uploading, setUploading] = useState(false);
 
   if (!selectedItem) {
     return (
@@ -96,39 +96,6 @@ export function StyleEditor({
   const styles = selectedItem.styles || {};
   const content = 'content' in selectedItem ? selectedItem.content : null;
   const componentType = 'type' in selectedItem ? selectedItem.type : null;
-
-  const handleImageUpload = async (file: File, field: 'src' | 'backgroundImage') => {
-    setUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `page-builder/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-      
-      if (field === 'backgroundImage') {
-        onStyleChange({ backgroundImage: data.publicUrl });
-      } else {
-        onContentChange?.({ ...content, src: data.publicUrl });
-      }
-
-      toast({ title: 'Image uploaded successfully' });
-    } catch (error: any) {
-      toast({
-        title: 'Upload failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const CollapsibleSection = ({ 
     title, 
@@ -271,30 +238,11 @@ export function StyleEditor({
             <>
               <div className="space-y-2">
                 <Label className="text-xs">Image</Label>
-                {content.src ? (
-                  <div className="relative">
-                    <img src={content.src} alt="" className="w-full h-20 object-cover rounded" />
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-1 right-1 h-6 w-6"
-                      onClick={() => onContentChange?.({ ...content, src: '' })}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full h-20 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
-                    <Upload className="h-5 w-5 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground mt-1">Upload Image</span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'src')}
-                    />
-                  </label>
-                )}
+                <ImageUploader
+                  value={content.src}
+                  onChange={(url) => onContentChange?.({ ...content, src: url })}
+                  onRemove={() => onContentChange?.({ ...content, src: '' })}
+                />
               </div>
               <div className="space-y-2">
                 <Label className="text-xs">Alt Text (SEO)</Label>
@@ -313,6 +261,78 @@ export function StyleEditor({
                   className="h-8"
                   placeholder="https://..."
                 />
+              </div>
+            </>
+          )}
+
+          {componentType === 'gallery' && (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs">Gallery Images</Label>
+                <GalleryUploader
+                  images={content.images || []}
+                  onChange={(images) => onContentChange?.({ ...content, images })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Columns</Label>
+                <Select
+                  value={String(content.columns || 3)}
+                  onValueChange={(v) => onContentChange?.({ ...content, columns: parseInt(v) })}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2">2 Columns</SelectItem>
+                    <SelectItem value="3">3 Columns</SelectItem>
+                    <SelectItem value="4">4 Columns</SelectItem>
+                    <SelectItem value="5">5 Columns</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs">Gap</Label>
+                <Input
+                  value={content.gap || '16px'}
+                  onChange={(e) => onContentChange?.({ ...content, gap: e.target.value })}
+                  className="h-8"
+                  placeholder="e.g., 16px, 1rem"
+                />
+              </div>
+            </>
+          )}
+
+          {componentType === 'icon' && (
+            <>
+              <div className="space-y-2">
+                <Label className="text-xs">Icon</Label>
+                <IconPicker
+                  value={content.name}
+                  onChange={(name) => onContentChange?.({ ...content, name })}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-2">
+                  <Label className="text-xs">Size</Label>
+                  <Input
+                    type="number"
+                    value={content.size || 24}
+                    onChange={(e) => onContentChange?.({ ...content, size: parseInt(e.target.value) })}
+                    className="h-8"
+                    min={12}
+                    max={128}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Color</Label>
+                  <Input
+                    type="color"
+                    value={content.color || '#000000'}
+                    onChange={(e) => onContentChange?.({ ...content, color: e.target.value })}
+                    className="h-8 p-1"
+                  />
+                </div>
               </div>
             </>
           )}
@@ -528,29 +548,11 @@ export function StyleEditor({
 
         <div className="space-y-2">
           <Label className="text-xs">Background Image</Label>
-          <label className="flex items-center justify-center w-full h-10 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50">
-            <Upload className="h-4 w-4 mr-2 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">Upload Background</span>
-            <input
-              type="file"
-              className="hidden"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0], 'backgroundImage')}
-            />
-          </label>
-          {styles.backgroundImage && (
-            <div className="relative mt-2">
-              <img src={styles.backgroundImage} alt="" className="w-full h-16 object-cover rounded" />
-              <Button
-                variant="destructive"
-                size="icon"
-                className="absolute top-1 right-1 h-6 w-6"
-                onClick={() => onStyleChange({ backgroundImage: undefined })}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
+          <ImageUploader
+            value={styles.backgroundImage}
+            onChange={(url) => onStyleChange({ backgroundImage: url })}
+            onRemove={() => onStyleChange({ backgroundImage: undefined })}
+          />
         </div>
       </CollapsibleSection>
 
