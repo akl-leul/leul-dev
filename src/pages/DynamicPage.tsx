@@ -14,6 +14,9 @@ import {
 } from '@/components/ui/card';
 import { Lock } from 'lucide-react';
 import DOMPurify from 'dompurify';
+import { ComponentRenderer } from '@/components/admin/page-builder/ComponentRenderer';
+import { PageSection } from '@/components/admin/page-builder/types';
+import { Json } from '@/integrations/supabase/types';
 
 interface DynamicPageData {
   id: string;
@@ -22,6 +25,8 @@ interface DynamicPageData {
   content: string;
   password: string | null;
   meta_description: string | null;
+  use_builder: boolean | null;
+  builder_content: Json | null;
 }
 
 export default function DynamicPage() {
@@ -81,6 +86,42 @@ export default function DynamicPage() {
         variant: 'destructive',
       });
     }
+  };
+
+  // Render builder content
+  const renderBuilderContent = (sections: PageSection[]) => {
+    return (
+      <div className="space-y-0">
+        {sections.map((section) => (
+          <div
+            key={section.id}
+            style={{
+              backgroundColor: section.styles?.backgroundColor,
+              backgroundImage: section.styles?.backgroundImage 
+                ? `url(${section.styles.backgroundImage})` 
+                : undefined,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              padding: section.styles?.padding,
+              margin: section.styles?.margin,
+            }}
+          >
+            <div className="container mx-auto px-4">
+              <div className="grid gap-4 grid-cols-1">
+                {section.components.map((component) => (
+                  <ComponentRenderer
+                    key={component.id}
+                    component={component}
+                    isEditing={false}
+                    viewMode="desktop"
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -150,7 +191,20 @@ export default function DynamicPage() {
     );
   }
 
-  // Render unlocked page
+  // Render page based on builder mode
+  if (page.use_builder && page.builder_content) {
+    const sections = Array.isArray(page.builder_content) 
+      ? (page.builder_content as unknown as PageSection[])
+      : [];
+    
+    return (
+      <div className="min-h-screen mt-16">
+        {renderBuilderContent(sections)}
+      </div>
+    );
+  }
+
+  // Render HTML content (legacy mode)
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16 mt-16">
       <article className="max-w-4xl mx-auto">

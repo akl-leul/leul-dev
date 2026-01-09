@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { BlogPostEditor } from './BlogPostEditor';
+import { PageBuilder } from './page-builder';
+import { PageSection } from './page-builder/types';
 import {
   Card,
   CardContent,
@@ -14,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Dialog,
   DialogContent,
@@ -32,8 +35,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Eye, Lock } from 'lucide-react';
+import { Plus, Edit, Trash2, Eye, Lock, Blocks, FileText } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Json } from '@/integrations/supabase/types';
 
 interface DynamicPage {
   id: string;
@@ -43,6 +47,8 @@ interface DynamicPage {
   password: string | null;
   is_published: boolean;
   meta_description: string | null;
+  use_builder: boolean | null;
+  builder_content: Json | null;
   created_at: string;
   updated_at: string;
 }
@@ -52,6 +58,8 @@ export function DynamicPageEditor() {
   const [loading, setLoading] = useState(true);
   const [editingPage, setEditingPage] = useState<DynamicPage | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editorMode, setEditorMode] = useState<'code' | 'builder'>('builder');
+  const [builderSections, setBuilderSections] = useState<PageSection[]>([]);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -105,6 +113,8 @@ export function DynamicPageEditor() {
         ...formData,
         password: formData.password || null,
         created_by: user.id,
+        use_builder: editorMode === 'builder',
+        builder_content: editorMode === 'builder' ? builderSections as unknown as Json : null,
       };
 
       if (editingPage) {
@@ -142,6 +152,44 @@ export function DynamicPageEditor() {
         description: error.message,
         variant: 'destructive',
       });
+    }
+  };
+
+  const handleBuilderSave = async (sections: PageSection[]) => {
+    setBuilderSections(sections);
+    
+    if (!user) return;
+
+    if (editingPage) {
+      try {
+        const { error } = await supabase
+          .from('dynamic_pages')
+          .update({
+            builder_content: sections as unknown as Json,
+            use_builder: true,
+            title: formData.title,
+            slug: formData.slug,
+            meta_description: formData.meta_description || null,
+            password: formData.password || null,
+            is_published: formData.is_published,
+          })
+          .eq('id', editingPage.id);
+
+        if (error) throw error;
+        
+        toast({
+          title: 'Success',
+          description: 'Page saved successfully',
+        });
+        
+        fetchPages();
+      } catch (error: any) {
+        toast({
+          title: 'Error',
+          description: error.message,
+          variant: 'destructive',
+        });
+      }
     }
   };
 
@@ -227,6 +275,8 @@ export function DynamicPageEditor() {
       meta_description: '',
     });
     setEditingPage(null);
+    setBuilderSections([]);
+    setEditorMode('builder');
   };
 
   const openEditDialog = (page: DynamicPage) => {
@@ -239,6 +289,12 @@ export function DynamicPageEditor() {
       is_published: page.is_published,
       meta_description: page.meta_description || '',
     });
+    setEditorMode(page.use_builder ? 'builder' : 'code');
+    setBuilderSections(
+      Array.isArray(page.builder_content) 
+        ? (page.builder_content as unknown as PageSection[]) 
+        : []
+    );
     setIsDialogOpen(true);
   };
 
@@ -252,7 +308,7 @@ export function DynamicPageEditor() {
         <div>
           <h2 className="text-2xl font-bold">Dynamic Pages</h2>
           <p className="text-muted-foreground">
-            Create custom pages that automatically appear in navigation
+            Create custom pages with visual builder or code editor
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -262,110 +318,139 @@ export function DynamicPageEditor() {
               Create Page
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>
                 {editingPage ? 'Edit Page' : 'Create New Page'}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Page Title</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                  />
+            
+            <div className="flex-1 overflow-y-auto">
+              <div className="space-y-4 p-1">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="title">Page Title</Label>
+                    <Input
+                      id="title"
+                      value={formData.title}
+                      onChange={(e) =>
+                        setFormData({ ...formData, title: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="slug">URL Slug</Label>
+                    <Input
+                      id="slug"
+                      value={formData.slug}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          slug: e.target.value.toLowerCase().replace(/\s+/g, '-'),
+                        })
+                      }
+                      placeholder="my-custom-page"
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Page will be at: /page/{formData.slug || 'my-custom-page'}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="slug">URL Slug</Label>
-                  <Input
-                    id="slug"
-                    value={formData.slug}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        slug: e.target.value.toLowerCase().replace(/\s+/g, '-'),
-                      })
-                    }
-                    placeholder="my-custom-page"
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Page will be at: /page/{formData.slug || 'my-custom-page'}
-                  </p>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="meta_description">Meta Description (SEO)</Label>
+                    <Input
+                      id="meta_description"
+                      value={formData.meta_description}
+                      onChange={(e) =>
+                        setFormData({ ...formData, meta_description: e.target.value })
+                      }
+                      placeholder="Brief description for search engines"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password Protection (Optional)</Label>
+                    <Input
+                      id="password"
+                      type="password"
+                      value={formData.password}
+                      onChange={(e) =>
+                        setFormData({ ...formData, password: e.target.value })
+                      }
+                      placeholder="Leave empty for public access"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="meta_description">Meta Description (SEO)</Label>
-                <Input
-                  id="meta_description"
-                  value={formData.meta_description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, meta_description: e.target.value })
-                  }
-                  placeholder="Brief description for search engines"
-                />
-              </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="is_published"
+                    checked={formData.is_published}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, is_published: checked })
+                    }
+                  />
+                  <Label htmlFor="is_published">Published</Label>
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password Protection (Optional)</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                  placeholder="Leave empty for public access"
-                />
-                <p className="text-xs text-muted-foreground">
-                  If set, users must enter this password to view the page
-                </p>
-              </div>
+                <Tabs value={editorMode} onValueChange={(v) => setEditorMode(v as 'code' | 'builder')}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="builder" className="flex items-center gap-2">
+                      <Blocks className="h-4 w-4" />
+                      Visual Builder
+                    </TabsTrigger>
+                    <TabsTrigger value="code" className="flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Code Editor
+                    </TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="builder" className="mt-4">
+                    <div className="border rounded-lg overflow-hidden" style={{ height: 'calc(95vh - 400px)' }}>
+                      <PageBuilder
+                        pageId={editingPage?.id}
+                        initialContent={builderSections}
+                        onSave={handleBuilderSave}
+                        onBack={() => setIsDialogOpen(false)}
+                      />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="code" className="mt-4">
+                    <div className="space-y-2">
+                      <Label>Page Content (HTML)</Label>
+                      <BlogPostEditor
+                        content={formData.content}
+                        onChange={(content) =>
+                          setFormData({ ...formData, content })
+                        }
+                      />
+                    </div>
+                  </TabsContent>
+                </Tabs>
 
-              <div className="flex items-center space-x-2">
-                <Switch
-                  id="is_published"
-                  checked={formData.is_published}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, is_published: checked })
-                  }
-                />
-                <Label htmlFor="is_published">Published</Label>
+                {editorMode === 'code' && (
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsDialogOpen(false);
+                        resetForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSubmit}>
+                      {editingPage ? 'Update Page' : 'Create Page'}
+                    </Button>
+                  </div>
+                )}
               </div>
-
-              <div className="space-y-2">
-                <Label>Page Content</Label>
-                <BlogPostEditor
-                  content={formData.content}
-                  onChange={(content) =>
-                    setFormData({ ...formData, content })
-                  }
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setIsDialogOpen(false);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  {editingPage ? 'Update Page' : 'Create Page'}
-                </Button>
-              </div>
-            </form>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -377,6 +462,12 @@ export function DynamicPageEditor() {
               <CardTitle className="flex items-center justify-between">
                 <span className="truncate">{page.title}</span>
                 <div className="flex items-center space-x-1">
+                  {page.use_builder && (
+                    <Badge variant="outline" className="text-xs">
+                      <Blocks className="h-3 w-3 mr-1" />
+                      Builder
+                    </Badge>
+                  )}
                   {page.password && (
                     <Lock className="h-4 w-4 text-muted-foreground" />
                   )}
