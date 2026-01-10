@@ -37,6 +37,9 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ImageUploader, GalleryUploader } from './ImageUploader';
 import { IconPicker, IconByName } from './IconPicker';
+import { SliderEditor } from './SliderEditor';
+import { AccordionEditor } from './AccordionEditor';
+import { FormEditor } from './FormEditor';
 
 interface StyleEditorProps {
   selectedItem: PageComponent | PageSection | null;
@@ -349,6 +352,27 @@ export function StyleEditor({
                 />
               </div>
             </>
+          )}
+
+          {componentType === 'slider' && (
+            <SliderEditor
+              content={content}
+              onChange={(newContent) => onContentChange?.(newContent)}
+            />
+          )}
+
+          {componentType === 'accordion' && (
+            <AccordionEditor
+              content={content}
+              onChange={(newContent) => onContentChange?.(newContent)}
+            />
+          )}
+
+          {componentType === 'form' && (
+            <FormEditor
+              content={content}
+              onChange={(newContent) => onContentChange?.(newContent)}
+            />
           )}
 
           {componentType === 'spacer' && (
