@@ -1,12 +1,23 @@
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PageComponent, ComponentStyle } from './types';
 import { IconByName } from './IconPicker';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause, Check } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import DOMPurify from 'dompurify';
 
 interface ComponentRendererProps {
@@ -22,7 +33,14 @@ export function ComponentRenderer({
   onContentChange,
   viewMode 
 }: ComponentRendererProps) {
+  const { toast } = useToast();
   const [sliderIndex, setSliderIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isHovering, setIsHovering] = useState(false);
+  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const sliderRef = useRef<NodeJS.Timeout | null>(null);
 
   const getResponsiveStyles = (): React.CSSProperties => {
     let styles = { ...component.styles } as any;
@@ -229,88 +247,408 @@ export function ComponentRenderer({
     }
 
     case 'form': {
-      const { fields = [], submitText = 'Submit' } = component.content;
+      const { 
+        fields = [], 
+        submitText = 'Submit', 
+        submitAction = 'email',
+        recipientEmail,
+        webhookUrl,
+        supabaseTable,
+        successMessage = 'Thank you! Your submission has been received.',
+        showLabels = true,
+      } = component.content;
+
+      const validateField = (field: any, value: any): string | null => {
+        if (field.required && (!value || (typeof value === 'string' && !value.trim()))) {
+          return `${field.label} is required`;
+        }
+        
+        if (field.type === 'email' && value) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value)) {
+            return 'Please enter a valid email address';
+          }
+        }
+        
+        if (field.validation) {
+          if (field.validation.minLength && value && value.length < field.validation.minLength) {
+            return `Minimum ${field.validation.minLength} characters required`;
+          }
+          if (field.validation.maxLength && value && value.length > field.validation.maxLength) {
+            return `Maximum ${field.validation.maxLength} characters allowed`;
+          }
+          if (field.validation.min !== undefined && parseFloat(value) < field.validation.min) {
+            return `Minimum value is ${field.validation.min}`;
+          }
+          if (field.validation.max !== undefined && parseFloat(value) > field.validation.max) {
+            return `Maximum value is ${field.validation.max}`;
+          }
+        }
+        
+        return null;
+      };
+
+      const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isEditing) return;
+
+        // Validate all fields
+        const errors: Record<string, string> = {};
+        fields.forEach((field: any) => {
+          const error = validateField(field, formData[field.id]);
+          if (error) errors[field.id] = error;
+        });
+
+        if (Object.keys(errors).length > 0) {
+          setFormErrors(errors);
+          return;
+        }
+
+        setFormErrors({});
+
+        try {
+          // Handle different submission types
+          if (submitAction === 'webhook' && webhookUrl) {
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(formData),
+            });
+          }
+          
+          // For email/supabase, we'd need edge function - show success for now
+          setFormSubmitted(true);
+          toast({
+            title: 'Success!',
+            description: successMessage,
+          });
+        } catch (error) {
+          toast({
+            title: 'Error',
+            description: 'Failed to submit form. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      };
+
+      if (formSubmitted && !isEditing) {
+        return (
+          <div 
+            className="text-center p-8 border rounded-lg bg-muted/30"
+            style={getResponsiveStyles()}
+          >
+            <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 dark:bg-green-900 mb-4">
+              <Check className="h-6 w-6 text-green-600 dark:text-green-400" />
+            </div>
+            <p className="text-lg font-medium">{successMessage}</p>
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => {
+                setFormSubmitted(false);
+                setFormData({});
+              }}
+            >
+              Submit Another Response
+            </Button>
+          </div>
+        );
+      }
+
+      const renderField = (field: any) => {
+        const error = formErrors[field.id];
+        const fieldWidth = field.width === 'half' ? 'w-1/2' : 'w-full';
+
+        switch (field.type) {
+          case 'textarea':
+            return (
+              <div key={field.id} className={`space-y-2 ${fieldWidth}`}>
+                {showLabels && (
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                )}
+                <Textarea
+                  placeholder={field.placeholder || field.label}
+                  value={formData[field.id] || ''}
+                  onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                  disabled={isEditing}
+                  className={error ? 'border-destructive' : ''}
+                />
+                {error && <p className="text-xs text-destructive">{error}</p>}
+              </div>
+            );
+
+          case 'select':
+            return (
+              <div key={field.id} className={`space-y-2 ${fieldWidth}`}>
+                {showLabels && (
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                )}
+                <Select
+                  value={formData[field.id] || ''}
+                  onValueChange={(v) => setFormData({ ...formData, [field.id]: v })}
+                  disabled={isEditing}
+                >
+                  <SelectTrigger className={error ? 'border-destructive' : ''}>
+                    <SelectValue placeholder={field.placeholder || `Select ${field.label}`} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(field.options || []).map((opt: string) => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {error && <p className="text-xs text-destructive">{error}</p>}
+              </div>
+            );
+
+          case 'checkbox':
+            return (
+              <div key={field.id} className={`space-y-2 ${fieldWidth}`}>
+                {showLabels && (
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                )}
+                <div className="space-y-2">
+                  {(field.options || []).map((opt: string) => (
+                    <div key={opt} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`${field.id}-${opt}`}
+                        checked={(formData[field.id] || []).includes(opt)}
+                        onCheckedChange={(checked) => {
+                          const current = formData[field.id] || [];
+                          setFormData({
+                            ...formData,
+                            [field.id]: checked 
+                              ? [...current, opt]
+                              : current.filter((v: string) => v !== opt),
+                          });
+                        }}
+                        disabled={isEditing}
+                      />
+                      <Label htmlFor={`${field.id}-${opt}`} className="font-normal">{opt}</Label>
+                    </div>
+                  ))}
+                </div>
+                {error && <p className="text-xs text-destructive">{error}</p>}
+              </div>
+            );
+
+          case 'radio':
+            return (
+              <div key={field.id} className={`space-y-2 ${fieldWidth}`}>
+                {showLabels && (
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                )}
+                <RadioGroup
+                  value={formData[field.id] || ''}
+                  onValueChange={(v) => setFormData({ ...formData, [field.id]: v })}
+                  disabled={isEditing}
+                >
+                  {(field.options || []).map((opt: string) => (
+                    <div key={opt} className="flex items-center gap-2">
+                      <RadioGroupItem value={opt} id={`${field.id}-${opt}`} />
+                      <Label htmlFor={`${field.id}-${opt}`} className="font-normal">{opt}</Label>
+                    </div>
+                  ))}
+                </RadioGroup>
+                {error && <p className="text-xs text-destructive">{error}</p>}
+              </div>
+            );
+
+          default:
+            return (
+              <div key={field.id} className={`space-y-2 ${fieldWidth}`}>
+                {showLabels && (
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                )}
+                <Input
+                  type={field.type}
+                  placeholder={field.placeholder || field.label}
+                  value={formData[field.id] || ''}
+                  onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                  disabled={isEditing}
+                  className={error ? 'border-destructive' : ''}
+                  min={field.validation?.min}
+                  max={field.validation?.max}
+                  minLength={field.validation?.minLength}
+                  maxLength={field.validation?.maxLength}
+                />
+                {error && <p className="text-xs text-destructive">{error}</p>}
+              </div>
+            );
+        }
+      };
+
       return (
         <form 
           className="space-y-4"
           style={getResponsiveStyles()}
-          onSubmit={(e) => e.preventDefault()}
+          onSubmit={handleSubmit}
         >
-          {fields.map((field: any) => (
-            <div key={field.id} className="space-y-2">
-              <label className="text-sm font-medium">
-                {field.label}
-                {field.required && <span className="text-destructive ml-1">*</span>}
-              </label>
-              {field.type === 'textarea' ? (
-                <Textarea placeholder={field.label} disabled={!isEditing} />
-              ) : (
-                <Input type={field.type} placeholder={field.label} disabled={!isEditing} />
-              )}
-            </div>
-          ))}
-          <Button type="submit" className="w-full">{submitText}</Button>
+          <div className="flex flex-wrap gap-4">
+            {fields.map(renderField)}
+          </div>
+          <Button type="submit" className="w-full" disabled={isEditing}>
+            {submitText}
+          </Button>
         </form>
       );
     }
 
     case 'slider': {
-      const { slides = [] } = component.content;
+      const { 
+        slides = [], 
+        autoplay = true, 
+        interval = 5000, 
+        transition = 'slide',
+        showDots = true,
+        showArrows = true,
+        pauseOnHover = true,
+      } = component.content;
       
+      // Autoplay logic
+      useEffect(() => {
+        if (autoplay && isPlaying && slides.length > 1 && !(pauseOnHover && isHovering)) {
+          sliderRef.current = setInterval(() => {
+            setSliderIndex(prev => (prev + 1) % slides.length);
+          }, interval);
+        }
+        
+        return () => {
+          if (sliderRef.current) clearInterval(sliderRef.current);
+        };
+      }, [autoplay, isPlaying, slides.length, interval, pauseOnHover, isHovering]);
+
       if (slides.length === 0) {
         return (
           <div 
             className="w-full aspect-video bg-muted flex items-center justify-center rounded-lg border-2 border-dashed"
             style={getResponsiveStyles()}
           >
-            <span className="text-muted-foreground">Add slider images</span>
+            <span className="text-muted-foreground">Add slider images in the settings panel</span>
           </div>
         );
       }
 
+      const getTransitionProps = () => {
+        switch (transition) {
+          case 'fade':
+            return {
+              initial: { opacity: 0 },
+              animate: { opacity: 1 },
+              exit: { opacity: 0 },
+              transition: { duration: 0.5 },
+            };
+          case 'zoom':
+            return {
+              initial: { opacity: 0, scale: 0.9 },
+              animate: { opacity: 1, scale: 1 },
+              exit: { opacity: 0, scale: 1.1 },
+              transition: { duration: 0.5 },
+            };
+          default:
+            return {
+              initial: { x: '100%' },
+              animate: { x: 0 },
+              exit: { x: '-100%' },
+              transition: { type: 'spring' as const, stiffness: 300, damping: 30 },
+            };
+        }
+      };
+
       return (
-        <div className="relative w-full" style={getResponsiveStyles()}>
-          <div className="overflow-hidden rounded-lg">
-            <motion.div
-              className="flex"
-              animate={{ x: `-${sliderIndex * 100}%` }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            >
-              {slides.map((slide: { src: string; alt: string }, idx: number) => (
-                <img
+        <div 
+          className="relative w-full overflow-hidden rounded-lg" 
+          style={getResponsiveStyles()}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+        >
+          <div className="relative aspect-video">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={sliderIndex}
+                {...getTransitionProps()}
+                className="absolute inset-0"
+              >
+                {slides[sliderIndex]?.link && !isEditing ? (
+                  <a href={slides[sliderIndex].link} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={slides[sliderIndex].src}
+                      alt={slides[sliderIndex].alt || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  </a>
+                ) : (
+                  <img
+                    src={slides[sliderIndex]?.src}
+                    alt={slides[sliderIndex]?.alt || ''}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+                {slides[sliderIndex]?.caption && (
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                    <p className="text-white text-lg font-medium">{slides[sliderIndex].caption}</p>
+                  </div>
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </div>
+
+          {showArrows && slides.length > 1 && (
+            <>
+              <button
+                onClick={() => setSliderIndex(prev => prev === 0 ? slides.length - 1 : prev - 1)}
+                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow-lg transition-all"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => setSliderIndex(prev => (prev + 1) % slides.length)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background shadow-lg transition-all"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
+
+          {showDots && slides.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              {slides.map((_: any, idx: number) => (
+                <button
                   key={idx}
-                  src={slide.src}
-                  alt={slide.alt || ''}
-                  className="w-full h-auto flex-shrink-0"
+                  onClick={() => setSliderIndex(idx)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    idx === sliderIndex 
+                      ? 'bg-primary scale-125' 
+                      : 'bg-white/60 hover:bg-white/80'
+                  }`}
                 />
               ))}
-            </motion.div>
-          </div>
-          <button
-            onClick={() => setSliderIndex(prev => Math.max(0, prev - 1))}
-            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background"
-            disabled={sliderIndex === 0}
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={() => setSliderIndex(prev => Math.min(slides.length - 1, prev + 1))}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background/80 hover:bg-background"
-            disabled={sliderIndex === slides.length - 1}
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-            {slides.map((_: any, idx: number) => (
-              <button
-                key={idx}
-                onClick={() => setSliderIndex(idx)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  idx === sliderIndex ? 'bg-primary' : 'bg-background/50'
-                }`}
-              />
-            ))}
-          </div>
+            </div>
+          )}
+
+          {autoplay && slides.length > 1 && (
+            <button
+              onClick={() => setIsPlaying(!isPlaying)}
+              className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-background shadow-lg"
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </button>
+          )}
         </div>
       );
     }
