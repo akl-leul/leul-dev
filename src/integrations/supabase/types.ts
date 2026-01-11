@@ -301,6 +301,42 @@ export type Database = {
           },
         ]
       }
+      component_templates: {
+        Row: {
+          component_type: string
+          content: Json
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          is_public: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          component_type: string
+          content?: Json
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          component_type?: string
+          content?: Json
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_content: {
         Row: {
           created_at: string
@@ -528,6 +564,47 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      form_submissions: {
+        Row: {
+          created_at: string
+          data: Json
+          form_id: string
+          form_name: string | null
+          id: string
+          page_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          form_id: string
+          form_name?: string | null
+          id?: string
+          page_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          form_id?: string
+          form_name?: string | null
+          id?: string
+          page_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_submissions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "dynamic_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       help_articles: {
         Row: {

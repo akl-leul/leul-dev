@@ -20,6 +20,7 @@ import {
   ChevronRight,
   Settings2,
 } from 'lucide-react';
+import { ComponentTemplateManager } from './ComponentTemplateManager';
 
 interface FormField {
   id: string;
@@ -36,6 +37,7 @@ interface FormField {
     max?: number;
   };
   width?: 'full' | 'half';
+  step?: number; // For progressive forms
 }
 
 interface FormContent {
@@ -47,6 +49,11 @@ interface FormContent {
   supabaseTable?: string;
   successMessage?: string;
   showLabels?: boolean;
+  formId?: string;
+  formName?: string;
+  // Progressive form settings
+  isProgressive?: boolean;
+  stepsConfig?: { name: string; description?: string }[];
 }
 
 interface FormEditorProps {
@@ -75,9 +82,18 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
 
   const fields = content.fields || [];
   const submitText = content.submitText || 'Submit';
-  const submitAction = content.submitAction || 'email';
+  const submitAction = content.submitAction || 'supabase';
   const showLabels = content.showLabels ?? true;
   const successMessage = content.successMessage || 'Thank you! Your submission has been received.';
+  const isProgressive = content.isProgressive ?? false;
+  const stepsConfig = content.stepsConfig || [{ name: 'Step 1' }];
+  const formId = content.formId || `form-${Date.now()}`;
+  const formName = content.formName || 'Contact Form';
+
+  // Initialize formId if not set
+  if (!content.formId) {
+    onChange({ ...content, formId, formName });
+  }
 
   const addField = (type: FormField['type'] = 'text') => {
     const newField: FormField = {
@@ -168,8 +184,32 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
     setDragOverField(null);
   };
 
+  }
+
+  const getStepCount = () => {
+    const steps = new Set(fields.map(f => f.step || 1));
+    return Math.max(...Array.from(steps), 1);
+  };
+
+  const updateStepsConfig = (stepCount: number) => {
+    const newSteps = Array.from({ length: stepCount }, (_, i) => 
+      stepsConfig[i] || { name: `Step ${i + 1}` }
+    );
+    onChange({ ...content, stepsConfig: newSteps });
+  };
+
   return (
     <div className="space-y-4">
+      {/* Template Manager */}
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-medium">Form Templates</Label>
+        <ComponentTemplateManager
+          componentType="form"
+          currentContent={content}
+          onLoadTemplate={(templateContent) => onChange({ ...content, ...templateContent })}
+        />
+      </div>
+
       {/* Form Settings Toggle */}
       <Button
         variant="outline"
@@ -187,6 +227,27 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
       {/* Form Settings */}
       {showSettings && (
         <div className="space-y-3 p-3 bg-muted/50 rounded-lg">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-2">
+              <Label className="text-xs">Form Name</Label>
+              <Input
+                value={formName}
+                onChange={(e) => onChange({ ...content, formName: e.target.value })}
+                placeholder="Contact Form"
+                className="h-8"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs">Form ID</Label>
+              <Input
+                value={formId}
+                onChange={(e) => onChange({ ...content, formId: e.target.value })}
+                placeholder="contact-form"
+                className="h-8"
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs">Submit Button Text</Label>
             <Input
@@ -206,9 +267,9 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="supabase">Save to Database</SelectItem>
                 <SelectItem value="email">Send Email</SelectItem>
                 <SelectItem value="webhook">Webhook URL</SelectItem>
-                <SelectItem value="supabase">Save to Database</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -239,18 +300,6 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
             </div>
           )}
 
-          {submitAction === 'supabase' && (
-            <div className="space-y-2">
-              <Label className="text-xs">Table Name</Label>
-              <Input
-                value={content.supabaseTable || ''}
-                onChange={(e) => onChange({ ...content, supabaseTable: e.target.value })}
-                placeholder="form_submissions"
-                className="h-8"
-              />
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label className="text-xs">Success Message</Label>
             <Textarea
@@ -267,6 +316,55 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
               checked={showLabels}
               onCheckedChange={(checked) => onChange({ ...content, showLabels: checked })}
             />
+          </div>
+
+          {/* Progressive Form Settings */}
+          <div className="border-t pt-3 mt-3">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <Label className="text-xs">Progressive Form (Multi-Step)</Label>
+                <p className="text-xs text-muted-foreground">Split form into steps</p>
+              </div>
+              <Switch
+                checked={isProgressive}
+                onCheckedChange={(checked) => onChange({ ...content, isProgressive: checked })}
+              />
+            </div>
+
+            {isProgressive && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs">Number of Steps</Label>
+                  <Select
+                    value={String(stepsConfig.length)}
+                    onValueChange={(v) => updateStepsConfig(parseInt(v))}
+                  >
+                    <SelectTrigger className="w-20 h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[2, 3, 4, 5].map(n => (
+                        <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {stepsConfig.map((step, idx) => (
+                  <div key={idx} className="flex gap-2">
+                    <Input
+                      value={step.name}
+                      onChange={(e) => {
+                        const newSteps = [...stepsConfig];
+                        newSteps[idx] = { ...newSteps[idx], name: e.target.value };
+                        onChange({ ...content, stepsConfig: newSteps });
+                      }}
+                      placeholder={`Step ${idx + 1} name`}
+                      className="h-8 flex-1"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -449,6 +547,28 @@ export function FormEditor({ content, onChange }: FormEditorProps) {
                       onCheckedChange={(checked) => updateField(field.id, { required: checked })}
                     />
                   </div>
+
+                  {/* Step assignment for progressive forms */}
+                  {isProgressive && (
+                    <div className="space-y-2">
+                      <Label className="text-xs">Assign to Step</Label>
+                      <Select
+                        value={String(field.step || 1)}
+                        onValueChange={(v) => updateField(field.id, { step: parseInt(v) })}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {stepsConfig.map((step, idx) => (
+                            <SelectItem key={idx} value={String(idx + 1)}>
+                              {step.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                   {/* Options for select, radio, checkbox */}
                   {['select', 'radio', 'checkbox'].includes(field.type) && (
