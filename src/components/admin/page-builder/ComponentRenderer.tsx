@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -27,11 +27,11 @@ interface ComponentRendererProps {
   viewMode: 'desktop' | 'tablet' | 'mobile';
 }
 
-export function ComponentRenderer({ 
-  component, 
-  isEditing, 
+export function ComponentRenderer({
+  component,
+  isEditing,
   onContentChange,
-  viewMode 
+  viewMode
 }: ComponentRendererProps) {
   const { toast } = useToast();
   const [sliderIndex, setSliderIndex] = useState(0);
@@ -44,7 +44,7 @@ export function ComponentRenderer({
 
   const getResponsiveStyles = (): React.CSSProperties => {
     let styles = { ...component.styles } as any;
-    
+
     if (component.responsiveStyles) {
       if (viewMode === 'tablet' && component.responsiveStyles.tablet) {
         styles = { ...styles, ...component.responsiveStyles.tablet };
@@ -55,7 +55,7 @@ export function ComponentRenderer({
 
     // Convert custom props to CSS
     const cssStyles: React.CSSProperties = {};
-    
+
     if (styles.backgroundColor) cssStyles.backgroundColor = styles.backgroundColor;
     if (styles.backgroundImage) cssStyles.backgroundImage = `url(${styles.backgroundImage})`;
     if (styles.backgroundGradient) cssStyles.background = styles.backgroundGradient;
@@ -88,7 +88,7 @@ export function ComponentRenderer({
     case 'heading': {
       const Tag = component.content.level || 'h2';
       const baseStyles = getResponsiveStyles();
-      
+
       if (isEditing) {
         return (
           <input
@@ -100,7 +100,7 @@ export function ComponentRenderer({
           />
         );
       }
-      
+
       return (
         <Tag style={baseStyles}>{component.content.text}</Tag>
       );
@@ -117,7 +117,7 @@ export function ComponentRenderer({
           />
         );
       }
-      
+
       return (
         <p style={getResponsiveStyles()}>{component.content.text}</p>
       );
@@ -146,9 +146,9 @@ export function ComponentRenderer({
     case 'gallery': {
       const { images = [], columns = 3, gap = '16px' } = component.content;
       return (
-        <div 
+        <div
           className="grid"
-          style={{ 
+          style={{
             ...getResponsiveStyles(),
             gridTemplateColumns: `repeat(${columns}, 1fr)`,
             gap,
@@ -165,7 +165,7 @@ export function ComponentRenderer({
             ))
           ) : (
             Array.from({ length: columns }).map((_, idx) => (
-              <div 
+              <div
                 key={idx}
                 className="aspect-square bg-muted flex items-center justify-center rounded-lg border-2 border-dashed"
               >
@@ -204,10 +204,10 @@ export function ComponentRenderer({
 
     case 'video': {
       const { url, type } = component.content;
-      
+
       if (!url) {
         return (
-          <div 
+          <div
             className="w-full aspect-video bg-muted flex items-center justify-center rounded-lg border-2 border-dashed"
             style={getResponsiveStyles()}
           >
@@ -237,9 +237,9 @@ export function ComponentRenderer({
       }
 
       return (
-        <video 
-          src={url} 
-          controls 
+        <video
+          src={url}
+          controls
           className="w-full rounded-lg"
           style={getResponsiveStyles()}
         />
@@ -247,9 +247,9 @@ export function ComponentRenderer({
     }
 
     case 'form': {
-      const { 
-        fields = [], 
-        submitText = 'Submit', 
+      const {
+        fields = [],
+        submitText = 'Submit',
         submitAction = 'supabase',
         recipientEmail,
         webhookUrl,
@@ -268,14 +268,14 @@ export function ComponentRenderer({
         if (field.required && (!value || (typeof value === 'string' && !value.trim()))) {
           return `${field.label} is required`;
         }
-        
+
         if (field.type === 'email' && value) {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(value)) {
             return 'Please enter a valid email address';
           }
         }
-        
+
         if (field.validation) {
           if (field.validation.minLength && value && value.length < field.validation.minLength) {
             return `Minimum ${field.validation.minLength} characters required`;
@@ -290,7 +290,7 @@ export function ComponentRenderer({
             return `Maximum value is ${field.validation.max}`;
           }
         }
-        
+
         return null;
       };
 
@@ -349,13 +349,23 @@ export function ComponentRenderer({
         setFormErrors({});
 
         try {
+          // Prepare data for submission - use labels instead of IDs for better readability
+          const submissionData: Record<string, any> = {};
+          fields.forEach((field: any) => {
+            const value = formData[field.id];
+            if (value !== undefined) {
+              const label = field.label || field.id;
+              submissionData[label] = value;
+            }
+          });
+
           // Save to Supabase form_submissions table
           if (submitAction === 'supabase') {
             const { supabase } = await import('@/integrations/supabase/client');
             const { error } = await supabase.from('form_submissions').insert({
               form_id: formId,
               form_name: formName,
-              data: formData,
+              data: submissionData,
               status: 'new',
             });
             if (error) throw error;
@@ -363,10 +373,10 @@ export function ComponentRenderer({
             await fetch(webhookUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ formId, formName, data: formData }),
+              body: JSON.stringify({ formId, formName, data: submissionData }),
             });
           }
-          
+
           setFormSubmitted(true);
           toast({
             title: 'Success!',
@@ -383,7 +393,7 @@ export function ComponentRenderer({
 
       if (formSubmitted && !isEditing) {
         return (
-          <div 
+          <div
             className="text-center p-8 border rounded-lg bg-muted/30"
             style={getResponsiveStyles()}
           >
@@ -476,7 +486,7 @@ export function ComponentRenderer({
                           const current = formData[field.id] || [];
                           setFormData({
                             ...formData,
-                            [field.id]: checked 
+                            [field.id]: checked
                               ? [...current, opt]
                               : current.filter((v: string) => v !== opt),
                           });
@@ -546,7 +556,7 @@ export function ComponentRenderer({
       const currentFields = getCurrentStepFields();
 
       return (
-        <form 
+        <form
           className="space-y-4"
           style={getResponsiveStyles()}
           onSubmit={handleSubmit}
@@ -558,10 +568,9 @@ export function ComponentRenderer({
                 {stepsConfig.map((step: { name: string }, idx: number) => (
                   <div
                     key={idx}
-                    className={`flex-1 text-center text-xs font-medium ${
-                      idx + 1 === currentStep ? 'text-primary' : 
-                      idx + 1 < currentStep ? 'text-green-600' : 'text-muted-foreground'
-                    }`}
+                    className={`flex-1 text-center text-xs font-medium ${idx + 1 === currentStep ? 'text-primary' :
+                        idx + 1 < currentStep ? 'text-green-600' : 'text-muted-foreground'
+                      }`}
                   >
                     {step.name}
                   </div>
@@ -571,9 +580,8 @@ export function ComponentRenderer({
                 {stepsConfig.map((_: any, idx: number) => (
                   <div
                     key={idx}
-                    className={`flex-1 h-2 rounded-full ${
-                      idx + 1 <= currentStep ? 'bg-primary' : 'bg-muted'
-                    }`}
+                    className={`flex-1 h-2 rounded-full ${idx + 1 <= currentStep ? 'bg-primary' : 'bg-muted'
+                      }`}
                   />
                 ))}
               </div>
@@ -583,7 +591,7 @@ export function ComponentRenderer({
           <div className="flex flex-wrap gap-4">
             {currentFields.map(renderField)}
           </div>
-          
+
           <div className="flex gap-2">
             {isProgressive && currentStep > 1 && (
               <Button type="button" variant="outline" onClick={handlePrev} disabled={isEditing}>
@@ -605,16 +613,16 @@ export function ComponentRenderer({
     }
 
     case 'slider': {
-      const { 
-        slides = [], 
-        autoplay = true, 
-        interval = 5000, 
+      const {
+        slides = [],
+        autoplay = true,
+        interval = 5000,
         transition = 'slide',
         showDots = true,
         showArrows = true,
         pauseOnHover = true,
       } = component.content;
-      
+
       // Autoplay logic
       useEffect(() => {
         if (autoplay && isPlaying && slides.length > 1 && !(pauseOnHover && isHovering)) {
@@ -622,7 +630,7 @@ export function ComponentRenderer({
             setSliderIndex(prev => (prev + 1) % slides.length);
           }, interval);
         }
-        
+
         return () => {
           if (sliderRef.current) clearInterval(sliderRef.current);
         };
@@ -630,7 +638,7 @@ export function ComponentRenderer({
 
       if (slides.length === 0) {
         return (
-          <div 
+          <div
             className="w-full aspect-video bg-muted flex items-center justify-center rounded-lg border-2 border-dashed"
             style={getResponsiveStyles()}
           >
@@ -666,8 +674,8 @@ export function ComponentRenderer({
       };
 
       return (
-        <div 
-          className="relative w-full overflow-hidden rounded-lg" 
+        <div
+          className="relative w-full overflow-hidden rounded-lg"
           style={getResponsiveStyles()}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
@@ -726,11 +734,10 @@ export function ComponentRenderer({
                 <button
                   key={idx}
                   onClick={() => setSliderIndex(idx)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
-                    idx === sliderIndex 
-                      ? 'bg-primary scale-125' 
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${idx === sliderIndex
+                      ? 'bg-primary scale-125'
                       : 'bg-white/60 hover:bg-white/80'
-                  }`}
+                    }`}
                 />
               ))}
             </div>
@@ -751,8 +758,8 @@ export function ComponentRenderer({
     case 'accordion': {
       const { items = [], allowMultiple } = component.content;
       return (
-        <Accordion 
-          type={allowMultiple ? 'multiple' : 'single'} 
+        <Accordion
+          type={allowMultiple ? 'multiple' : 'single'}
           collapsible
           style={getResponsiveStyles()}
         >
@@ -778,9 +785,9 @@ export function ComponentRenderer({
           />
         );
       }
-      
+
       return (
-        <div 
+        <div
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(code) }}
           style={getResponsiveStyles()}
         />
@@ -790,13 +797,13 @@ export function ComponentRenderer({
     case 'divider': {
       const { style = 'solid', color = 'hsl(220 13% 91%)' } = component.content;
       return (
-        <hr 
-          style={{ 
+        <hr
+          style={{
             ...getResponsiveStyles(),
             borderStyle: style,
             borderColor: color,
             borderWidth: '0 0 1px 0',
-          }} 
+          }}
         />
       );
     }
@@ -810,9 +817,9 @@ export function ComponentRenderer({
       const { name, size = 24, color = 'currentColor' } = component.content;
       return (
         <div style={getResponsiveStyles()} className="flex items-center justify-center">
-          <IconByName 
-            name={name || 'Star'} 
-            size={size} 
+          <IconByName
+            name={name || 'Star'}
+            size={size}
             color={color}
           />
         </div>
@@ -822,9 +829,9 @@ export function ComponentRenderer({
     case 'columns': {
       const { columns = 2, gap = '24px' } = component.content;
       return (
-        <div 
+        <div
           className="grid"
-          style={{ 
+          style={{
             ...getResponsiveStyles(),
             gridTemplateColumns: `repeat(${columns}, 1fr)`,
             gap,
@@ -845,7 +852,7 @@ export function ComponentRenderer({
           ))}
           {(!component.children || component.children.length < columns) && (
             Array.from({ length: columns - (component.children?.length || 0) }).map((_, idx) => (
-              <div 
+              <div
                 key={`empty-${idx}`}
                 className="min-h-[100px] border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground"
               >

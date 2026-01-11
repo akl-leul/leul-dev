@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -18,7 +18,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { 
+import {
   ChevronDown,
   AlignLeft,
   AlignCenter,
@@ -76,6 +76,34 @@ const HEADING_LEVELS = [
   { value: 'h6', label: 'H6 - Tiny Heading' },
 ];
 
+const CollapsibleSection = ({
+  title,
+  icon: Icon,
+  children,
+  defaultOpen = false
+}: {
+  title: string;
+  icon: React.ComponentType<any>;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) => {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <Collapsible open={open} onOpenChange={setOpen} className="border-b">
+      <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
+        <div className="flex items-center gap-2">
+          <Icon className="h-4 w-4" />
+          <span className="font-medium text-sm">{title}</span>
+        </div>
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="px-4 pb-4 space-y-4">
+        {children}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
 export function StyleEditor({
   selectedItem,
   selectedType,
@@ -99,35 +127,6 @@ export function StyleEditor({
   const styles = selectedItem.styles || {};
   const content = 'content' in selectedItem ? selectedItem.content : null;
   const componentType = 'type' in selectedItem ? selectedItem.type : null;
-
-  const CollapsibleSection = ({ 
-    title, 
-    icon: Icon, 
-    children,
-    defaultOpen = false 
-  }: { 
-    title: string; 
-    icon: React.ComponentType<any>;
-    children: React.ReactNode;
-    defaultOpen?: boolean;
-  }) => {
-    const [open, setOpen] = useState(defaultOpen);
-    return (
-      <Collapsible open={open} onOpenChange={setOpen} className="border-b">
-        <CollapsibleTrigger className="flex items-center justify-between w-full p-4 hover:bg-muted/50 transition-colors">
-          <div className="flex items-center gap-2">
-            <Icon className="h-4 w-4" />
-            <span className="font-medium text-sm">{title}</span>
-          </div>
-          <ChevronDown className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-        </CollapsibleTrigger>
-        <CollapsibleContent className="px-4 pb-4 space-y-4">
-          {children}
-        </CollapsibleContent>
-      </Collapsible>
-    );
-  };
-
   return (
     <ScrollArea className="h-full">
       <div className="p-4 border-b">
@@ -186,267 +185,293 @@ export function StyleEditor({
                 />
               </div>
             </>
-          )}
+          )
+          }
 
-          {componentType === 'text' && (
-            <div className="space-y-2">
-              <Label className="text-xs">Text Content</Label>
-              <textarea
-                value={content.text || ''}
-                onChange={(e) => onContentChange?.({ ...content, text: e.target.value })}
-                className="w-full min-h-[100px] p-2 text-sm border rounded-md"
-              />
-            </div>
-          )}
-
-          {componentType === 'button' && (
-            <>
+          {
+            componentType === 'text' && (
               <div className="space-y-2">
-                <Label className="text-xs">Button Text</Label>
-                <Input
+                <Label className="text-xs">Text Content</Label>
+                <textarea
                   value={content.text || ''}
                   onChange={(e) => onContentChange?.({ ...content, text: e.target.value })}
-                  className="h-8"
+                  className="w-full min-h-[100px] p-2 text-sm border rounded-md"
                 />
               </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Link URL</Label>
-                <Input
-                  value={content.link || ''}
-                  onChange={(e) => onContentChange?.({ ...content, link: e.target.value })}
-                  className="h-8"
-                  placeholder="https://..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Variant</Label>
-                <Select
-                  value={content.variant || 'primary'}
-                  onValueChange={(v) => onContentChange?.({ ...content, variant: v })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="primary">Primary</SelectItem>
-                    <SelectItem value="secondary">Secondary</SelectItem>
-                    <SelectItem value="outline">Outline</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </>
-          )}
+            )
+          }
 
-          {componentType === 'image' && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-xs">Image</Label>
-                <ImageUploader
-                  value={content.src}
-                  onChange={(url) => onContentChange?.({ ...content, src: url })}
-                  onRemove={() => onContentChange?.({ ...content, src: '' })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Alt Text (SEO)</Label>
-                <Input
-                  value={content.alt || ''}
-                  onChange={(e) => onContentChange?.({ ...content, alt: e.target.value })}
-                  className="h-8"
-                  placeholder="Describe the image..."
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Link URL (optional)</Label>
-                <Input
-                  value={content.link || ''}
-                  onChange={(e) => onContentChange?.({ ...content, link: e.target.value })}
-                  className="h-8"
-                  placeholder="https://..."
-                />
-              </div>
-            </>
-          )}
-
-          {componentType === 'gallery' && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-xs">Gallery Images</Label>
-                <GalleryUploader
-                  images={content.images || []}
-                  onChange={(images) => onContentChange?.({ ...content, images })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Columns</Label>
-                <Select
-                  value={String(content.columns || 3)}
-                  onValueChange={(v) => onContentChange?.({ ...content, columns: parseInt(v) })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2 Columns</SelectItem>
-                    <SelectItem value="3">3 Columns</SelectItem>
-                    <SelectItem value="4">4 Columns</SelectItem>
-                    <SelectItem value="5">5 Columns</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Gap</Label>
-                <Input
-                  value={content.gap || '16px'}
-                  onChange={(e) => onContentChange?.({ ...content, gap: e.target.value })}
-                  className="h-8"
-                  placeholder="e.g., 16px, 1rem"
-                />
-              </div>
-            </>
-          )}
-
-          {componentType === 'icon' && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-xs">Icon</Label>
-                <IconPicker
-                  value={content.name}
-                  onChange={(name) => onContentChange?.({ ...content, name })}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
+          {
+            componentType === 'button' && (
+              <>
                 <div className="space-y-2">
-                  <Label className="text-xs">Size</Label>
+                  <Label className="text-xs">Button Text</Label>
                   <Input
-                    type="number"
-                    value={content.size || 24}
-                    onChange={(e) => onContentChange?.({ ...content, size: parseInt(e.target.value) })}
+                    value={content.text || ''}
+                    onChange={(e) => onContentChange?.({ ...content, text: e.target.value })}
                     className="h-8"
-                    min={12}
-                    max={128}
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Link URL</Label>
+                  <Input
+                    value={content.link || ''}
+                    onChange={(e) => onContentChange?.({ ...content, link: e.target.value })}
+                    className="h-8"
+                    placeholder="https://..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Variant</Label>
+                  <Select
+                    value={content.variant || 'primary'}
+                    onValueChange={(v) => onContentChange?.({ ...content, variant: v })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="primary">Primary</SelectItem>
+                      <SelectItem value="secondary">Secondary</SelectItem>
+                      <SelectItem value="outline">Outline</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )
+          }
+
+          {
+            componentType === 'image' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Image</Label>
+                  <ImageUploader
+                    value={content.src}
+                    onChange={(url) => onContentChange?.({ ...content, src: url })}
+                    onRemove={() => onContentChange?.({ ...content, src: '' })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Alt Text (SEO)</Label>
+                  <Input
+                    value={content.alt || ''}
+                    onChange={(e) => onContentChange?.({ ...content, alt: e.target.value })}
+                    className="h-8"
+                    placeholder="Describe the image..."
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Link URL (optional)</Label>
+                  <Input
+                    value={content.link || ''}
+                    onChange={(e) => onContentChange?.({ ...content, link: e.target.value })}
+                    className="h-8"
+                    placeholder="https://..."
+                  />
+                </div>
+              </>
+            )
+          }
+
+          {
+            componentType === 'gallery' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Gallery Images</Label>
+                  <GalleryUploader
+                    images={content.images || []}
+                    onChange={(images) => onContentChange?.({ ...content, images })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Columns</Label>
+                  <Select
+                    value={String(content.columns || 3)}
+                    onValueChange={(v) => onContentChange?.({ ...content, columns: parseInt(v) })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 Columns</SelectItem>
+                      <SelectItem value="3">3 Columns</SelectItem>
+                      <SelectItem value="4">4 Columns</SelectItem>
+                      <SelectItem value="5">5 Columns</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Gap</Label>
+                  <Input
+                    value={content.gap || '16px'}
+                    onChange={(e) => onContentChange?.({ ...content, gap: e.target.value })}
+                    className="h-8"
+                    placeholder="e.g., 16px, 1rem"
+                  />
+                </div>
+              </>
+            )
+          }
+
+          {
+            componentType === 'icon' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Icon</Label>
+                  <IconPicker
+                    value={content.name}
+                    onChange={(name) => onContentChange?.({ ...content, name })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-2">
+                    <Label className="text-xs">Size</Label>
+                    <Input
+                      type="number"
+                      value={content.size || 24}
+                      onChange={(e) => onContentChange?.({ ...content, size: parseInt(e.target.value) })}
+                      className="h-8"
+                      min={12}
+                      max={128}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs">Color</Label>
+                    <Input
+                      type="color"
+                      value={content.color || '#000000'}
+                      onChange={(e) => onContentChange?.({ ...content, color: e.target.value })}
+                      className="h-8 p-1"
+                    />
+                  </div>
+                </div>
+              </>
+            )
+          }
+
+          {
+            componentType === 'video' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Video URL</Label>
+                  <Input
+                    value={content.url || ''}
+                    onChange={(e) => onContentChange?.({ ...content, url: e.target.value })}
+                    className="h-8"
+                    placeholder="YouTube or Vimeo URL..."
+                  />
+                </div>
+              </>
+            )
+          }
+
+          {
+            componentType === 'slider' && (
+              <SliderEditor
+                content={content}
+                onChange={(newContent) => onContentChange?.(newContent)}
+              />
+            )
+          }
+
+          {
+            componentType === 'accordion' && (
+              <AccordionEditor
+                content={content}
+                onChange={(newContent) => onContentChange?.(newContent)}
+              />
+            )
+          }
+
+          {
+            componentType === 'form' && (
+              <FormEditor
+                content={content}
+                onChange={(newContent) => onContentChange?.(newContent)}
+              />
+            )
+          }
+
+          {
+            componentType === 'spacer' && (
+              <div className="space-y-2">
+                <Label className="text-xs">Height</Label>
+                <Input
+                  value={content.height || '48px'}
+                  onChange={(e) => onContentChange?.({ ...content, height: e.target.value })}
+                  className="h-8"
+                  placeholder="e.g., 48px, 2rem"
+                />
+              </div>
+            )
+          }
+
+          {
+            componentType === 'divider' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Style</Label>
+                  <Select
+                    value={content.style || 'solid'}
+                    onValueChange={(v) => onContentChange?.({ ...content, style: v })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="solid">Solid</SelectItem>
+                      <SelectItem value="dashed">Dashed</SelectItem>
+                      <SelectItem value="dotted">Dotted</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs">Color</Label>
                   <Input
                     type="color"
-                    value={content.color || '#000000'}
+                    value={content.color || '#e5e7eb'}
                     onChange={(e) => onContentChange?.({ ...content, color: e.target.value })}
                     className="h-8 p-1"
                   />
                 </div>
-              </div>
-            </>
-          )}
+              </>
+            )
+          }
 
-          {componentType === 'video' && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-xs">Video URL</Label>
-                <Input
-                  value={content.url || ''}
-                  onChange={(e) => onContentChange?.({ ...content, url: e.target.value })}
-                  className="h-8"
-                  placeholder="YouTube or Vimeo URL..."
-                />
-              </div>
-            </>
-          )}
-
-          {componentType === 'slider' && (
-            <SliderEditor
-              content={content}
-              onChange={(newContent) => onContentChange?.(newContent)}
-            />
-          )}
-
-          {componentType === 'accordion' && (
-            <AccordionEditor
-              content={content}
-              onChange={(newContent) => onContentChange?.(newContent)}
-            />
-          )}
-
-          {componentType === 'form' && (
-            <FormEditor
-              content={content}
-              onChange={(newContent) => onContentChange?.(newContent)}
-            />
-          )}
-
-          {componentType === 'spacer' && (
-            <div className="space-y-2">
-              <Label className="text-xs">Height</Label>
-              <Input
-                value={content.height || '48px'}
-                onChange={(e) => onContentChange?.({ ...content, height: e.target.value })}
-                className="h-8"
-                placeholder="e.g., 48px, 2rem"
-              />
-            </div>
-          )}
-
-          {componentType === 'divider' && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-xs">Style</Label>
-                <Select
-                  value={content.style || 'solid'}
-                  onValueChange={(v) => onContentChange?.({ ...content, style: v })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="solid">Solid</SelectItem>
-                    <SelectItem value="dashed">Dashed</SelectItem>
-                    <SelectItem value="dotted">Dotted</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Color</Label>
-                <Input
-                  type="color"
-                  value={content.color || '#e5e7eb'}
-                  onChange={(e) => onContentChange?.({ ...content, color: e.target.value })}
-                  className="h-8 p-1"
-                />
-              </div>
-            </>
-          )}
-
-          {componentType === 'columns' && (
-            <>
-              <div className="space-y-2">
-                <Label className="text-xs">Number of Columns</Label>
-                <Select
-                  value={String(content.columns || 2)}
-                  onValueChange={(v) => onContentChange?.({ ...content, columns: parseInt(v) })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2 Columns</SelectItem>
-                    <SelectItem value="3">3 Columns</SelectItem>
-                    <SelectItem value="4">4 Columns</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs">Gap</Label>
-                <Input
-                  value={content.gap || '24px'}
-                  onChange={(e) => onContentChange?.({ ...content, gap: e.target.value })}
-                  className="h-8"
-                />
-              </div>
-            </>
-          )}
-        </CollapsibleSection>
-      )}
+          {
+            componentType === 'columns' && (
+              <>
+                <div className="space-y-2">
+                  <Label className="text-xs">Number of Columns</Label>
+                  <Select
+                    value={String(content.columns || 2)}
+                    onValueChange={(v) => onContentChange?.({ ...content, columns: parseInt(v) })}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 Columns</SelectItem>
+                      <SelectItem value="3">3 Columns</SelectItem>
+                      <SelectItem value="4">4 Columns</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs">Gap</Label>
+                  <Input
+                    value={content.gap || '24px'}
+                    onChange={(e) => onContentChange?.({ ...content, gap: e.target.value })}
+                    className="h-8"
+                  />
+                </div>
+              </>
+            )
+          }
+        </CollapsibleSection >
+      )
+      }
 
       {/* Typography */}
       <CollapsibleSection title="Typography" icon={Type}>

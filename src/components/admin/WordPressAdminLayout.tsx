@@ -102,6 +102,7 @@ export function WordPressAdminLayout({
       title: 'Communication',
       items: [
         { id: 'contacts', icon: Mail, label: 'Messages' },
+        { id: 'form-submissions', icon: MessageSquare, label: 'Form Submissions' },
         { id: 'comments', icon: MessageCircle, label: 'Comments' },
         { id: 'feedback', icon: MessageSquare, label: 'Feedback' },
       ],
@@ -124,7 +125,7 @@ export function WordPressAdminLayout({
     const url = new URL(window.location.href);
     url.searchParams.set('section', section);
     window.history.pushState({}, '', url.toString());
-    
+
     if (isMobile) {
       setMobileSheetOpen(false);
     }
@@ -134,8 +135,8 @@ export function WordPressAdminLayout({
     <nav className="py-4 space-y-6">
       {/* Logo/Brand */}
       <div className="px-4 mb-6">
-        <Link 
-          to="/" 
+        <Link
+          to="/"
           className="flex items-center gap-2 text-sidebar-foreground hover:text-sidebar-primary transition-colors"
         >
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[hsl(var(--sidebar-primary))] to-[hsl(280_65%_60%)] flex items-center justify-center">
@@ -216,7 +217,7 @@ export function WordPressAdminLayout({
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          
+
           <div className="hidden sm:block">
             <h1 className="text-lg font-semibold gradient-text">Dashboard</h1>
           </div>
@@ -225,7 +226,7 @@ export function WordPressAdminLayout({
         <div className="flex items-center gap-2">
           {/* Performance toggle */}
           <PerformanceToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
-          
+
           {/* Theme toggle */}
           <Button
             variant="ghost"
@@ -244,9 +245,9 @@ export function WordPressAdminLayout({
                 className="flex items-center gap-3 px-2 hover:bg-accent rounded-xl"
               >
                 <Avatar className="h-8 w-8 border-2 border-primary/20">
-                  <AvatarImage 
-                    src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ''} 
-                    alt={user?.email || 'User'} 
+                  <AvatarImage
+                    src={user?.user_metadata?.avatar_url || user?.user_metadata?.picture || ''}
+                    alt={user?.email || 'User'}
                   />
                   <AvatarFallback className="bg-gradient-to-br from-primary to-purple-600 text-white text-xs font-medium">
                     {getUserInitials()}
@@ -265,14 +266,14 @@ export function WordPressAdminLayout({
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleSectionChange('settings')}
                 className="cursor-pointer rounded-lg"
               >
                 <User className="h-4 w-4 mr-2" />
                 Profile
               </DropdownMenuItem>
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => handleSectionChange('settings')}
                 className="cursor-pointer rounded-lg"
               >
@@ -280,7 +281,7 @@ export function WordPressAdminLayout({
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-2" />
-              <DropdownMenuItem 
+              <DropdownMenuItem
                 onClick={() => signOut()}
                 className="cursor-pointer rounded-lg text-destructive focus:text-destructive"
               >

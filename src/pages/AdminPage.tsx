@@ -21,6 +21,7 @@ import { CommentsManager } from '@/components/admin/CommentsManager';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CategoriesManager } from '@/components/admin/CategoriesManager';
 import { TagsManager } from '@/components/admin/TagsManager';
+import { FormSubmissionsManager } from '@/components/admin/FormSubmissionsManager';
 
 const AdminPage = () => {
   const { user, loading } = useAuth();
@@ -30,7 +31,7 @@ const AdminPage = () => {
   const [selectedSection, setSelectedSection] = useState('analytics');
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAdmin, setCheckingAdmin] = useState(true);
-  
+
   // State for content editors
   const [homeContent, setHomeContent] = useState<any>(null);
   const [aboutContent, setAboutContent] = useState<any>(null);
@@ -39,7 +40,7 @@ const AdminPage = () => {
     phone: '',
     location: '',
   });
-  
+
   // Analytics state
   const [analytics, setAnalytics] = useState({
     totalProjects: 0,
@@ -117,11 +118,11 @@ const AdminPage = () => {
       });
     }
   };
-  
+
   // Load analytics data
   const loadAnalytics = async () => {
     if (!user) return;
-    
+
     try {
       // Fetch counts in parallel - filter by user_id where applicable
       const [projectsRes, postsRes, viewsRes, contactsRes, commentsRes] = await Promise.all([
@@ -211,7 +212,7 @@ const AdminPage = () => {
                   .from('contact_content')
                   .select('id')
                   .maybeSingle();
-                
+
                 if (existing) {
                   await supabase
                     .from('contact_content')
@@ -262,6 +263,12 @@ const AdminPage = () => {
         return (
           <div className="p-6">
             <MessagesManager />
+          </div>
+        );
+      case 'form-submissions':
+        return (
+          <div className="p-6">
+            <FormSubmissionsManager />
           </div>
         );
       case 'comments':
