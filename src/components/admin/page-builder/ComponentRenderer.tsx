@@ -250,13 +250,19 @@ export function ComponentRenderer({
       const { 
         fields = [], 
         submitText = 'Submit', 
-        submitAction = 'email',
+        submitAction = 'supabase',
         recipientEmail,
         webhookUrl,
-        supabaseTable,
         successMessage = 'Thank you! Your submission has been received.',
         showLabels = true,
+        formId = 'form',
+        formName = 'Form',
+        isProgressive = false,
+        stepsConfig = [{ name: 'Step 1' }],
       } = component.content;
+
+      const [currentStep, setCurrentStep] = useState(1);
+      const totalSteps = isProgressive ? stepsConfig.length : 1;
 
       const validateField = (field: any, value: any): string | null => {
         if (field.required && (!value || (typeof value === 'string' && !value.trim()))) {
@@ -288,6 +294,34 @@ export function ComponentRenderer({
         return null;
       };
 
+      const getCurrentStepFields = () => {
+        if (!isProgressive) return fields;
+        return fields.filter((f: any) => (f.step || 1) === currentStep);
+      };
+
+      const validateCurrentStep = () => {
+        const stepFields = getCurrentStepFields();
+        const errors: Record<string, string> = {};
+        stepFields.forEach((field: any) => {
+          const error = validateField(field, formData[field.id]);
+          if (error) errors[field.id] = error;
+        });
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+      };
+
+      const handleNext = () => {
+        if (validateCurrentStep() && currentStep < totalSteps) {
+          setCurrentStep(prev => prev + 1);
+        }
+      };
+
+      const handlePrev = () => {
+        if (currentStep > 1) {
+          setCurrentStep(prev => prev - 1);
+        }
+      };
+
       const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (isEditing) return;
@@ -301,22 +335,38 @@ export function ComponentRenderer({
 
         if (Object.keys(errors).length > 0) {
           setFormErrors(errors);
+          if (isProgressive) {
+            // Find which step has the first error
+            const errorFieldIds = Object.keys(errors);
+            const firstErrorField = fields.find((f: any) => errorFieldIds.includes(f.id));
+            if (firstErrorField) {
+              setCurrentStep(firstErrorField.step || 1);
+            }
+          }
           return;
         }
 
         setFormErrors({});
 
         try {
-          // Handle different submission types
-          if (submitAction === 'webhook' && webhookUrl) {
+          // Save to Supabase form_submissions table
+          if (submitAction === 'supabase') {
+            const { supabase } = await import('@/integrations/supabase/client');
+            const { error } = await supabase.from('form_submissions').insert({
+              form_id: formId,
+              form_name: formName,
+              data: formData,
+              status: 'new',
+            });
+            if (error) throw error;
+          } else if (submitAction === 'webhook' && webhookUrl) {
             await fetch(webhookUrl, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(formData),
+              body: JSON.stringify({ formId, formName, data: formData }),
             });
           }
           
-          // For email/supabase, we'd need edge function - show success for now
           setFormSubmitted(true);
           toast({
             title: 'Success!',
@@ -493,18 +543,63 @@ export function ComponentRenderer({
         }
       };
 
+      const currentFields = getCurrentStepFields();
+
       return (
         <form 
           className="space-y-4"
           style={getResponsiveStyles()}
           onSubmit={handleSubmit}
         >
+          {/* Progress indicator for progressive forms */}
+          {isProgressive && totalSteps > 1 && (
+            <div className="mb-6">
+              <div className="flex justify-between mb-2">
+                {stepsConfig.map((step: { name: string }, idx: number) => (
+                  <div
+                    key={idx}
+                    className={`flex-1 text-center text-xs font-medium ${
+                      idx + 1 === currentStep ? 'text-primary' : 
+                      idx + 1 < currentStep ? 'text-green-600' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {step.name}
+                  </div>
+                ))}
+              </div>
+              <div className="flex gap-1">
+                {stepsConfig.map((_: any, idx: number) => (
+                  <div
+                    key={idx}
+                    className={`flex-1 h-2 rounded-full ${
+                      idx + 1 <= currentStep ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-4">
-            {fields.map(renderField)}
+            {currentFields.map(renderField)}
           </div>
-          <Button type="submit" className="w-full" disabled={isEditing}>
-            {submitText}
-          </Button>
+          
+          <div className="flex gap-2">
+            {isProgressive && currentStep > 1 && (
+              <Button type="button" variant="outline" onClick={handlePrev} disabled={isEditing}>
+                Previous
+              </Button>
+            )}
+            {isProgressive && currentStep < totalSteps ? (
+              <Button type="button" onClick={handleNext} disabled={isEditing} className="flex-1">
+                Next
+              </Button>
+            ) : (
+              <Button type="submit" className="flex-1" disabled={isEditing}>
+                {submitText}
+              </Button>
+            )}
+          </div>
         </form>
       );
     }
