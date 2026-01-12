@@ -292,6 +292,9 @@ export function PageBuilder({
             onDuplicateComponent={builder.duplicateComponent}
             onMoveComponent={builder.moveComponent}
             onUpdateComponent={builder.updateComponent}
+            onAddChildComponent={builder.addChildComponent}
+            onUpdateChildComponent={builder.updateChildComponent}
+            onRemoveChildComponent={builder.removeChildComponent}
             onClearSelection={builder.clearSelection}
           />
 

@@ -310,16 +310,138 @@ export function usePageBuilder(initialSections: PageSection[] = []) {
     });
   }, [addToHistory]);
 
-  // Find component
-  const findComponent = useCallback((componentId: string): { section: PageSection, component: PageComponent } | null => {
+  // Find component (including nested)
+  const findComponent = useCallback((componentId: string): { section: PageSection, component: PageComponent, parentComponent?: PageComponent } | null => {
     for (const section of sections) {
-      const component = section.components.find(c => c.id === componentId);
-      if (component) {
-        return { section, component };
+      for (const component of section.components) {
+        if (component.id === componentId) {
+          return { section, component };
+        }
+        // Check nested children
+        if (component.children) {
+          const child = component.children.find(c => c.id === componentId);
+          if (child) {
+            return { section, component: child, parentComponent: component };
+          }
+        }
       }
     }
     return null;
   }, [sections]);
+
+  // Add child component to a nested parent (like columns or container)
+  const addChildComponent = useCallback((
+    sectionId: string,
+    parentId: string,
+    componentType: ComponentType,
+    index?: number
+  ) => {
+    const defaults = COMPONENT_DEFAULTS[componentType];
+    const newChild: PageComponent = {
+      id: generateId(),
+      type: componentType,
+      content: defaults.content,
+      styles: defaults.styles || {},
+      children: defaults.children,
+    };
+
+    setSections(prev => {
+      const newSections = prev.map(s => {
+        if (s.id !== sectionId) return s;
+        return {
+          ...s,
+          components: s.components.map(c => {
+            if (c.id !== parentId) return c;
+            const children = [...(c.children || [])];
+            if (index !== undefined) {
+              // For columns, replace at specific index
+              if (c.type === 'columns') {
+                children[index] = newChild;
+              } else {
+                children.splice(index, 0, newChild);
+              }
+            } else {
+              children.push(newChild);
+            }
+            return { ...c, children };
+          }),
+        };
+      });
+      addToHistory(newSections);
+      return newSections;
+    });
+
+    setSelectedId(newChild.id);
+    setSelectedType('component');
+    return newChild.id;
+  }, [addToHistory]);
+
+  // Update child component
+  const updateChildComponent = useCallback((
+    sectionId: string,
+    parentId: string,
+    childId: string,
+    updates: Partial<PageComponent>
+  ) => {
+    setSections(prev => {
+      const newSections = prev.map(s => {
+        if (s.id !== sectionId) return s;
+        return {
+          ...s,
+          components: s.components.map(c => {
+            if (c.id !== parentId || !c.children) return c;
+            return {
+              ...c,
+              children: c.children.map(child =>
+                child.id === childId ? { ...child, ...updates } : child
+              ),
+            };
+          }),
+        };
+      });
+      addToHistory(newSections);
+      return newSections;
+    });
+  }, [addToHistory]);
+
+  // Remove child component
+  const removeChildComponent = useCallback((
+    sectionId: string,
+    parentId: string,
+    childId: string
+  ) => {
+    setSections(prev => {
+      const newSections = prev.map(s => {
+        if (s.id !== sectionId) return s;
+        return {
+          ...s,
+          components: s.components.map(c => {
+            if (c.id !== parentId || !c.children) return c;
+            // For columns, set to undefined instead of removing
+            if (c.type === 'columns') {
+              return {
+                ...c,
+                children: c.children.map(child =>
+                  child.id === childId ? undefined : child
+                ).filter(Boolean) as PageComponent[],
+              };
+            }
+            return {
+              ...c,
+              children: c.children.filter(child => child.id !== childId),
+            };
+          }),
+        };
+      });
+      addToHistory(newSections);
+      return newSections;
+    });
+
+    if (selectedId === childId) {
+      setSelectedId(null);
+      setSelectedType(null);
+    }
+  }, [selectedId, addToHistory]);
 
   // Select item
   const selectItem = useCallback((id: string | null, type: 'section' | 'component' | null) => {
@@ -381,6 +503,9 @@ export function usePageBuilder(initialSections: PageSection[] = []) {
     moveComponent,
     updateComponent,
     updateComponentStyle,
+    addChildComponent,
+    updateChildComponent,
+    removeChildComponent,
     findComponent,
     selectItem,
     clearSelection,

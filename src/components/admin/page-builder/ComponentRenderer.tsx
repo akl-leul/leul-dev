@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PageComponent, ComponentStyle } from './types';
+import { PageComponent, ComponentStyle, ComponentType } from './types';
 import { IconByName } from './IconPicker';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { Plus, Trash2, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +26,9 @@ interface ComponentRendererProps {
   component: PageComponent;
   isEditing: boolean;
   onContentChange?: (content: any) => void;
+  onAddChildComponent?: (parentId: string, componentType: ComponentType, index?: number) => void;
+  onUpdateChildComponent?: (parentId: string, childId: string, updates: Partial<PageComponent>) => void;
+  onRemoveChildComponent?: (parentId: string, childId: string) => void;
   viewMode: 'desktop' | 'tablet' | 'mobile';
 }
 
@@ -31,6 +36,9 @@ export function ComponentRenderer({
   component,
   isEditing,
   onContentChange,
+  onAddChildComponent,
+  onUpdateChildComponent,
+  onRemoveChildComponent,
   viewMode
 }: ComponentRendererProps) {
   const { toast } = useToast();
@@ -828,6 +836,28 @@ export function ComponentRenderer({
 
     case 'columns': {
       const { columns = 2, gap = '24px' } = component.content;
+      const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+      const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOverIndex(index);
+      };
+
+      const handleDragLeave = () => {
+        setDragOverIndex(null);
+      };
+
+      const handleDrop = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const componentType = e.dataTransfer.getData('componentType') as ComponentType;
+        if (componentType && onAddChildComponent) {
+          onAddChildComponent(component.id, componentType, index);
+        }
+        setDragOverIndex(null);
+      };
+
       return (
         <div
           className="grid"
@@ -837,52 +867,160 @@ export function ComponentRenderer({
             gap,
           }}
         >
-          {component.children?.map((child, idx) => (
-            <ComponentRenderer
-              key={child.id || idx}
-              component={child}
-              isEditing={isEditing}
-              onContentChange={(content) => {
-                const newChildren = [...(component.children || [])];
-                newChildren[idx] = { ...newChildren[idx], content };
-                onContentChange?.({ ...component.content, children: newChildren });
-              }}
-              viewMode={viewMode}
-            />
-          ))}
-          {(!component.children || component.children.length < columns) && (
-            Array.from({ length: columns - (component.children?.length || 0) }).map((_, idx) => (
+          {Array.from({ length: columns }).map((_, colIdx) => {
+            const child = component.children?.[colIdx];
+            return (
               <div
-                key={`empty-${idx}`}
-                className="min-h-[100px] border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground"
+                key={child?.id || `col-${colIdx}`}
+                className={cn(
+                  "min-h-[100px] border-2 border-dashed rounded-lg transition-all relative group/nested",
+                  dragOverIndex === colIdx ? "border-primary bg-primary/10" : "border-muted-foreground/30"
+                )}
+                onDragOver={(e) => handleDragOver(e, colIdx)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, colIdx)}
               >
-                Drop component here
+                {child ? (
+                  <div className="relative">
+                    {/* Nested component controls */}
+                    <div className="absolute -top-2 right-1 flex items-center gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity z-10">
+                      <button
+                        className="p-1 rounded bg-destructive text-destructive-foreground shadow text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onRemoveChildComponent) {
+                            onRemoveChildComponent(component.id, child.id);
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <ComponentRenderer
+                      component={child}
+                      isEditing={isEditing}
+                      onContentChange={(content) => {
+                        if (onUpdateChildComponent) {
+                          onUpdateChildComponent(component.id, child.id, { content });
+                        }
+                      }}
+                      onAddChildComponent={onAddChildComponent}
+                      onUpdateChildComponent={onUpdateChildComponent}
+                      onRemoveChildComponent={onRemoveChildComponent}
+                      viewMode={viewMode}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center h-full p-4 text-muted-foreground">
+                    <Plus className="h-6 w-6 mb-1" />
+                    <span className="text-xs">Drop here</span>
+                  </div>
+                )}
               </div>
-            ))
-          )}
+            );
+          })}
         </div>
       );
     }
 
     case 'container': {
+      const [dragOverContainer, setDragOverContainer] = useState(false);
+      const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+      const handleDragOver = (e: React.DragEvent, index?: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setDragOverContainer(true);
+        if (index !== undefined) setDragOverIndex(index);
+      };
+
+      const handleDragLeave = () => {
+        setDragOverContainer(false);
+        setDragOverIndex(null);
+      };
+
+      const handleDrop = (e: React.DragEvent, index?: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const componentType = e.dataTransfer.getData('componentType') as ComponentType;
+        if (componentType && onAddChildComponent) {
+          onAddChildComponent(component.id, componentType, index ?? (component.children?.length || 0));
+        }
+        setDragOverContainer(false);
+        setDragOverIndex(null);
+      };
+
       return (
-        <div style={getResponsiveStyles()}>
-          {component.children?.map((child, idx) => (
-            <ComponentRenderer
-              key={child.id || idx}
-              component={child}
-              isEditing={isEditing}
-              onContentChange={(content) => {
-                const newChildren = [...(component.children || [])];
-                newChildren[idx] = { ...newChildren[idx], content };
-                onContentChange?.({ ...component.content, children: newChildren });
-              }}
-              viewMode={viewMode}
+        <div style={getResponsiveStyles()} className="relative">
+          {/* Drop zone at top */}
+          {(component.children?.length || 0) > 0 && (
+            <div
+              className={cn(
+                "h-2 transition-all",
+                dragOverIndex === 0 ? "h-12 bg-primary/20 border-2 border-dashed border-primary rounded-lg my-1" : ""
+              )}
+              onDragOver={(e) => handleDragOver(e, 0)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, 0)}
             />
+          )}
+
+          {component.children?.map((child, idx) => (
+            <div key={child.id || idx}>
+              <div className="relative group/nested">
+                {/* Nested component controls */}
+                <div className="absolute -top-2 right-1 flex items-center gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity z-10">
+                  <button
+                    className="p-1 rounded bg-destructive text-destructive-foreground shadow text-xs"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onRemoveChildComponent) {
+                        onRemoveChildComponent(component.id, child.id);
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+                <ComponentRenderer
+                  component={child}
+                  isEditing={isEditing}
+                  onContentChange={(content) => {
+                    if (onUpdateChildComponent) {
+                      onUpdateChildComponent(component.id, child.id, { content });
+                    }
+                  }}
+                  onAddChildComponent={onAddChildComponent}
+                  onUpdateChildComponent={onUpdateChildComponent}
+                  onRemoveChildComponent={onRemoveChildComponent}
+                  viewMode={viewMode}
+                />
+              </div>
+              {/* Drop zone after each component */}
+              <div
+                className={cn(
+                  "h-2 transition-all",
+                  dragOverIndex === idx + 1 ? "h-12 bg-primary/20 border-2 border-dashed border-primary rounded-lg my-1" : ""
+                )}
+                onDragOver={(e) => handleDragOver(e, idx + 1)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, idx + 1)}
+              />
+            </div>
           ))}
+
           {(!component.children || component.children.length === 0) && (
-            <div className="min-h-[100px] border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground">
-              Drop components here
+            <div 
+              className={cn(
+                "min-h-[100px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-muted-foreground transition-all",
+                dragOverContainer ? "border-primary bg-primary/10" : "border-muted-foreground/30"
+              )}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <Plus className="h-6 w-6 mb-1" />
+              <span className="text-xs">Drop components here</span>
             </div>
           )}
         </div>
