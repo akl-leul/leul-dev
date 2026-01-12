@@ -43,6 +43,9 @@ interface BuilderCanvasProps {
   onDuplicateComponent: (sectionId: string, componentId: string) => void;
   onMoveComponent: (fromSectionId: string, toSectionId: string, fromIndex: number, toIndex: number) => void;
   onUpdateComponent: (sectionId: string, componentId: string, updates: Partial<PageComponent>) => void;
+  onAddChildComponent?: (sectionId: string, parentId: string, type: ComponentType, index?: number) => void;
+  onUpdateChildComponent?: (sectionId: string, parentId: string, childId: string, updates: Partial<PageComponent>) => void;
+  onRemoveChildComponent?: (sectionId: string, parentId: string, childId: string) => void;
   onClearSelection: () => void;
 }
 
@@ -64,6 +67,9 @@ export function BuilderCanvas({
   onDuplicateComponent,
   onMoveComponent,
   onUpdateComponent,
+  onAddChildComponent,
+  onUpdateChildComponent,
+  onRemoveChildComponent,
   onClearSelection,
 }: BuilderCanvasProps) {
   const [dragOverSectionId, setDragOverSectionId] = useState<string | null>(null);
@@ -303,6 +309,15 @@ export function BuilderCanvas({
                             onContentChange={(content) => 
                               onUpdateComponent(section.id, component.id, { content })
                             }
+                            onAddChildComponent={onAddChildComponent ? (parentId, type, index) => 
+                              onAddChildComponent(section.id, parentId, type, index)
+                            : undefined}
+                            onUpdateChildComponent={onUpdateChildComponent ? (parentId, childId, updates) =>
+                              onUpdateChildComponent(section.id, parentId, childId, updates)
+                            : undefined}
+                            onRemoveChildComponent={onRemoveChildComponent ? (parentId, childId) =>
+                              onRemoveChildComponent(section.id, parentId, childId)
+                            : undefined}
                           />
                         </motion.div>
 
