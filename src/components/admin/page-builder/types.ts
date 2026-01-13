@@ -137,14 +137,32 @@ export const DEFAULT_STYLES: ComponentStyle = {
   textColor: 'inherit',
 };
 
+// Theme-aware color tokens (use CSS variables for dark/light mode compatibility)
+export const THEME_COLORS = {
+  background: 'hsl(var(--background))',
+  foreground: 'hsl(var(--foreground))',
+  primary: 'hsl(var(--primary))',
+  primaryForeground: 'hsl(var(--primary-foreground))',
+  secondary: 'hsl(var(--secondary))',
+  secondaryForeground: 'hsl(var(--secondary-foreground))',
+  muted: 'hsl(var(--muted))',
+  mutedForeground: 'hsl(var(--muted-foreground))',
+  accent: 'hsl(var(--accent))',
+  accentForeground: 'hsl(var(--accent-foreground))',
+  destructive: 'hsl(var(--destructive))',
+  border: 'hsl(var(--border))',
+  card: 'hsl(var(--card))',
+  cardForeground: 'hsl(var(--card-foreground))',
+};
+
 export const COMPONENT_DEFAULTS: Record<ComponentType, Partial<PageComponent>> = {
   text: {
     content: { text: 'Enter your text here...' },
-    styles: { ...DEFAULT_STYLES, fontSize: '16px' },
+    styles: { ...DEFAULT_STYLES, fontSize: '16px', textColor: 'inherit' },
   },
   heading: {
     content: { text: 'Heading', level: 'h2' },
-    styles: { ...DEFAULT_STYLES, fontSize: '32px', fontWeight: '700' },
+    styles: { ...DEFAULT_STYLES, fontSize: '32px', fontWeight: '700', textColor: 'inherit' },
   },
   image: {
     content: { src: '', alt: '', link: '' },
@@ -158,8 +176,8 @@ export const COMPONENT_DEFAULTS: Record<ComponentType, Partial<PageComponent>> =
     content: { text: 'Click Me', link: '#', variant: 'primary' },
     styles: { 
       ...DEFAULT_STYLES, 
-      backgroundColor: 'hsl(252 100% 67%)', 
-      textColor: 'white',
+      backgroundColor: 'hsl(var(--primary))', 
+      textColor: 'hsl(var(--primary-foreground))',
       padding: '12px 24px',
       borderRadius: '8px',
       textAlign: 'center',
@@ -177,7 +195,9 @@ export const COMPONENT_DEFAULTS: Record<ComponentType, Partial<PageComponent>> =
         { id: '3', type: 'textarea', label: 'Message', required: false },
       ],
       submitText: 'Submit',
-      submitAction: 'email',
+      submitAction: 'supabase',
+      formId: '',
+      formName: 'Contact Form',
     },
     styles: { ...DEFAULT_STYLES },
   },
@@ -199,7 +219,7 @@ export const COMPONENT_DEFAULTS: Record<ComponentType, Partial<PageComponent>> =
     styles: { ...DEFAULT_STYLES },
   },
   divider: {
-    content: { style: 'solid', color: 'hsl(220 13% 91%)' },
+    content: { style: 'solid', color: 'hsl(var(--border))' },
     styles: { ...DEFAULT_STYLES, margin: '24px 0' },
   },
   spacer: {
