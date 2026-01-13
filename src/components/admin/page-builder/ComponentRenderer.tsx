@@ -84,8 +84,35 @@ export function ComponentRenderer({
     if (styles.minHeight) cssStyles.minHeight = styles.minHeight;
     if (styles.maxWidth) cssStyles.maxWidth = styles.maxWidth;
     if (styles.opacity !== undefined) cssStyles.opacity = styles.opacity;
+    if (styles.transition) cssStyles.transition = styles.transition;
+
+    // Animation CSS variables
+    if (styles.animationDuration) {
+      (cssStyles as any)['--pb-anim-duration'] = styles.animationDuration;
+    }
+    if (styles.animationDelay) {
+      (cssStyles as any)['--pb-anim-delay'] = styles.animationDelay;
+    }
 
     return cssStyles;
+  };
+
+  // Get animation classes based on component styles
+  const getAnimationClasses = (): string => {
+    const classes: string[] = [];
+    const styles = component.styles;
+
+    // Entrance animation
+    if (styles.entranceAnimation && styles.entranceAnimation !== 'none') {
+      classes.push(`pb-anim-${styles.entranceAnimation}`);
+    }
+
+    // Hover effect
+    if (styles.hoverEffect && styles.hoverEffect !== 'none') {
+      classes.push(`pb-hover-${styles.hoverEffect}`);
+    }
+
+    return classes.join(' ');
   };
 
   const handleTextChange = (text: string) => {
@@ -110,7 +137,7 @@ export function ComponentRenderer({
       }
 
       return (
-        <Tag style={baseStyles}>{component.content.text}</Tag>
+        <Tag style={baseStyles} className={getAnimationClasses()}>{component.content.text}</Tag>
       );
     }
 
@@ -127,14 +154,15 @@ export function ComponentRenderer({
       }
 
       return (
-        <p style={getResponsiveStyles()}>{component.content.text}</p>
+        <p style={getResponsiveStyles()} className={getAnimationClasses()}>{component.content.text}</p>
       );
     }
 
     case 'image': {
       const styles = getResponsiveStyles();
+      const animClasses = getAnimationClasses();
       return (
-        <div style={styles}>
+        <div style={styles} className={animClasses}>
           {component.content.src ? (
             <img
               src={component.content.src}
@@ -155,7 +183,7 @@ export function ComponentRenderer({
       const { images = [], columns = 3, gap = '16px' } = component.content;
       return (
         <div
-          className="grid"
+          className={cn("grid", getAnimationClasses())}
           style={{
             ...getResponsiveStyles(),
             gridTemplateColumns: `repeat(${columns}, 1fr)`,
@@ -188,7 +216,7 @@ export function ComponentRenderer({
     case 'button': {
       const { text, link, variant = 'primary' } = component.content;
       return (
-        <div style={{ textAlign: component.styles.textAlign || 'left' }}>
+        <div style={{ textAlign: component.styles.textAlign || 'left' }} className={getAnimationClasses()}>
           <Button
             variant={variant === 'primary' ? 'default' : variant === 'secondary' ? 'secondary' : 'outline'}
             style={getResponsiveStyles()}

@@ -45,6 +45,12 @@ export interface ComponentStyle {
   opacity?: number;
   transform?: string;
   transition?: string;
+  // Animation properties
+  animation?: string;
+  animationDelay?: string;
+  animationDuration?: string;
+  hoverEffect?: 'none' | 'scale' | 'lift' | 'glow' | 'pulse';
+  entranceAnimation?: 'none' | 'fade-in' | 'slide-up' | 'slide-down' | 'slide-left' | 'slide-right' | 'scale-in' | 'bounce';
 }
 
 export interface ResponsiveStyles {

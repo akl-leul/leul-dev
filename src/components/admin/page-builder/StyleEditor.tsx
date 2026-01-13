@@ -25,6 +25,7 @@ import {
   AlignRight,
   AlignJustify,
   Bold,
+  Sparkles,
   Image,
   Palette,
   Box,
@@ -741,6 +742,100 @@ export function StyleEditor({
             min={0}
             max={1}
             step={0.01}
+          />
+        </div>
+      </CollapsibleSection>
+
+      {/* Animations */}
+      <CollapsibleSection title="Animations" icon={Sparkles}>
+        <div className="space-y-2">
+          <Label className="text-xs">Entrance Animation</Label>
+          <Select
+            value={styles.entranceAnimation || 'none'}
+            onValueChange={(v) => onStyleChange({ entranceAnimation: v as ComponentStyle['entranceAnimation'] })}
+          >
+            <SelectTrigger className="h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="fade-in">Fade In</SelectItem>
+              <SelectItem value="slide-up">Slide Up</SelectItem>
+              <SelectItem value="slide-down">Slide Down</SelectItem>
+              <SelectItem value="slide-left">Slide from Left</SelectItem>
+              <SelectItem value="slide-right">Slide from Right</SelectItem>
+              <SelectItem value="scale-in">Scale In</SelectItem>
+              <SelectItem value="bounce">Bounce</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs">Hover Effect</Label>
+          <Select
+            value={styles.hoverEffect || 'none'}
+            onValueChange={(v) => onStyleChange({ hoverEffect: v as ComponentStyle['hoverEffect'] })}
+          >
+            <SelectTrigger className="h-8">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None</SelectItem>
+              <SelectItem value="scale">Scale Up</SelectItem>
+              <SelectItem value="lift">Lift (Shadow)</SelectItem>
+              <SelectItem value="glow">Glow</SelectItem>
+              <SelectItem value="pulse">Pulse</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="space-y-2">
+            <Label className="text-xs">Animation Duration</Label>
+            <Select
+              value={styles.animationDuration || '0.3s'}
+              onValueChange={(v) => onStyleChange({ animationDuration: v })}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0.2s">Fast (0.2s)</SelectItem>
+                <SelectItem value="0.3s">Normal (0.3s)</SelectItem>
+                <SelectItem value="0.5s">Slow (0.5s)</SelectItem>
+                <SelectItem value="0.8s">Very Slow (0.8s)</SelectItem>
+                <SelectItem value="1s">1 second</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs">Delay</Label>
+            <Select
+              value={styles.animationDelay || '0s'}
+              onValueChange={(v) => onStyleChange({ animationDelay: v })}
+            >
+              <SelectTrigger className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="0s">None</SelectItem>
+                <SelectItem value="0.1s">0.1s</SelectItem>
+                <SelectItem value="0.2s">0.2s</SelectItem>
+                <SelectItem value="0.3s">0.3s</SelectItem>
+                <SelectItem value="0.5s">0.5s</SelectItem>
+                <SelectItem value="1s">1s</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-xs">Transition</Label>
+          <Input
+            value={styles.transition || ''}
+            onChange={(e) => onStyleChange({ transition: e.target.value })}
+            placeholder="all 0.3s ease"
+            className="h-8"
           />
         </div>
       </CollapsibleSection>

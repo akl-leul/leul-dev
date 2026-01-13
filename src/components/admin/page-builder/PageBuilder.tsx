@@ -73,6 +73,13 @@ export function PageBuilder({
     return result?.section.id || null;
   }, [builder.selectedId, builder.selectedType, builder.findComponent]);
 
+  // Get parent component if selected component is nested
+  const getSelectedParentComponent = useCallback(() => {
+    if (!builder.selectedId || builder.selectedType === 'section') return null;
+    const result = builder.findComponent(builder.selectedId);
+    return result?.parentComponent || null;
+  }, [builder.selectedId, builder.selectedType, builder.findComponent]);
+
   const handleAddComponentFromLibrary = (componentType: ComponentType) => {
     // Add to first section or create one
     if (builder.sections.length === 0) {
@@ -93,8 +100,20 @@ export function PageBuilder({
       builder.updateSection(builder.selectedId, { styles: { ...getSelectedItem()?.styles, ...styles } });
     } else {
       const sectionId = getSelectedSectionId();
+      const parentComponent = getSelectedParentComponent();
+      
       if (sectionId) {
-        builder.updateComponentStyle(sectionId, builder.selectedId, styles);
+        if (parentComponent) {
+          // Update nested child component style
+          const currentChild = parentComponent.children?.find(c => c.id === builder.selectedId);
+          if (currentChild) {
+            builder.updateChildComponent(sectionId, parentComponent.id, builder.selectedId, {
+              styles: { ...currentChild.styles, ...styles }
+            });
+          }
+        } else {
+          builder.updateComponentStyle(sectionId, builder.selectedId, styles);
+        }
       }
     }
   };
@@ -106,8 +125,15 @@ export function PageBuilder({
       builder.updateSection(builder.selectedId, content);
     } else {
       const sectionId = getSelectedSectionId();
+      const parentComponent = getSelectedParentComponent();
+      
       if (sectionId) {
-        builder.updateComponent(sectionId, builder.selectedId, { content });
+        if (parentComponent) {
+          // Update nested child component content
+          builder.updateChildComponent(sectionId, parentComponent.id, builder.selectedId, { content });
+        } else {
+          builder.updateComponent(sectionId, builder.selectedId, { content });
+        }
       }
     }
   };
