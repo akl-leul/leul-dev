@@ -798,12 +798,13 @@ export function ComponentRenderer({
         <div
           dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(code) }}
           style={getResponsiveStyles()}
+          className="prose dark:prose-invert max-w-none"
         />
       );
     }
 
     case 'divider': {
-      const { style = 'solid', color = 'hsl(220 13% 91%)' } = component.content;
+      const { style = 'solid', color = 'hsl(var(--border))' } = component.content;
       return (
         <hr
           style={{
@@ -836,26 +837,32 @@ export function ComponentRenderer({
 
     case 'columns': {
       const { columns = 2, gap = '24px' } = component.content;
-      const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
-      const handleDragOver = (e: React.DragEvent, index: number) => {
+      const handleColumnDragOver = (e: React.DragEvent, colIdx: number) => {
         e.preventDefault();
         e.stopPropagation();
-        setDragOverIndex(index);
+        const target = e.currentTarget as HTMLElement;
+        target.classList.add('border-primary', 'bg-primary/10');
+        target.classList.remove('border-muted-foreground/30');
       };
 
-      const handleDragLeave = () => {
-        setDragOverIndex(null);
+      const handleColumnDragLeave = (e: React.DragEvent) => {
+        const target = e.currentTarget as HTMLElement;
+        target.classList.remove('border-primary', 'bg-primary/10');
+        target.classList.add('border-muted-foreground/30');
       };
 
-      const handleDrop = (e: React.DragEvent, index: number) => {
+      const handleColumnDrop = (e: React.DragEvent, colIdx: number) => {
         e.preventDefault();
         e.stopPropagation();
+        const target = e.currentTarget as HTMLElement;
+        target.classList.remove('border-primary', 'bg-primary/10');
+        target.classList.add('border-muted-foreground/30');
+        
         const componentType = e.dataTransfer.getData('componentType') as ComponentType;
         if (componentType && onAddChildComponent) {
-          onAddChildComponent(component.id, componentType, index);
+          onAddChildComponent(component.id, componentType, colIdx);
         }
-        setDragOverIndex(null);
       };
 
       return (
@@ -873,29 +880,32 @@ export function ComponentRenderer({
               <div
                 key={child?.id || `col-${colIdx}`}
                 className={cn(
-                  "min-h-[100px] border-2 border-dashed rounded-lg transition-all relative group/nested",
-                  dragOverIndex === colIdx ? "border-primary bg-primary/10" : "border-muted-foreground/30"
+                  "min-h-[100px] border-2 border-dashed rounded-lg transition-all relative group/nested p-2",
+                  "border-muted-foreground/30 bg-background"
                 )}
-                onDragOver={(e) => handleDragOver(e, colIdx)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, colIdx)}
+                onDragOver={(e) => handleColumnDragOver(e, colIdx)}
+                onDragLeave={handleColumnDragLeave}
+                onDrop={(e) => handleColumnDrop(e, colIdx)}
               >
                 {child ? (
-                  <div className="relative">
+                  <div className="relative h-full">
                     {/* Nested component controls */}
-                    <div className="absolute -top-2 right-1 flex items-center gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity z-10">
-                      <button
-                        className="p-1 rounded bg-destructive text-destructive-foreground shadow text-xs"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (onRemoveChildComponent) {
-                            onRemoveChildComponent(component.id, child.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </button>
-                    </div>
+                    {isEditing && (
+                      <div className="absolute -top-3 right-1 flex items-center gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity z-20">
+                        <button
+                          className="p-1 rounded bg-destructive text-destructive-foreground shadow text-xs hover:bg-destructive/90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            if (onRemoveChildComponent) {
+                              onRemoveChildComponent(component.id, child.id);
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    )}
                     <ComponentRenderer
                       component={child}
                       isEditing={isEditing}
@@ -911,9 +921,9 @@ export function ComponentRenderer({
                     />
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center justify-center h-full p-4 text-muted-foreground">
+                  <div className="flex flex-col items-center justify-center h-full p-4 text-muted-foreground min-h-[80px]">
                     <Plus className="h-6 w-6 mb-1" />
-                    <span className="text-xs">Drop here</span>
+                    <span className="text-xs text-center">Drag & drop component</span>
                   </div>
                 )}
               </div>
@@ -924,44 +934,62 @@ export function ComponentRenderer({
     }
 
     case 'container': {
-      const [dragOverContainer, setDragOverContainer] = useState(false);
-      const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+      const containerRef = useRef<HTMLDivElement>(null);
 
-      const handleDragOver = (e: React.DragEvent, index?: number) => {
+      const handleContainerDragOver = (e: React.DragEvent) => {
         e.preventDefault();
         e.stopPropagation();
-        setDragOverContainer(true);
-        if (index !== undefined) setDragOverIndex(index);
+        const target = e.currentTarget as HTMLElement;
+        target.classList.add('border-primary', 'bg-primary/10');
+        target.classList.remove('border-muted-foreground/30');
       };
 
-      const handleDragLeave = () => {
-        setDragOverContainer(false);
-        setDragOverIndex(null);
+      const handleContainerDragLeave = (e: React.DragEvent) => {
+        const target = e.currentTarget as HTMLElement;
+        target.classList.remove('border-primary', 'bg-primary/10');
+        target.classList.add('border-muted-foreground/30');
       };
 
-      const handleDrop = (e: React.DragEvent, index?: number) => {
+      const handleContainerDrop = (e: React.DragEvent, index?: number) => {
         e.preventDefault();
         e.stopPropagation();
         const componentType = e.dataTransfer.getData('componentType') as ComponentType;
         if (componentType && onAddChildComponent) {
           onAddChildComponent(component.id, componentType, index ?? (component.children?.length || 0));
         }
-        setDragOverContainer(false);
-        setDragOverIndex(null);
+        // Reset styles
+        if (containerRef.current) {
+          const dropZones = containerRef.current.querySelectorAll('.drop-zone');
+          dropZones.forEach(zone => {
+            zone.classList.remove('h-12', 'bg-primary/20', 'border-primary');
+            zone.classList.add('h-2');
+          });
+        }
+      };
+
+      const handleDropZoneDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const target = e.currentTarget as HTMLElement;
+        target.classList.add('h-12', 'bg-primary/20', 'border-2', 'border-dashed', 'border-primary', 'rounded-lg', 'my-1');
+        target.classList.remove('h-2');
+      };
+
+      const handleDropZoneDragLeave = (e: React.DragEvent) => {
+        const target = e.currentTarget as HTMLElement;
+        target.classList.remove('h-12', 'bg-primary/20', 'border-2', 'border-dashed', 'border-primary', 'rounded-lg', 'my-1');
+        target.classList.add('h-2');
       };
 
       return (
-        <div style={getResponsiveStyles()} className="relative">
+        <div ref={containerRef} style={getResponsiveStyles()} className="relative bg-background">
           {/* Drop zone at top */}
           {(component.children?.length || 0) > 0 && (
             <div
-              className={cn(
-                "h-2 transition-all",
-                dragOverIndex === 0 ? "h-12 bg-primary/20 border-2 border-dashed border-primary rounded-lg my-1" : ""
-              )}
-              onDragOver={(e) => handleDragOver(e, 0)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, 0)}
+              className="drop-zone h-2 transition-all"
+              onDragOver={handleDropZoneDragOver}
+              onDragLeave={handleDropZoneDragLeave}
+              onDrop={(e) => handleContainerDrop(e, 0)}
             />
           )}
 
@@ -969,19 +997,22 @@ export function ComponentRenderer({
             <div key={child.id || idx}>
               <div className="relative group/nested">
                 {/* Nested component controls */}
-                <div className="absolute -top-2 right-1 flex items-center gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity z-10">
-                  <button
-                    className="p-1 rounded bg-destructive text-destructive-foreground shadow text-xs"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onRemoveChildComponent) {
-                        onRemoveChildComponent(component.id, child.id);
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
+                {isEditing && (
+                  <div className="absolute -top-3 right-1 flex items-center gap-1 opacity-0 group-hover/nested:opacity-100 transition-opacity z-20">
+                    <button
+                      className="p-1 rounded bg-destructive text-destructive-foreground shadow text-xs hover:bg-destructive/90"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        if (onRemoveChildComponent) {
+                          onRemoveChildComponent(component.id, child.id);
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
                 <ComponentRenderer
                   component={child}
                   isEditing={isEditing}
@@ -998,29 +1029,23 @@ export function ComponentRenderer({
               </div>
               {/* Drop zone after each component */}
               <div
-                className={cn(
-                  "h-2 transition-all",
-                  dragOverIndex === idx + 1 ? "h-12 bg-primary/20 border-2 border-dashed border-primary rounded-lg my-1" : ""
-                )}
-                onDragOver={(e) => handleDragOver(e, idx + 1)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, idx + 1)}
+                className="drop-zone h-2 transition-all"
+                onDragOver={handleDropZoneDragOver}
+                onDragLeave={handleDropZoneDragLeave}
+                onDrop={(e) => handleContainerDrop(e, idx + 1)}
               />
             </div>
           ))}
 
           {(!component.children || component.children.length === 0) && (
             <div 
-              className={cn(
-                "min-h-[100px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-muted-foreground transition-all",
-                dragOverContainer ? "border-primary bg-primary/10" : "border-muted-foreground/30"
-              )}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
+              className="min-h-[100px] border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-muted-foreground transition-all border-muted-foreground/30"
+              onDragOver={handleContainerDragOver}
+              onDragLeave={handleContainerDragLeave}
+              onDrop={(e) => handleContainerDrop(e)}
             >
               <Plus className="h-6 w-6 mb-1" />
-              <span className="text-xs">Drop components here</span>
+              <span className="text-xs text-center">Drag & drop components here</span>
             </div>
           )}
         </div>

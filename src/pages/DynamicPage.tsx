@@ -88,38 +88,49 @@ export default function DynamicPage() {
     }
   };
 
-  // Render builder content
+  // Render builder content with theme-aware styling
   const renderBuilderContent = (sections: PageSection[]) => {
     return (
-      <div className="space-y-0">
-        {sections.map((section) => (
-          <div
-            key={section.id}
-            style={{
-              backgroundColor: section.styles?.backgroundColor,
-              backgroundImage: section.styles?.backgroundImage 
-                ? `url(${section.styles.backgroundImage})` 
-                : undefined,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              padding: section.styles?.padding,
-              margin: section.styles?.margin,
-            }}
-          >
-            <div className="container mx-auto px-4">
-              <div className="grid gap-4 grid-cols-1">
-                {section.components.map((component) => (
-                  <ComponentRenderer
-                    key={component.id}
-                    component={component}
-                    isEditing={false}
-                    viewMode="desktop"
-                  />
-                ))}
+      <div className="space-y-0 bg-background text-foreground">
+        {sections.map((section) => {
+          // Determine if backgroundColor uses CSS variables or is transparent
+          const bgColor = section.styles?.backgroundColor;
+          const hasBgColor = bgColor && bgColor !== 'transparent';
+          
+          return (
+            <div
+              key={section.id}
+              className="transition-colors duration-200"
+              style={{
+                backgroundColor: hasBgColor ? bgColor : undefined,
+                backgroundImage: section.styles?.backgroundImage 
+                  ? `url(${section.styles.backgroundImage})` 
+                  : section.styles?.backgroundGradient || undefined,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                padding: section.styles?.padding || '48px 24px',
+                margin: section.styles?.margin,
+                minHeight: section.styles?.minHeight,
+              }}
+            >
+              <div 
+                className="container mx-auto px-4"
+                style={{ maxWidth: section.styles?.maxWidth }}
+              >
+                <div className="grid gap-4 grid-cols-1">
+                  {section.components.map((component) => (
+                    <ComponentRenderer
+                      key={component.id}
+                      component={component}
+                      isEditing={false}
+                      viewMode="desktop"
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   };
