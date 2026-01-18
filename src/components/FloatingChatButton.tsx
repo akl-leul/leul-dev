@@ -7,6 +7,7 @@ import { ArrowUp, MessageCircle, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { generateAIResponse, ChatMessage } from '@/utils/simpleAI';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
 
 const FloatingChatButton = () => {
   const [showButton, setShowButton] = useState(false);
@@ -14,7 +15,7 @@ const FloatingChatButton = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       role: 'assistant',
-      content: "Hi! I'm your website assistant. I can help you find information about the developer, skills, projects, or anything else on this site. What would you like to know?",
+      content: "Hi! I'm your Leul's Website Assistant. I can help you find information about the developer, skills, projects, or anything else on this site. What would you like to know?",
       timestamp: new Date()
     }
   ]);
@@ -28,7 +29,7 @@ const FloatingChatButton = () => {
     const handleScroll = () => {
       setShowButton(window.scrollY > 300);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -74,7 +75,7 @@ const FloatingChatButton = () => {
         content: aiResponse,
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, assistantMessage]);
       setIsTyping(false);
     }, 800);
@@ -112,8 +113,8 @@ const FloatingChatButton = () => {
                       <div className="flex items-center gap-2">
                         <MessageCircle className="h-5 w-5" />
                         <div>
-                          <h3 className="font-semibold">Website Assistant</h3>
-                          <p className="text-xs opacity-90">Powered by AI</p>
+                          <h3 className="font-semibold">Leul's Website Assistant</h3>
+                          <p className="text-xs opacity-90">Powered by Leul</p>
                         </div>
                       </div>
                       <Button
@@ -128,7 +129,7 @@ const FloatingChatButton = () => {
 
                     {/* Chat Messages */}
                     <ScrollArea className="flex-1 p-4">
-                      <div className="space-y-4">
+                      <div className="space-y-6">
                         {messages.map((message, index) => (
                           <motion.div
                             key={index}
@@ -142,17 +143,32 @@ const FloatingChatButton = () => {
                           >
                             <div
                               className={cn(
-                                "max-w-[80%] rounded-lg px-4 py-2 text-sm",
+                                "max-w-[80%] rounded-lg px-4 py-2 text-sm break-words",
                                 message.role === 'user'
                                   ? "bg-primary text-primary-foreground"
-                                  : "bg-muted text-foreground"
+                                  : "bg-muted text-foreground prose prose-sm prose-invert max-w-none prose-p:my-4 prose-li:my-3 prose-headings:mt-6 prose-headings:mb-3 prose-a:text-amber-400 prose-a:font-semibold hover:prose-a:text-amber-300 prose-a:no-underline hover:prose-a:underline"
                               )}
                             >
-                              {message.content}
+                              {message.role === 'assistant' ? (
+                                <ReactMarkdown
+                                  components={{
+                                    a: ({ node, ...props }) => (
+                                      <a
+                                        {...props}
+                                        className="text-amber-500 font-bold hover:text-amber-600 underline decoration-amber-500/30 underline-offset-4 transition-colors"
+                                      />
+                                    ),
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                              ) : (
+                                message.content
+                              )}
                             </div>
                           </motion.div>
                         ))}
-                        
+
                         {isTyping && (
                           <motion.div
                             initial={{ opacity: 0 }}
@@ -171,6 +187,8 @@ const FloatingChatButton = () => {
                         <div ref={messagesEndRef} />
                       </div>
                     </ScrollArea>
+
+
 
                     {/* Chat Input */}
                     <div className="p-4 border-t">
@@ -240,7 +258,7 @@ const FloatingChatButton = () => {
                   )}
                 </AnimatePresence>
               </Button>
-              
+
               {!isChatOpen && (
                 <motion.div
                   initial={{ scale: 0 }}
