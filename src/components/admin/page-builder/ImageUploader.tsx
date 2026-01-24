@@ -83,10 +83,13 @@ export function ImageUploader({
 
       const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
       
+      if (!data?.publicUrl) {
+        throw new Error('Failed to get public URL for uploaded image');
+      }
+      
       setProgress(100);
       onChange(data.publicUrl);
-      setOpen(false);
-
+      
       toast({ title: 'Image uploaded successfully' });
     } catch (error: any) {
       toast({
@@ -117,8 +120,9 @@ export function ImageUploader({
     try {
       new URL(urlInput);
       onChange(urlInput);
-      setOpen(false);
       setUrlInput('');
+      
+      toast({ title: 'Image added successfully' });
     } catch {
       toast({
         title: 'Invalid URL',
@@ -259,6 +263,12 @@ export function ImageUploader({
             </Button>
           </TabsContent>
         </Tabs>
+        
+        <div className="flex justify-end pt-4 border-t">
+          <Button variant="outline" onClick={() => setOpen(false)}>
+            Close
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );
