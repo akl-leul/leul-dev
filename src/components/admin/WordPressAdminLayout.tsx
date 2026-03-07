@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useTheme } from '@/contexts/ThemeProvider';
-import { PerformanceToggle } from '@/components/PerformanceToggle';
+
 import {
   Settings,
   Menu,
@@ -224,8 +224,6 @@ export function WordPressAdminLayout({
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Performance toggle */}
-          <PerformanceToggle className="text-muted-foreground hover:text-foreground hover:bg-accent" />
 
           {/* Theme toggle */}
           <Button
