@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
-import { PerformanceToggle } from '@/components/PerformanceToggle';
+
 import { useAuth } from '@/contexts/AuthContext';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,7 +95,6 @@ const Header = () => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-2">
-            <PerformanceToggle className="text-muted-foreground hover:text-foreground" />
             <ThemeToggle />
 
             {user && (
