@@ -209,7 +209,7 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {featuredProjects.map((project) => (
                 <div key={project.id}>
-                  <Card className="overflow-hidden border border-border">
+                  <Card className="bp-card overflow-hidden border border-border">
                     {project.image_url && (
                       <div className="aspect-video overflow-hidden">
                         <img
@@ -302,7 +302,7 @@ const Home = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {latestPosts.map((post) => (
                 <article key={post.id}>
-                  <Card className="h-full border border-border">
+                  <Card className="bp-card h-full border border-border">
                     <CardHeader>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
                         <span className="flex items-center gap-1">

@@ -154,7 +154,7 @@ const Skills = () => {
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {categorySkills.map((skill) => (
-                  <Card key={skill.id}>
+                  <Card key={skill.id} className="bp-card">
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center gap-3 text-lg font-semibold">

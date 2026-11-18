@@ -138,7 +138,7 @@ export function FeaturedProjectsWithFeedback() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <Card key={project.id}>
+          <Card key={project.id} className="bp-card">
             {project.image_url && (
               <div className="aspect-video overflow-hidden rounded-t-lg">
                 <img

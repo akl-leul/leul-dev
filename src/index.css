@@ -416,6 +416,25 @@ All colors MUST be HSL.
     }
     .bp-corners::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
     .bp-corners::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+
+    /* Unique blueprint card: chamfered corners, motorsport stripe, spec index */
+    .bp-card {
+        position: relative; border-radius: 0 !important;
+        border: 1px solid hsl(var(--border)) !important;
+        background:
+            linear-gradient(hsl(var(--border) / .18) 1px, transparent 1px) 0 0 / 100% 24px,
+            linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--card) / .55) 100%) !important;
+        clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
+        box-shadow: none !important; transform: none !important;
+    }
+    .bp-card::before {
+        content: ""; position: absolute; top: 0; left: 0; right: 26px; height: 3px; z-index: 2;
+        background: linear-gradient(90deg, hsl(var(--bp-cyan, var(--primary))) 0 33%, hsl(var(--primary)) 33% 66%, hsl(var(--bp-red, var(--destructive))) 66%);
+    }
+    .bp-card::after {
+        content: ""; position: absolute; right: 10px; bottom: 10px; width: 14px; height: 14px; z-index: 2; pointer-events: none;
+        border-right: 2px solid hsl(var(--bp-cyan, var(--primary))); border-bottom: 2px solid hsl(var(--bp-cyan, var(--primary)));
+    }
     .bp-glow { transition: box-shadow .25s, border-color .25s; }
     .bp-glow:hover { border-color: hsl(var(--primary)); box-shadow: 0 0 0 1px hsl(var(--primary) / .4), 0 0 24px -6px hsl(var(--primary) / .6); }
     .bp-stripe { height: 3px; background: linear-gradient(90deg, hsl(var(--bp-cyan, var(--primary))) 0 33%, hsl(var(--primary)) 33% 66%, hsl(var(--bp-red, var(--destructive))) 66%); }

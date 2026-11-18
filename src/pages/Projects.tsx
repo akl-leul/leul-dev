@@ -172,7 +172,7 @@ const Projects = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentProjects.map((project) => (
-                <Card3D key={project.id} className="overflow-hidden">
+                <Card3D key={project.id} className="bp-card overflow-hidden">
                   <Card3DImage
                     src={project.image_url || undefined}
                     alt={project.title}

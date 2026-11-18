@@ -181,7 +181,7 @@ const Blog = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentPosts.map((post) => (
-                <Card3D key={post.id} className="overflow-hidden">
+                <Card3D key={post.id} className="bp-card overflow-hidden">
                   <Card3DImage
                     src={post.featured_image || undefined}
                     alt={post.title}
