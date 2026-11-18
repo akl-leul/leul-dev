@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          created_at: string
+          credential_url: string | null
+          description: string | null
+          display_order: number
+          id: string
+          images: string[]
+          issued_date: string | null
+          issuer: string | null
+          published: boolean
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credential_url?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          images?: string[]
+          issued_date?: string | null
+          issuer?: string | null
+          published?: boolean
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credential_url?: string | null
+          description?: string | null
+          display_order?: number
+          id?: string
+          images?: string[]
+          issued_date?: string | null
+          issuer?: string | null
+          published?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       activity_logs: {
         Row: {
           action: string

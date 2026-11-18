@@ -94,6 +94,7 @@ export function WordPressAdminLayout({
         { id: 'tags', icon: Award, label: 'Tags' },
         { id: 'skills', icon: Sparkles, label: 'Skills' },
         { id: 'experiences', icon: Briefcase, label: 'Experience' },
+        { id: 'achievements', icon: Award, label: 'Certificates' },
         { id: 'dynamic-pages', icon: FileCode, label: 'Pages' },
         { id: 'navigation', icon: LinkIcon, label: 'Navigation' },
       ],

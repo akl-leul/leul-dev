@@ -14,7 +14,7 @@ import {
   ChevronDown 
 } from 'lucide-react';
 import { format } from 'date-fns';
-import { motion, Variants } from 'framer-motion';
+import { motion, Variants, useReducedMotion } from 'framer-motion';
 import { SITE_OWNER_ID } from '@/config/owner';
 import HeroPortrait3D from '@/components/HeroPortrait3D';
 
@@ -63,6 +63,7 @@ const Home = () => {
   const [latestPosts, setLatestPosts] = useState<Post[]>([]);
   const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const reduceMotion = useReducedMotion();
   const [counts, setCounts] = useState({ projects: 0, posts: 0 });
 
   useEffect(() => {
@@ -109,7 +110,7 @@ const Home = () => {
 
   return (
     <motion.main
-      initial="hidden"
+      initial={reduceMotion ? false : "hidden"}
       animate="visible"
       exit="exit"
       variants={pageVariants}
@@ -119,12 +120,12 @@ const Home = () => {
       {/* Hero Section — fits exactly one viewport */}
       <section
         className="bp-hero relative flex items-center overflow-hidden"
-        aria-label="Hero section introducing the developer"
+        aria-labelledby="hero-heading"
       >
         <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_72%_45%,hsl(var(--primary)/0.22),transparent_55%)]" />
 
         {/* Vertical side rail */}
-        <div className="hidden md:flex absolute left-6 lg:left-10 top-24 bottom-8 flex-col items-center gap-4 z-10">
+        <div aria-hidden="true" className="hidden md:flex absolute left-6 lg:left-10 top-24 bottom-8 flex-col items-center gap-4 z-10">
           <span className="bp-mono text-[10px] tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180">FULL-STACK DEVELOPER</span>
           <span className="flex-1 w-px bg-border" />
           <span className="bp-mono text-[10px] tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180">{new Date().getFullYear()}</span>
@@ -133,38 +134,38 @@ const Home = () => {
         <div className="relative w-full max-w-7xl mx-auto px-6 md:pl-24 lg:pl-28 pt-20 pb-6 z-10">
           <div className="grid md:grid-cols-[1.05fr_1fr] gap-6 md:gap-8 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -30 }}
+              initial={reduceMotion ? false : { opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.7 }}
               className="flex flex-col gap-5 md:gap-7 min-w-0"
             >
-              <div className="flex gap-8 md:gap-10">
+              <dl className="flex gap-8 md:gap-10" aria-label="Quick stats">
                 {[['+' , `${counts.projects}`, 'Projects built'], ['+', `${counts.posts}`, 'Articles written']].map(([s, n, l]) => (
-                  <div key={l}>
-                    <div className="text-[clamp(1.5rem,min(4.5vw,5vh),2.75rem)] font-light text-foreground leading-none"><sup className="text-primary text-[0.6em] mr-0.5">{s}</sup>{n}</div>
-                    <div className="bp-mono text-[10px] tracking-widest text-muted-foreground mt-1 uppercase">{l}</div>
+                  <div key={l} className="flex flex-col-reverse">
+                    <dt className="bp-mono text-[10px] tracking-widest text-muted-foreground mt-1 uppercase">{l}</dt>
+                    <dd className="text-[clamp(1.5rem,min(4.5vw,5vh),2.75rem)] font-light text-foreground leading-none"><sup aria-hidden="true" className="text-primary text-[0.6em] mr-0.5">{s}</sup>{n}<span className="sr-only"> or more</span></dd>
                   </div>
                 ))}
-              </div>
+              </dl>
 
               <div>
-                <h1 className="text-[clamp(3rem,min(13vw,17vh),10rem)] font-light leading-[0.85] tracking-tight text-foreground">
-                  Hello<span className="text-destructive">.</span>
+                <h1 id="hero-heading" className="text-[clamp(3rem,min(13vw,17vh),10rem)] font-light leading-[0.85] tracking-tight text-foreground">
+                  Hello<span aria-hidden="true" className="text-destructive">.</span>
                 </h1>
                 <p className="mt-4 md:mt-6 text-base md:text-lg text-muted-foreground flex items-center gap-3">
-                  <span className="h-px w-8 bg-primary shrink-0" />
+                  <span aria-hidden="true" className="h-px w-8 bg-primary shrink-0" />
                   It's {homeContent?.name || 'Leul Ayfokru'} — I build scalable, efficient applications
                 </p>
                 {homeContent?.tagline && (
                   <p className="mt-2 text-sm text-muted-foreground max-w-md pl-11">{homeContent.tagline}</p>
                 )}
-                <Link to="/projects" className="mt-5 md:mt-7 ml-11 inline-flex items-center gap-2 text-sm uppercase tracking-widest text-foreground border-b border-primary pb-1 hover:text-primary transition-colors">
-                  See my works <ArrowRight className="h-4 w-4" />
+                <Link to="/projects" aria-label="See my works: browse all projects" className="mt-5 md:mt-7 ml-11 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary inline-flex items-center gap-2 text-sm uppercase tracking-widest text-foreground border-b border-primary pb-1 hover:text-primary transition-colors">
+                  See my works <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </Link>
               </div>
 
-              <a href="#featured" className="hidden md:inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Scroll down <ChevronDown className="h-4 w-4" />
+              <a href="#featured" aria-label="Scroll down to featured projects" className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary hidden md:inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Scroll down <ChevronDown aria-hidden="true" className={reduceMotion ? "h-4 w-4" : "h-4 w-4 animate-bounce"} />
               </a>
             </motion.div>
 

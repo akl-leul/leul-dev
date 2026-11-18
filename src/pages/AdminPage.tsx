@@ -21,6 +21,7 @@ import { CommentsManager } from '@/components/admin/CommentsManager';
 import { SettingsManager } from '@/components/admin/SettingsManager';
 import { CategoriesManager } from '@/components/admin/CategoriesManager';
 import { TagsManager } from '@/components/admin/TagsManager';
+import { AchievementsManager } from '@/components/admin/AchievementsManager';
 import { FormSubmissionsManager } from '@/components/admin/FormSubmissionsManager';
 
 const AdminPage = () => {
@@ -249,6 +250,12 @@ const AdminPage = () => {
         return (
           <div className="p-6">
             <ExperiencesManager />
+          </div>
+        );
+      case 'achievements':
+        return (
+          <div className="p-6">
+            <AchievementsManager />
           </div>
         );
       case 'dynamic-pages':
