@@ -417,6 +417,9 @@ All colors MUST be HSL.
     .bp-corners::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
     .bp-corners::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
 
+    /* Hero fits exactly one viewport height */
+    .bp-hero { height: 100vh; height: 100svh; overflow: hidden; }
+
     /* Unique blueprint card: chamfered corners, motorsport stripe, spec index */
     .bp-card {
         position: relative; border-radius: 0 !important;

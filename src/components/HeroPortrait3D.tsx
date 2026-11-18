@@ -29,7 +29,7 @@ const HeroPortrait3D = () => {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4, duration: 0.9 }}
-      className="relative mx-auto w-full max-w-[460px] [perspective:1200px]"
+      className="relative mx-auto w-full max-w-[min(300px,22vh)] md:max-w-[min(460px,36vh)] [perspective:1200px]"
     >
       <motion.div style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }} className="relative">
         {/* Back layer: blueprint plate */}
