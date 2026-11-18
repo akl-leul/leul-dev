@@ -138,20 +138,20 @@ export function FeaturedProjectsWithFeedback() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <Card key={project.id} className="group hover:shadow-lg transition-shadow">
+          <Card key={project.id}>
             {project.image_url && (
               <div className="aspect-video overflow-hidden rounded-t-lg">
                 <img
                   src={project.image_url}
                   alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full object-cover"
                 />
               </div>
             )}
 
             <CardHeader>
               <div className="flex items-start justify-between">
-                <CardTitle className="text-lg group-hover:text-primary transition-colors">
+                <CardTitle className="text-lg">
                   {project.title}
                   {project.featured && (
                     <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />

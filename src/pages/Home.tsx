@@ -238,21 +238,15 @@ const Home = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredProjects.map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="group overflow-hidden border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+              {featuredProjects.map((project) => (
+                <div key={project.id}>
+                  <Card className="overflow-hidden border border-border">
                     {project.image_url && (
                       <div className="aspect-video overflow-hidden">
                         <img
                           src={project.image_url}
                           alt={`${project.title} project screenshot`}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-cover"
                           loading="lazy"
                         />
                       </div>
@@ -288,7 +282,7 @@ const Home = () => {
                       </div>
                     </CardContent>
                   </Card>
-                </motion.div>
+                </div>
               ))}
             </div>
           )}
@@ -337,15 +331,9 @@ const Home = () => {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {latestPosts.map((post, index) => (
-                <motion.article
-                  key={post.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="group h-full border border-border hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+              {latestPosts.map((post) => (
+                <article key={post.id}>
+                  <Card className="h-full border border-border">
                     <CardHeader>
                       <div className="flex items-center gap-3 text-sm text-muted-foreground mb-2">
                         <span className="flex items-center gap-1">
@@ -357,13 +345,13 @@ const Home = () => {
                           {post.read_time} min read
                         </span>
                       </div>
-                      <CardTitle className="group-hover:text-primary transition-colors">
+                      <CardTitle>
                         <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                       </CardTitle>
                       {post.excerpt && <CardDescription className="line-clamp-3">{post.excerpt}</CardDescription>}
                     </CardHeader>
                   </Card>
-                </motion.article>
+                </article>
               ))}
             </div>
           )}

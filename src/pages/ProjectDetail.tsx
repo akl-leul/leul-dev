@@ -150,8 +150,6 @@ const ProjectDetail = () => {
                   alt={`${project.title} - Image ${currentImageIndex + 1}`}
                   className="w-full h-72 sm:h-96 lg:h-[28rem] object-cover cursor-pointer"
                   onClick={() => openLightbox(currentImageIndex)}
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ duration: 0.3 }}
                 />
                 
                 <Button
@@ -222,7 +220,6 @@ const ProjectDetail = () => {
                 className={`shrink-0 rounded-xl overflow-hidden border-2 transition-all ${
                   index === currentImageIndex ? 'border-primary shadow-lg scale-105' : 'border-transparent hover:border-muted-foreground/30'
                 }`}
-                whileHover={{ scale: 1.05 }}
                 title="Double-click to open fullscreen"
               >
                 <img

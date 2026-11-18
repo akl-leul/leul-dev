@@ -180,7 +180,7 @@ const Projects = () => {
 
                   <Card3DHeader>
                     <div className="flex items-start justify-between">
-                      <Card3DTitle className="group-hover:text-primary transition-colors">
+                      <Card3DTitle>
                         {project.title}
                         {project.featured && (
                           <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />

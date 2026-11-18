@@ -199,7 +199,7 @@ const Blog = () => {
                       </div>
                     </div>
 
-                    <Card3DTitle className="group-hover:text-primary transition-colors">
+                    <Card3DTitle>
                       <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                     </Card3DTitle>
 
@@ -212,7 +212,7 @@ const Blog = () => {
                     <Button variant="outline" size="sm" asChild className="w-full group/btn">
                       <Link to={`/blog/${post.slug}`} className="flex items-center justify-center gap-2">
                         Read More
-                        <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover/btn:translate-x-1" />
+                        <ArrowRight className="h-4 w-4" />
                       </Link>
                     </Button>
                   </Card3DContent>
