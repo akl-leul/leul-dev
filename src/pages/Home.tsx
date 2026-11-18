@@ -16,6 +16,7 @@ import {
 import { format } from 'date-fns';
 import { motion, Variants } from 'framer-motion';
 import { SITE_OWNER_ID } from '@/config/owner';
+import HeroPortrait3D from '@/components/HeroPortrait3D';
 
 interface Project {
   id: string;
@@ -114,99 +115,61 @@ const Home = () => {
         className="relative min-h-screen flex items-center overflow-hidden"
         aria-label="Hero section introducing the developer"
       >
-        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_70%_50%,hsl(var(--primary)/0.18),transparent_60%)]" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_72%_45%,hsl(var(--primary)/0.22),transparent_55%)]" />
 
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 z-10">
-          <div className="grid lg:grid-cols-2 gap-10 items-center">
+        {/* Vertical side rail */}
+        <div className="hidden md:flex absolute left-6 lg:left-10 top-32 bottom-16 flex-col items-center gap-6 z-10">
+          <span className="bp-mono text-[10px] tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180">FULL-STACK DEVELOPER</span>
+          <span className="flex-1 w-px bg-border" />
+          <span className="bp-mono text-[10px] tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180">{new Date().getFullYear()}</span>
+        </div>
+
+        <div className="relative w-full max-w-7xl mx-auto px-6 md:pl-24 lg:pl-28 pt-28 pb-16 z-10">
+          <div className="grid lg:grid-cols-[1.05fr_1fr] gap-8 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.7 }}
-              className="space-y-7"
+              className="flex flex-col gap-10 lg:min-h-[70vh] justify-between"
             >
-              <p className="bp-label flex items-center gap-3">
-                <span className="h-px w-10 bg-primary" /> SPEC.01 — Hi, I'm {homeContent?.name || 'Leul Ayfokru'}
-              </p>
-              <h1 className="text-5xl md:text-7xl font-bold leading-[0.95] uppercase text-foreground">
-                Build Scalable
-                <span className="block text-primary">Efficient</span>
-                Applications
-              </h1>
-              {homeContent?.tagline && (
-                <p className="text-lg text-muted-foreground max-w-lg border-l-2 border-destructive pl-4">
-                  {homeContent.tagline}
-                </p>
-              )}
-              <div className="flex flex-wrap gap-4">
-                <Button size="lg" asChild className="bp-glow uppercase tracking-widest px-8">
-                  <Link to="/projects" className="flex items-center gap-2">
-                    See my works
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-              <div className="grid grid-cols-3 max-w-md border border-border divide-x divide-border bg-card/60">
-                {[
-                  ['Mode', 'Full-stack'],
-                  ['Build', 'Scalable'],
-                  ['Status', 'Available'],
-                ].map(([k, v]) => (
-                  <div key={k} className="p-3">
-                    <div className="bp-mono text-[10px] text-muted-foreground">{k}</div>
-                    <div className="text-sm font-semibold text-foreground">{v}</div>
+              <div className="flex gap-10">
+                {[['+' , `${featuredProjects.length || 10}`, 'Featured builds'], ['+', `${latestPosts.length || 5}`, 'Articles written']].map(([s, n, l]) => (
+                  <div key={l}>
+                    <div className="text-4xl font-light text-foreground"><sup className="text-primary text-lg mr-0.5">{s}</sup>{n}</div>
+                    <div className="bp-mono text-[10px] tracking-widest text-muted-foreground mt-1 uppercase">{l}</div>
                   </div>
                 ))}
               </div>
+
+              <div>
+                <h1 className="text-[22vw] sm:text-[9rem] lg:text-[11rem] font-light leading-[0.85] tracking-tight text-foreground">
+                  Hello<span className="text-destructive">.</span>
+                </h1>
+                <p className="mt-6 text-lg text-muted-foreground flex items-center gap-3">
+                  <span className="h-px w-8 bg-primary" />
+                  It's {homeContent?.name || 'Leul Ayfokru'} — I build scalable, efficient applications
+                </p>
+                {homeContent?.tagline && (
+                  <p className="mt-3 text-sm text-muted-foreground max-w-md pl-11">{homeContent.tagline}</p>
+                )}
+                <Link to="/projects" className="mt-8 ml-11 inline-flex items-center gap-2 text-sm uppercase tracking-widest text-foreground border-b border-primary pb-1 hover:text-primary transition-colors">
+                  See my works <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              <a href="#featured" className="hidden lg:inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Scroll down <ChevronDown className="h-4 w-4" />
+              </a>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.8 }}
-              className="relative bp-corners border border-border bg-card/40 p-6"
-            >
-              <div className="flex justify-between bp-mono text-[10px] text-muted-foreground mb-4">
-                <span>FIG. A — SIDE ELEVATION</span>
-                <span className="text-destructive">REV 2026</span>
-              </div>
-              {homeContent?.hero_image ? (
-                <img src={homeContent.hero_image} alt="Profile" className="w-full h-[420px] object-contain" />
-              ) : (
-                <svg viewBox="0 0 600 260" className="w-full h-auto text-primary" fill="none" stroke="currentColor" aria-hidden="true">
-                  <path className="bp-draw" strokeWidth="2" d="M40 190 L60 150 Q90 130 150 125 L230 85 Q280 62 360 66 L430 72 Q470 78 500 112 L545 126 Q568 134 570 160 L570 190 L520 190 M410 190 L200 190 M90 190 L40 190" />
-                  <path className="bp-draw" strokeWidth="1.5" d="M240 90 L255 125 L470 120 Q450 90 420 82 Z M262 125 L360 124" />
-                  <circle className="bp-draw" cx="145" cy="190" r="38" strokeWidth="2" />
-                  <circle cx="145" cy="190" r="16" strokeWidth="1" opacity=".6" />
-                  <circle className="bp-draw" cx="465" cy="190" r="38" strokeWidth="2" />
-                  <circle cx="465" cy="190" r="16" strokeWidth="1" opacity=".6" />
-                  <g stroke="hsl(var(--bp-cyan))" strokeWidth="1" opacity=".7" strokeDasharray="4 4">
-                    <line x1="145" y1="240" x2="465" y2="240" />
-                    <line x1="145" y1="232" x2="145" y2="248" />
-                    <line x1="465" y1="232" x2="465" y2="248" />
-                    <line x1="20" y1="66" x2="20" y2="228" />
-                  </g>
-                  <text x="270" y="256" fill="hsl(var(--bp-cyan))" stroke="none" fontSize="11" fontFamily="IBM Plex Mono">WHEELBASE 2,975 MM</text>
-                  <path d="M500 120 L560 40" stroke="hsl(var(--bp-red))" strokeWidth="1" />
-                  <text x="520" y="34" fill="hsl(var(--bp-red))" stroke="none" fontSize="11" fontFamily="IBM Plex Mono">AERO</text>
-                </svg>
-              )}
-              <div className="bp-stripe mt-4" />
-            </motion.div>
+            <HeroPortrait3D />
           </div>
         </div>
-
-        <motion.div
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
-          animate={{ y: [0, 8, 0] }}
-          transition={{ repeat: Infinity, duration: 1.8 }}
-          aria-label="Scroll down"
-        >
-          <ChevronDown className="w-7 h-7 text-primary" />
-        </motion.div>
       </section>
 
       {/* Featured Projects Section */}
       <motion.section
+        id="featured"
         className="py-20 bg-background"
         initial="hidden"
         whileInView="visible"
