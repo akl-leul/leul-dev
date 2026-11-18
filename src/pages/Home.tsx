@@ -63,6 +63,7 @@ const Home = () => {
   const [latestPosts, setLatestPosts] = useState<Post[]>([]);
   const [homeContent, setHomeContent] = useState<HomeContent | null>(null);
   const [loading, setLoading] = useState(true);
+  const [counts, setCounts] = useState({ projects: 0, posts: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,6 +89,11 @@ const Home = () => {
           .limit(1)
           .maybeSingle();
 
+        const [{ count: pc }, { count: bc }] = await Promise.all([
+          supabase.from('projects').select('id', { count: 'exact', head: true }).eq('user_id', SITE_OWNER_ID),
+          supabase.from('posts').select('id', { count: 'exact', head: true }).eq('published', true).eq('user_id', SITE_OWNER_ID),
+        ]);
+        setCounts({ projects: pc ?? 0, posts: bc ?? 0 });
         setFeaturedProjects(projects || []);
         setLatestPosts(posts || []);
         setHomeContent(content);
@@ -133,7 +139,7 @@ const Home = () => {
               className="flex flex-col gap-10 lg:min-h-[70vh] justify-between"
             >
               <div className="flex gap-10">
-                {[['+' , `${featuredProjects.length || 10}`, 'Featured builds'], ['+', `${latestPosts.length || 5}`, 'Articles written']].map(([s, n, l]) => (
+                {[['+' , `${counts.projects}`, 'Projects built'], ['+', `${counts.posts}`, 'Articles written']].map(([s, n, l]) => (
                   <div key={l}>
                     <div className="text-4xl font-light text-foreground"><sup className="text-primary text-lg mr-0.5">{s}</sup>{n}</div>
                     <div className="bp-mono text-[10px] tracking-widest text-muted-foreground mt-1 uppercase">{l}</div>

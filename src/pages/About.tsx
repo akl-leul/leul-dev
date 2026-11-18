@@ -8,6 +8,7 @@ import { Download, MapPin, Mail, ExternalLink, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { FaXTwitter } from "react-icons/fa6";
 import { SITE_OWNER_ID } from '@/config/owner';
+import ExperienceTimeline from '@/components/ExperienceTimeline';
 
 interface Profile {
   name: string;
@@ -187,71 +188,7 @@ const About = () => {
               <CardContent className="p-8 text-center text-muted-foreground">No work experience added yet.</CardContent>
             </Card>
           ) : (
-            <div className="grid md:grid-cols-2 gap-6">
-              {experiences.map((exp) => (
-                <Card key={exp.id} className="rounded-lg shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-4">
-                      <div>
-                        <h3 className="text-xl font-semibold text-foreground mb-1">{exp.role}</h3>
-                        <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                          {exp.company_url ? (
-                            <a
-                              href={exp.company_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-medium hover:text-indigo-600 transition-colors"
-                            >
-                              {exp.company}
-                            </a>
-                          ) : (
-                            <span className="font-medium">{exp.company}</span>
-                          )}
-                          {exp.location && (
-                            <>
-                              <span>•</span>
-                              <span>{exp.location}</span>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-3 md:mt-0">
-                        <Calendar className="h-5 w-5" />
-                        <span>
-                          {formatDate(exp.start_date)} - {exp.current || !exp.end_date ? 'Present' : formatDate(exp.end_date)}
-                        </span>
-                      </div>
-                    </div>
-
-                    {exp.description && (
-                      <p className="text-muted-foreground mb-4">{exp.description}</p>
-                    )}
-
-                    {exp.achievements && exp.achievements.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="font-semibold text-foreground mb-2">Key Achievements:</h4>
-                        <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                          {exp.achievements.map((ach, idx) => (
-                            <li key={idx}>{ach}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {exp.tech_used && exp.tech_used.length > 0 && (
-                      <div>
-                        <h4 className="font-semibold text-foreground mb-2">Technologies Used:</h4>
-                        <div className="flex flex-wrap gap-2">
-                          {exp.tech_used.map((tech) => (
-                            <Badge key={tech} variant="secondary" className="bg-indigo-100 text-indigo-700 border-none">{tech}</Badge>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <ExperienceTimeline experiences={experiences} formatDate={formatDate} />
           )}
         </section>
       </div>
