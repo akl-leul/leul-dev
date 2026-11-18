@@ -1,6 +1,5 @@
 import { useRef } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
-import portrait from '@/assets/leul-blueprint-portrait.png.asset.json';
 
 /** Blueprint portrait with layered 3D depth that tilts toward the cursor. */
 const HeroPortrait3D = () => {
@@ -45,7 +44,7 @@ const HeroPortrait3D = () => {
         />
         {/* Portrait */}
         <img
-          src={portrait.url}
+          src="/leul-portrait.png"
           alt="Leul — blueprint portrait"
           style={{ transform: 'translateZ(40px)' }}
           className="relative w-full h-auto drop-shadow-[0_30px_40px_hsl(var(--primary)/0.45)]"

@@ -359,29 +359,29 @@ All colors MUST be HSL.
 /* ===== Blueprint public identity (scoped to public layout) ===== */
 @layer base {
     .blueprint {
-        --background: 215 81% 13%;      /* #061B3A */
-        --foreground: 211 100% 96%;     /* #EAF4FF */
-        --card: 215 79% 18%;            /* #0A2854 */
-        --card-foreground: 211 100% 96%;
+        --background: 0 0% 4%;
+        --foreground: 0 0% 96%;
+        --card: 0 0% 8%;
+        --card-foreground: 0 0% 96%;
         --popover: 215 79% 18%;
-        --popover-foreground: 211 100% 96%;
-        --primary: 212 100% 54%;        /* #1685FF */
-        --primary-foreground: 211 100% 96%;
+        --popover-foreground: 0 0% 96%;
+        --primary: 0 0% 100%;
+        --primary-foreground: 0 0% 4%;
         --secondary: 215 79% 18%;
-        --secondary-foreground: 211 100% 96%;
+        --secondary-foreground: 0 0% 96%;
         --muted: 215 70% 16%;
-        --muted-foreground: 211 41% 73%; /* #9DB8D5 */
-        --accent: 210 69% 28%;
-        --accent-foreground: 211 100% 96%;
-        --destructive: 351 81% 49%;     /* #E31837 */
-        --destructive-foreground: 211 100% 96%;
-        --border: 210 46% 36%;          /* #315B86 */
+        --muted-foreground: 0 0% 62%;
+        --accent: 0 0% 18%;
+        --accent-foreground: 0 0% 96%;
+        --destructive: 0 0% 85%;
+        --destructive-foreground: 0 0% 96%;
+        --border: 0 0% 24%;
         --input: 210 46% 36%;
         --ring: 212 100% 54%;
         --radius: 0.25rem;
-        --bp-grid: 210 69% 28%;         /* #16477A */
-        --bp-cyan: 199 100% 64%;        /* #48C8FF */
-        --bp-red: 351 81% 49%;
+        --bp-grid: 0 0% 16%;
+        --bp-cyan: 0 0% 75%;
+        --bp-red: 0 0% 55%;
         background-color: hsl(var(--background));
         color: hsl(var(--foreground));
         background-image:
@@ -426,7 +426,11 @@ All colors MUST be HSL.
             linear-gradient(160deg, hsl(var(--card)) 0%, hsl(var(--card) / .55) 100%) !important;
         clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 26px 100%, 0 calc(100% - 26px));
         box-shadow: none !important; transform: none !important;
+        height: 100%; display: flex; flex-direction: column;
     }
+    .bp-card > :last-child { margin-top: auto; }
+    *:has(> .bp-card) { height: 100%; }
+    .blueprint img[src="/leul-portrait.png"] { filter: grayscale(1) contrast(1.1); }
     .bp-card::before {
         content: ""; position: absolute; top: 0; left: 0; right: 26px; height: 3px; z-index: 2;
         background: linear-gradient(90deg, hsl(var(--bp-cyan, var(--primary))) 0 33%, hsl(var(--primary)) 33% 66%, hsl(var(--bp-red, var(--destructive))) 66%);
