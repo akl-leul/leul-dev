@@ -10,7 +10,7 @@ interface LayoutProps {
 
 const Layout = ({ children }: LayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col relative">
+    <div className="blueprint dark min-h-screen flex flex-col relative">
       <MetaTags />
       
       <div className="relative flex flex-col min-h-screen">

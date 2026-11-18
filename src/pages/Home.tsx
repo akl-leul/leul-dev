@@ -111,154 +111,97 @@ const Home = () => {
     >
       {/* Hero Section */}
       <section
-        className="relative min-h-screen flex items-center justify-center overflow-hidden"
-        style={{
-          background: homeContent?.background_image 
-            ? `url(${homeContent.background_image}) center/cover no-repeat`
-            : homeContent?.background_gradient || 'linear-gradient(135deg, hsl(252 100% 67%), hsl(280 65% 60%))',
-        }}
+        className="relative min-h-screen flex items-center overflow-hidden"
         aria-label="Hero section introducing the developer"
       >
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/50" />
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_70%_50%,hsl(var(--primary)/0.18),transparent_60%)]" />
 
-        {/* Decorative shapes */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            className="absolute top-20 left-10 w-72 h-72 rounded-full opacity-20 blur-3xl"
-            style={{ background: 'hsl(252 100% 70%)' }}
-            animate={{ scale: [1, 1.2, 1], x: [0, 30, 0] }}
-            transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute bottom-20 right-10 w-96 h-96 rounded-full opacity-15 blur-3xl"
-            style={{ background: 'hsl(280 65% 60%)' }}
-            animate={{ scale: [1, 1.15, 1], y: [0, -20, 0] }}
-            transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-          />
-          <motion.div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full opacity-10 blur-3xl"
-            style={{ background: 'hsl(200 80% 60%)' }}
-            animate={{ scale: [1, 1.1, 1] }}
-            transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-          />
-        </div>
-
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-24" style={{ zIndex: 10 }}>
-          <div className="grid lg:grid-cols-2 gap-6 items-center">
-            {/* Left Content */}
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 z-10">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
             <motion.div
-              initial={{ opacity: 0, x: -40 }}
+              initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
-              className="space-y-6 z-10"
+              transition={{ delay: 0.2, duration: 0.7 }}
+              className="space-y-7"
             >
-              <motion.p
-                className="text-lg md:text-xl font-medium text-white/90"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                Hi, I'm {homeContent?.name || 'Leul Ayfokru'}
-              </motion.p>
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-none">
-                <motion.span
-                  className="block text-white"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  Build Scalable
-                </motion.span>
-                <motion.span
-                  className="block text-white"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  Efficient
-                </motion.span>
-                <motion.span
-                  className="block text-white"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 }}
-                >
-                  Applications
-                </motion.span>
+              <p className="bp-label flex items-center gap-3">
+                <span className="h-px w-10 bg-primary" /> SPEC.01 — Hi, I'm {homeContent?.name || 'Leul Ayfokru'}
+              </p>
+              <h1 className="text-5xl md:text-7xl font-bold leading-[0.95] uppercase text-foreground">
+                Build Scalable
+                <span className="block text-primary">Efficient</span>
+                Applications
               </h1>
-
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 1.2 }}
-              >
-                <Button
-                  size="lg"
-                  asChild
-                  className="bg-white text-gray-900 hover:bg-gray-100 rounded-full px-8 shadow-lg"
-                >
+              {homeContent?.tagline && (
+                <p className="text-lg text-muted-foreground max-w-lg border-l-2 border-destructive pl-4">
+                  {homeContent.tagline}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-4">
+                <Button size="lg" asChild className="bp-glow uppercase tracking-widest px-8">
                   <Link to="/projects" className="flex items-center gap-2">
                     See my works
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
-              </motion.div>
+              </div>
+              <div className="grid grid-cols-3 max-w-md border border-border divide-x divide-border bg-card/60">
+                {[
+                  ['Mode', 'Full-stack'],
+                  ['Build', 'Scalable'],
+                  ['Status', 'Available'],
+                ].map(([k, v]) => (
+                  <div key={k} className="p-3">
+                    <div className="bp-mono text-[10px] text-muted-foreground">{k}</div>
+                    <div className="text-sm font-semibold text-foreground">{v}</div>
+                  </div>
+                ))}
+              </div>
             </motion.div>
 
-            {/* Right Content */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               transition={{ delay: 0.4, duration: 0.8 }}
-              className="relative h-[600px] lg:h-[700px]"
+              className="relative bp-corners border border-border bg-card/40 p-6"
             >
-              <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
-                <motion.h2
-                  className="text-[180px] md:text-[240px] lg:text-[300px] font-bold opacity-10 select-none text-white"
-                  style={{ letterSpacing: '-0.05em', lineHeight: 0.8 }}
-                  initial={{ scale: 1.2, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 0.15 }}
-                  transition={{ delay: 0.6, duration: 1 }}
-                >
-                  Code
-                </motion.h2>
+              <div className="flex justify-between bp-mono text-[10px] text-muted-foreground mb-4">
+                <span>FIG. A — SIDE ELEVATION</span>
+                <span className="text-destructive">REV 2026</span>
               </div>
-
-              {homeContent?.hero_image && (
-                <motion.div
-                  className="absolute inset-0 flex items-center justify-center"
-                  initial={{ opacity: 0, y: 40 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.8 }}
-                >
-                  <img
-                    src={homeContent.hero_image}
-                    alt="Profile"
-                    className="w-full h-full object-contain filter drop-shadow-2xl"
-                  />
-                </motion.div>
+              {homeContent?.hero_image ? (
+                <img src={homeContent.hero_image} alt="Profile" className="w-full h-[420px] object-contain" />
+              ) : (
+                <svg viewBox="0 0 600 260" className="w-full h-auto text-primary" fill="none" stroke="currentColor" aria-hidden="true">
+                  <path className="bp-draw" strokeWidth="2" d="M40 190 L60 150 Q90 130 150 125 L230 85 Q280 62 360 66 L430 72 Q470 78 500 112 L545 126 Q568 134 570 160 L570 190 L520 190 M410 190 L200 190 M90 190 L40 190" />
+                  <path className="bp-draw" strokeWidth="1.5" d="M240 90 L255 125 L470 120 Q450 90 420 82 Z M262 125 L360 124" />
+                  <circle className="bp-draw" cx="145" cy="190" r="38" strokeWidth="2" />
+                  <circle cx="145" cy="190" r="16" strokeWidth="1" opacity=".6" />
+                  <circle className="bp-draw" cx="465" cy="190" r="38" strokeWidth="2" />
+                  <circle cx="465" cy="190" r="16" strokeWidth="1" opacity=".6" />
+                  <g stroke="hsl(var(--bp-cyan))" strokeWidth="1" opacity=".7" strokeDasharray="4 4">
+                    <line x1="145" y1="240" x2="465" y2="240" />
+                    <line x1="145" y1="232" x2="145" y2="248" />
+                    <line x1="465" y1="232" x2="465" y2="248" />
+                    <line x1="20" y1="66" x2="20" y2="228" />
+                  </g>
+                  <text x="270" y="256" fill="hsl(var(--bp-cyan))" stroke="none" fontSize="11" fontFamily="IBM Plex Mono">WHEELBASE 2,975 MM</text>
+                  <path d="M500 120 L560 40" stroke="hsl(var(--bp-red))" strokeWidth="1" />
+                  <text x="520" y="34" fill="hsl(var(--bp-red))" stroke="none" fontSize="11" fontFamily="IBM Plex Mono">AERO</text>
+                </svg>
               )}
+              <div className="bp-stripe mt-4" />
             </motion.div>
           </div>
         </div>
 
-        {/* Scroll Down */}
         <motion.div
-          className="absolute bottom-10 left-1/2 transform -translate-x-1/2 cursor-pointer"
-          style={{ zIndex: 20 }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            repeat: Infinity,
-            repeatType: 'reverse',
-            duration: 1.5,
-            ease: 'easeInOut',
-            delay: 2,
-          }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ repeat: Infinity, duration: 1.8 }}
           aria-label="Scroll down"
         >
-          <ChevronDown className="w-8 h-8 text-white" />
+          <ChevronDown className="w-7 h-7 text-primary" />
         </motion.div>
       </section>
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ThemeToggle } from '@/components/ui/theme-toggle';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { Menu, X, User, LogOut } from 'lucide-react';
@@ -52,13 +51,15 @@ const Header = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="fixed top-4 left-1/2 z-50 -translate-x-1/2 w-[95%] max-w-7xl rounded-xl bg-background/70 backdrop-blur-md shadow-lg border border-border">
+    <header className="fixed top-0 inset-x-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+      <div className="bp-stripe" />
+      <div className="max-w-7xl mx-auto">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
          <Link 
   to="/" 
-  className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent font-logo tracking-wide hover:opacity-80 transition duration-300"
+  className="flex items-center gap-2 text-lg font-bold uppercase tracking-[0.2em] text-foreground hover:text-primary transition-colors" style={{ fontFamily: '"Space Grotesk", sans-serif' }}
 >
   {settings.site_name}
 </Link>
@@ -73,7 +74,7 @@ const Header = () => {
                   href={item.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium transition-colors hover:text-primary text-muted-foreground"
+                  className="bp-mono text-[11px] py-1 border-b-2 transition-colors hover:text-primary text-muted-foreground border-transparent"
                 >
                   {item.label}
                 </a>
@@ -81,10 +82,10 @@ const Header = () => {
                 <Link
                   key={item.id}
                   to={item.href}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${
+                  className={`bp-mono text-[11px] py-1 border-b-2 transition-colors hover:text-primary ${
                     isActive(item.href) 
-                      ? 'text-primary' 
-                      : 'text-muted-foreground'
+                      ? 'text-primary border-primary' 
+                      : 'text-muted-foreground border-transparent'
                   }`}
                 >
                   {item.label}
@@ -95,7 +96,6 @@ const Header = () => {
 
           {/* Right side actions */}
           <div className="flex items-center space-x-2">
-            <ThemeToggle />
 
             {user && (
               <DropdownMenu>
@@ -169,6 +169,7 @@ const Header = () => {
             </nav>
           </div>
         )}
+      </div>
       </div>
     </header>
   );

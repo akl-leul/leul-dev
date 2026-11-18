@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,7 +11,7 @@ All colors MUST be HSL.
     font-family: "Dancing Script", cursive;
 }
 
-@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+
 
 @layer base {
     :root {
@@ -354,3 +355,72 @@ All colors MUST be HSL.
         50% { transform: scale(1.02); }
     }
 }
+
+/* ===== Blueprint public identity (scoped to public layout) ===== */
+@layer base {
+    .blueprint {
+        --background: 215 81% 13%;      /* #061B3A */
+        --foreground: 211 100% 96%;     /* #EAF4FF */
+        --card: 215 79% 18%;            /* #0A2854 */
+        --card-foreground: 211 100% 96%;
+        --popover: 215 79% 18%;
+        --popover-foreground: 211 100% 96%;
+        --primary: 212 100% 54%;        /* #1685FF */
+        --primary-foreground: 211 100% 96%;
+        --secondary: 215 79% 18%;
+        --secondary-foreground: 211 100% 96%;
+        --muted: 215 70% 16%;
+        --muted-foreground: 211 41% 73%; /* #9DB8D5 */
+        --accent: 210 69% 28%;
+        --accent-foreground: 211 100% 96%;
+        --destructive: 351 81% 49%;     /* #E31837 */
+        --destructive-foreground: 211 100% 96%;
+        --border: 210 46% 36%;          /* #315B86 */
+        --input: 210 46% 36%;
+        --ring: 212 100% 54%;
+        --radius: 0.25rem;
+        --bp-grid: 210 69% 28%;         /* #16477A */
+        --bp-cyan: 199 100% 64%;        /* #48C8FF */
+        --bp-red: 351 81% 49%;
+        background-color: hsl(var(--background));
+        color: hsl(var(--foreground));
+        background-image:
+            linear-gradient(hsl(var(--bp-grid) / 0.35) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--bp-grid) / 0.35) 1px, transparent 1px),
+            linear-gradient(hsl(var(--bp-grid) / 0.15) 1px, transparent 1px),
+            linear-gradient(90deg, hsl(var(--bp-grid) / 0.15) 1px, transparent 1px);
+        background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+        background-attachment: fixed;
+    }
+    .blueprint h1, .blueprint h2, .blueprint h3, .blueprint h4 {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        letter-spacing: -0.01em;
+    }
+    .blueprint .bg-background, .blueprint .bg-card { background-color: hsl(var(--card) / 0.85); }
+    .blueprint main > section.bg-background, .blueprint main section.bg-muted\/30 { background-color: transparent; }
+}
+
+@layer components {
+    .bp-mono {
+        font-family: "IBM Plex Mono", monospace;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+    }
+    .bp-label {
+        @apply bp-mono text-xs text-primary;
+    }
+    .bp-corners { position: relative; }
+    .bp-corners::before, .bp-corners::after {
+        content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none;
+        border-color: hsl(var(--bp-cyan, var(--primary)));
+    }
+    .bp-corners::before { top: -1px; left: -1px; border-top: 2px solid; border-left: 2px solid; }
+    .bp-corners::after { bottom: -1px; right: -1px; border-bottom: 2px solid; border-right: 2px solid; }
+    .bp-glow { transition: box-shadow .25s, border-color .25s; }
+    .bp-glow:hover { border-color: hsl(var(--primary)); box-shadow: 0 0 0 1px hsl(var(--primary) / .4), 0 0 24px -6px hsl(var(--primary) / .6); }
+    .bp-stripe { height: 3px; background: linear-gradient(90deg, hsl(var(--bp-cyan, var(--primary))) 0 33%, hsl(var(--primary)) 33% 66%, hsl(var(--bp-red, var(--destructive))) 66%); }
+    .bp-draw { stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: bpDraw 2.8s ease-out forwards; }
+    @keyframes bpDraw { to { stroke-dashoffset: 0; } }
+    @media (prefers-reduced-motion: reduce) { .bp-draw { animation: none; stroke-dashoffset: 0; } }
+}
+.blueprint .rounded-xl, .blueprint .rounded-lg { border-radius: var(--radius); }

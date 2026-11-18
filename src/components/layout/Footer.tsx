@@ -89,7 +89,7 @@ const Footer = () => {
             <div className="col-span-1 md:col-span-2">
                    <Link 
   to="/" 
-  className="text-2xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 bg-clip-text text-transparent font-logo tracking-wide hover:opacity-80 transition duration-300"
+  className="flex items-center gap-2 text-lg font-bold uppercase tracking-[0.2em] text-foreground hover:text-primary transition-colors" style={{ fontFamily: '"Space Grotesk", sans-serif' }}
 >
   Leul Dev
 </Link>
