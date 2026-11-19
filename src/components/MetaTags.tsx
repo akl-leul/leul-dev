@@ -1,4 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
+import { useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { getShareMetadata, HOME_IMAGE, ShareContent } from '@/lib/share-metadata';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
 
 interface MetaTagsProps {
@@ -19,20 +23,44 @@ export const MetaTags = ({
   url 
 }: MetaTagsProps) => {
   const { settings } = useSiteSettings();
+  const { pathname } = useLocation();
+  const [page, setPage] = useState<{ path: string; content: ShareContent } | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setPage(null);
+    const load = async () => {
+      let content: ShareContent | undefined;
+      const project = pathname.match(/^\/projects\/([^/]+)\/?$/);
+      const article = pathname.match(/^\/blog\/([^/]+)\/?$/);
+      const dynamic = pathname.match(/^\/page\/([^/]+)\/?$/);
+      if (project) {
+        const { data } = await supabase.from('projects').select('title, description, image_url').eq('id', project[1]).maybeSingle();
+        if (data) content = { title: `${data.title} — Leul Ayfokru`, description: data.description, image: data.image_url };
+      } else if (article) {
+        const { data } = await supabase.from('posts').select('title, excerpt, featured_image').eq('slug', decodeURIComponent(article[1])).eq('published', true).maybeSingle();
+        if (data) content = { title: `${data.title} — Leul Ayfokru`, description: data.excerpt, image: data.featured_image, type: 'article' };
+      } else if (dynamic) {
+        const { data } = await supabase.from('dynamic_pages').select('title, meta_description, password').eq('slug', decodeURIComponent(dynamic[1])).eq('is_published', true).maybeSingle();
+        if (data && !data.password) content = { title: `${data.title} — Leul Ayfokru`, description: data.meta_description };
+      }
+      if (active && content) setPage({ path: pathname, content });
+    };
+    void load().catch(() => { /* Keep the safe page fallback when content is unavailable. */ });
+    return () => { active = false; };
+  }, [pathname]);
+
+  const metadata = getShareMetadata(pathname, {
+    ...(page?.path === pathname ? page.content : {}),
+    ...(title ? { title } : {}),
+    ...(description ? { description } : {}),
+    ...(ogImage ? { image: ogImage } : {}),
+  });
 
   useEffect(() => {
     // Use provided props or fall back to settings
-    const finalTitle = title || settings.site_name;
-    const finalDescription = description || settings.site_description;
     const finalKeywords = keywords || settings.meta_keywords;
-    const finalOgImage = ogImage || settings.og_image_url;
     const finalFavicon = favicon || settings.favicon_url;
-    const finalUrl = url || settings.site_url || window.location.origin;
-
-    // Update document title
-    if (finalTitle) {
-      document.title = finalTitle;
-    }
 
     // Update or create meta tags
     const updateMetaTag = (name: string, content: string, property?: string) => {
@@ -62,32 +90,8 @@ export const MetaTags = ({
     };
 
     // Update basic meta tags
-    updateMetaTag('description', finalDescription);
     updateMetaTag('keywords', finalKeywords);
     updateMetaTag('author', 'Leul-ayfokru');
-
-    // Update Open Graph tags
-    updateMetaTag('og:title', finalTitle, 'og:title');
-    updateMetaTag('og:description', finalDescription, 'og:description');
-    updateMetaTag('og:image', finalOgImage, 'og:image');
-    updateMetaTag('og:url', finalUrl, 'og:url');
-    updateMetaTag('og:type', 'website', 'og:type');
-
-    // Update Twitter Card tags
-    updateMetaTag('twitter:title', finalTitle, 'twitter:title');
-    updateMetaTag('twitter:description', finalDescription, 'twitter:description');
-    updateMetaTag('twitter:image', finalOgImage, 'twitter:image');
-    updateMetaTag('twitter:card', 'summary_large_image', 'twitter:card');
-    updateMetaTag('twitter:site', '@Leul_et', 'twitter:site');
-
-    // Update canonical URL
-    let canonicalLink = document.querySelector('link[rel="canonical"]') as HTMLLinkElement;
-    if (!canonicalLink) {
-      canonicalLink = document.createElement('link');
-      canonicalLink.setAttribute('rel', 'canonical');
-      document.head.appendChild(canonicalLink);
-    }
-    canonicalLink.setAttribute('href', finalUrl);
 
     // Update favicon
     if (finalFavicon) {
@@ -116,5 +120,24 @@ export const MetaTags = ({
 
   }, [title, description, keywords, ogImage, favicon, url, settings]);
 
-  return null; // This component doesn't render anything
+  return (
+    <Helmet>
+      <title>{metadata.title}</title>
+      <meta name="description" content={metadata.description} />
+      <link rel="canonical" href={metadata.url} />
+      <meta property="og:title" content={metadata.title} />
+      <meta property="og:description" content={metadata.description} />
+      <meta property="og:url" content={metadata.url} />
+      <meta property="og:type" content={metadata.type} />
+      <meta property="og:image" content={metadata.image} />
+      <meta property="og:image:alt" content={metadata.title} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={metadata.title} />
+      <meta name="twitter:description" content={metadata.description} />
+      <meta name="twitter:image" content={metadata.image} />
+      <meta name="twitter:image:alt" content={metadata.title} />
+      {metadata.image === HOME_IMAGE && <meta property="og:image:width" content="1200" />}
+      {metadata.image === HOME_IMAGE && <meta property="og:image:height" content="630" />}
+    </Helmet>
+  );
 };

@@ -17,6 +17,7 @@ import { format } from 'date-fns';
 import { motion, Variants, useReducedMotion } from 'framer-motion';
 import { SITE_OWNER_ID } from '@/config/owner';
 import HeroPortrait3D from '@/components/HeroPortrait3D';
+import CountUp from '@/components/CountUp';
 
 interface Project {
   id: string;
@@ -140,10 +141,10 @@ const Home = () => {
               className="flex flex-col gap-5 md:gap-7 min-w-0"
             >
               <dl className="flex gap-8 md:gap-10" aria-label="Quick stats">
-                {[['+' , `${counts.projects}`, 'Projects built'], ['+', `${counts.posts}`, 'Articles written']].map(([s, n, l]) => (
-                  <div key={l} className="flex flex-col-reverse">
-                    <dt className="bp-mono text-[10px] tracking-widest text-muted-foreground mt-1 uppercase">{l}</dt>
-                    <dd className="text-[clamp(1.5rem,min(4.5vw,5vh),2.75rem)] font-light text-foreground leading-none"><sup aria-hidden="true" className="text-primary text-[0.6em] mr-0.5">{s}</sup>{n}<span className="sr-only"> or more</span></dd>
+                {[{ value: counts.projects, label: 'Projects built' }, { value: counts.posts, label: 'Articles written' }].map(({ value, label }) => (
+                  <div key={label} className="flex flex-col-reverse min-w-0">
+                    <dt className="bp-mono text-[10px] tracking-widest text-muted-foreground mt-1 uppercase">{label}</dt>
+                    <dd className="text-3xl md:text-4xl font-light text-foreground leading-none"><CountUp value={value} /></dd>
                   </div>
                 ))}
               </dl>

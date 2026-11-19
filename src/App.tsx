@@ -19,10 +19,12 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/AdminPage";
 import DynamicPage from "./pages/DynamicPage";
 import NotFound from "./pages/NotFound";
+import { HelmetProvider } from 'react-helmet-async';
 
 const queryClient = new QueryClient();
 
 const App = () => (
+  <HelmetProvider>
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
@@ -57,6 +59,7 @@ const App = () => (
       </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
