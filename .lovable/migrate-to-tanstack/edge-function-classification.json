@@ -1,0 +1,1 @@
+{"functions":[{"name":"send-email-reply","classification":"unknown","signal":"no internal call sites; Deno imports and Resend secret on Supabase","outcome":"left"}]}

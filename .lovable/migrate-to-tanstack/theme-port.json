@@ -1,0 +1,10 @@
+{"customizations":[
+{"token":"HSL shadcn semantic color tokens","source":"src/index.css","reappliedIn":"src/styles.css"},
+{"token":"sidebar color tokens","source":"tailwind.config.ts","reappliedIn":"src/styles.css"},
+{"token":"radius scale","source":"tailwind.config.ts","reappliedIn":"src/styles.css"},
+{"token":"centered container","source":"tailwind.config.ts","reappliedIn":"src/styles.css"},
+{"token":"typography plugin","source":"tailwind.config.ts","reappliedIn":"src/styles.css"},
+{"token":"admin and glass component styles","source":"src/index.css","reappliedIn":"src/styles.css"},
+{"token":"animation and page-builder utilities","source":"src/index.css","reappliedIn":"src/styles.css"},
+{"token":"blueprint monochrome theme and utilities","source":"src/index.css","reappliedIn":"src/styles.css"}
+]}

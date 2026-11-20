@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams } from "@/lib/router-compat";
 import { Card3D, Card3DContent, Card3DHeader, Card3DTitle } from "@/components/ui/card-3d";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink, Github, Star, ArrowLeft, ChevronLeft, ChevronRight, Expand } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { ProjectFeedback } from "@/components/ProjectFeedback";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
 import { ImageLightbox } from "@/components/ui/image-lightbox";

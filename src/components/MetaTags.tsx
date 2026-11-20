@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from '@/lib/router-compat';
 import { supabase } from '@/integrations/supabase/client';
 import { getShareMetadata, HOME_IMAGE, ShareContent } from '@/lib/share-metadata';
 import { useSiteSettings } from '@/hooks/useSiteSettings';
@@ -120,24 +119,6 @@ export const MetaTags = ({
 
   }, [title, description, keywords, ogImage, favicon, url, settings]);
 
-  return (
-    <Helmet>
-      <title>{metadata.title}</title>
-      <meta name="description" content={metadata.description} />
-      <link rel="canonical" href={metadata.url} />
-      <meta property="og:title" content={metadata.title} />
-      <meta property="og:description" content={metadata.description} />
-      <meta property="og:url" content={metadata.url} />
-      <meta property="og:type" content={metadata.type} />
-      <meta property="og:image" content={metadata.image} />
-      <meta property="og:image:alt" content={metadata.title} />
-      <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={metadata.title} />
-      <meta name="twitter:description" content={metadata.description} />
-      <meta name="twitter:image" content={metadata.image} />
-      <meta name="twitter:image:alt" content={metadata.title} />
-      {metadata.image === HOME_IMAGE && <meta property="og:image:width" content="1200" />}
-      {metadata.image === HOME_IMAGE && <meta property="og:image:height" content="630" />}
-    </Helmet>
-  );
+  void metadata;
+  return null;
 };

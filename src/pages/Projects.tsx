@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { usePageView } from "@/hooks/usePageView";
 import { ExternalLink, Github, Search, Star, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link } from "@/lib/router-compat";
 import { SITE_OWNER_ID } from "@/config/owner";
 import { Card, CardContent } from "@/components/ui/card";
 import {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from '@/lib/router-compat';
 import { Github, Linkedin, Mail, ArrowUpRight, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useReducedMotion } from 'framer-motion';
