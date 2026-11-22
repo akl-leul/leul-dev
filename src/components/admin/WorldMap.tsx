@@ -320,8 +320,8 @@ export function WorldMap({ pageViews }: WorldMapProps) {
           >
             <ZoomableGroup zoom={zoom} minZoom={1} maxZoom={8}>
               <Geographies geography={geoUrl}>
-                {({ geographies }) =>
-                  geographies.map((geo) => {
+                {({ geographies }: { geographies: any[] }) =>
+                  geographies.map((geo: any) => {
                     const isSelected = selectedCountry === geo.properties.name;
                     return (
                       <Geography

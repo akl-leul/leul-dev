@@ -196,7 +196,7 @@ const About = () => {
   );
 };
 
-const SocialButton = ({ url, icon }: { url: string; icon: JSX.Element }) => (
+const SocialButton = ({ url, icon }: { url: string; icon: React.ReactElement }) => (
   <Button variant="outline" size="icon" asChild>
     <a href={url} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 transition-colors">
       {icon}

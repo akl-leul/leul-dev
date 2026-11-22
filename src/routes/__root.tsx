@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { createRootRouteWithContext, HeadContent, Link, Outlet, Scripts, useRouter } from "@tanstack/react-router";
+import { type ErrorComponentProps, createRootRouteWithContext, HeadContent, Link, Outlet, Scripts, useRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -63,7 +63,7 @@ function RootComponent() {
   );
 }
 
-function RootError({ error, reset }: { error: Error; reset: () => void }) {
+function RootError({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   useEffect(() => {
     console.error(error);

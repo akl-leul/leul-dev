@@ -1,4 +1,4 @@
-import { describe, expect, test } from 'bun:test';
+import { describe, expect, test } from 'vitest';
 import { getShareMetadata } from './share-metadata';
 import { countAtProgress } from './count-up';
 

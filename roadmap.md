@@ -4,4 +4,4 @@
 - [ ] Animated totals from zero with reduced-motion support.
 - [ ] Distinct expandable experience timeline.
 - [ ] Creative monochrome footer.
-- [ ] Verify desktop/mobile behavior and save changes.
+- [ ] Verify desktop/mobile behavior and save changes.- [ ] Skills page: simple list only (no proficiency/years), 12px text, cleaner layout.
