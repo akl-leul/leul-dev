@@ -42,7 +42,7 @@ const Skills = () => {
                   <h2 id={`cat-${i}`} className="text-[12px] font-semibold uppercase tracking-wider text-foreground">{category}</h2>
                   <span className="text-[12px] text-muted-foreground">{list.length}</span>
                 </div>
-                <ul className="flex flex-wrap gap-2">
+                <ul className="flex flex-wrap content-start items-start gap-2">
                   {list.map((s) => (
                     <li key={s.id} className="text-[12px] text-foreground border border-border px-3 py-1.5">{s.name}</li>
                   ))}

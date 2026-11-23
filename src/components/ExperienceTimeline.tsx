@@ -43,7 +43,7 @@ const ExperienceTimeline = ({ experiences, formatDate }: { experiences: Experien
               aria-controls={`experience-${exp.id}`}
               className="w-full h-auto whitespace-normal justify-between text-left rounded-none px-0 py-6 md:py-8 hover:bg-transparent gap-5"
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex w-full items-start justify-between gap-4">
                 <div>
                   <h3 className="text-xl md:text-2xl font-medium text-foreground">{exp.role}</h3>
                   <p className="text-muted-foreground text-sm mt-1 flex flex-wrap items-center gap-2">
