@@ -140,19 +140,19 @@ export function FeaturedProjectsWithFeedback() {
         {projects.map((project) => (
           <Card key={project.id} className="bp-card">
             {project.image_url && (
-              <div className="aspect-video overflow-hidden rounded-t-lg">
+              <Link to={`/projects/${project.id}`} aria-label={`Open ${project.title}`} className="block aspect-video overflow-hidden rounded-t-lg">
                 <img
                   src={project.image_url}
                   alt={project.title}
                   className="w-full h-full object-cover"
                 />
-              </div>
+              </Link>
             )}
 
             <CardHeader>
               <div className="flex items-start justify-between">
                 <CardTitle className="text-lg">
-                  {project.title}
+                  <Link to={`/projects/${project.id}`} className="hover:underline underline-offset-4">{project.title}</Link>
                   {project.featured && (
                     <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />
                   )}

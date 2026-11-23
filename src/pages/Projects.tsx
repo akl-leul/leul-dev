@@ -173,15 +173,17 @@ const Projects = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentProjects.map((project) => (
                 <Card3D key={project.id} className="bp-card overflow-hidden">
-                  <Card3DImage
-                    src={project.image_url || undefined}
-                    alt={project.title}
-                  />
+                  <Link to={`/projects/${project.id}`} aria-label={`Open ${project.title}`} className="block">
+                    <Card3DImage
+                      src={project.image_url || undefined}
+                      alt={project.title}
+                    />
+                  </Link>
 
                   <Card3DHeader>
                     <div className="flex items-start justify-between">
                       <Card3DTitle>
-                        {project.title}
+                        <Link to={`/projects/${project.id}`} className="hover:underline underline-offset-4">{project.title}</Link>
                         {project.featured && (
                           <Star className="inline ml-2 h-4 w-4 text-yellow-500 fill-current" />
                         )}

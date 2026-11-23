@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { usePageView } from '@/hooks/usePageView';
 import { SITE_OWNER_ID } from '@/config/owner';
+import { getSkillIcon } from '@/lib/skill-icons';
 
 interface Skill { id: string; name: string; category: string; }
 
@@ -43,9 +44,9 @@ const Skills = () => {
                   <span className="text-[12px] text-muted-foreground">{list.length}</span>
                 </div>
                 <ul className="flex flex-wrap content-start items-start gap-2">
-                  {list.map((s) => (
-                    <li key={s.id} className="text-[12px] text-foreground border border-border px-3 py-1.5">{s.name}</li>
-                  ))}
+                  {list.map((s) => { const Icon = getSkillIcon(s.name); return (
+                    <li key={s.id} className="inline-flex items-center gap-2 text-[12px] text-foreground border border-border px-3 py-1.5"><Icon aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />{s.name}</li>
+                  ); })}
                 </ul>
               </section>
             ))}

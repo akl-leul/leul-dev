@@ -155,14 +155,29 @@ const Home = () => {
                 </h1>
                 <p className="mt-4 md:mt-6 text-base md:text-lg text-muted-foreground flex items-center gap-3">
                   <span aria-hidden="true" className="h-px w-8 bg-primary shrink-0" />
-                  It's {homeContent?.name || 'Leul Ayfokru'} — I build scalable, efficient applications
+                  I'm {homeContent?.name || 'Leul Ayfokru'} — I turn your idea into a product people use.
                 </p>
-                {homeContent?.tagline && (
-                  <p className="mt-2 text-sm text-muted-foreground max-w-md pl-11">{homeContent.tagline}</p>
-                )}
-                <Link to="/projects" aria-label="See my works: browse all projects" className="mt-5 md:mt-7 ml-11 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary inline-flex items-center gap-2 text-sm uppercase tracking-widest text-foreground border-b border-primary pb-1 hover:text-primary transition-colors">
+                <ul aria-label="Services" className="mt-4 md:mt-5 pl-11 grid gap-2 max-w-md">
+                  {[
+                    { n: '01', t: 'Full-stack web apps', d: 'Fast sites, dashboards & APIs' },
+                    { n: '02', t: 'Telegram bots', d: 'Shops, bookings, payments & automation' },
+                    { n: '03', t: 'Mobile apps', d: 'iOS & Android from one codebase' },
+                  ].map((s) => (
+                    <li key={s.n} className="flex items-baseline gap-3 border-l border-border pl-3">
+                      <span className="bp-mono text-[10px] text-muted-foreground">{s.n}</span>
+                      <span className="text-sm text-foreground font-medium">{s.t}</span>
+                      <span className="text-xs text-muted-foreground hidden sm:inline truncate">— {s.d}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-5 md:mt-6 ml-11 flex flex-wrap items-center gap-6">
+                <Link to="/contact" aria-label="Start a project: contact me" className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary inline-flex items-center gap-2 text-sm uppercase tracking-widest bg-primary text-primary-foreground px-4 py-2 hover:opacity-90 transition-opacity">
+                  Start a project <ArrowRight aria-hidden="true" className="h-4 w-4" />
+                </Link>
+                <Link to="/projects" aria-label="See my works: browse all projects" className=" focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary inline-flex items-center gap-2 text-sm uppercase tracking-widest text-foreground border-b border-primary pb-1 hover:text-primary transition-colors">
                   See my works <ArrowRight aria-hidden="true" className="h-4 w-4" />
                 </Link>
+                </div>
               </div>
 
               <a href="#featured" aria-label="Scroll down to featured projects" className="focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary hidden md:inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -213,17 +228,17 @@ const Home = () => {
                 <div key={project.id}>
                   <Card className="bp-card overflow-hidden border border-border">
                     {project.image_url && (
-                      <div className="aspect-video overflow-hidden">
+                      <Link to={`/projects/${project.id}`} aria-label={`Open ${project.title}`} className="block aspect-video overflow-hidden">
                         <img
                           src={project.image_url}
                           alt={`${project.title} project screenshot`}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
-                      </div>
+                      </Link>
                     )}
                     <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold mb-2 text-foreground">{project.title}</h3>
+                      <h3 className="text-xl font-semibold mb-2 text-foreground"><Link to={`/projects/${project.id}`} className="hover:underline underline-offset-4">{project.title}</Link></h3>
                       <p className="text-muted-foreground mb-4 line-clamp-2">{project.description}</p>
                       <div className="flex flex-wrap gap-2 mb-4">
                         {project.tech_stack.slice(0, 3).map((tech) => (
