@@ -52,7 +52,7 @@ const HeroPortrait3D = () => {
           src="/leul-portrait.png"
           alt=""
           aria-hidden="true"
-          style={{ transform: 'translateZ(40px)' }}
+          style={{ transform: 'translateZ(40px)', filter: 'grayscale(1) contrast(1.1)' }}
           className="relative w-full h-auto drop-shadow-[0_30px_40px_hsl(var(--primary)/0.45)]"
         />
         {/* Front accent */}

@@ -132,7 +132,7 @@ const Home = () => {
           <span className="bp-mono text-[10px] tracking-[0.3em] text-muted-foreground [writing-mode:vertical-rl] rotate-180">{new Date().getFullYear()}</span>
         </div>
 
-        <div className="relative w-full max-w-7xl mx-auto px-6 md:pl-24 lg:pl-28 pt-20 pb-6 z-10">
+        <div className="relative w-full max-w-7xl mx-auto px-6 md:pl-24 lg:pl-28 pt-28 md:pt-36 pb-6 z-10">
           <div className="grid md:grid-cols-[1.05fr_1fr] gap-6 md:gap-8 items-center">
             <motion.div
               initial={reduceMotion ? false : { opacity: 0, x: -30 }}

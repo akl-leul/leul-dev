@@ -157,6 +157,7 @@ export function ImageCropUpload({
             className="max-w-md rounded-lg border"
           />
           <Button
+ type="button"
             variant="destructive"
             size="sm"
             className="absolute top-2 right-2"
@@ -169,6 +170,7 @@ export function ImageCropUpload({
 
       <div className="flex gap-2">
         <Button
+ type="button"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
         >
@@ -209,10 +211,10 @@ export function ImageCropUpload({
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCropDialogOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setCropDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleCropComplete} disabled={uploading}>
+            <Button type="button" onClick={handleCropComplete} disabled={uploading}>
               <CropIcon className="h-4 w-4 mr-2" />
               {uploading ? 'Uploading...' : 'Crop & Upload'}
             </Button>
