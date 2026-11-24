@@ -166,15 +166,20 @@ const About = () => {
                 <CardTitle>My Story</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed mb-4">
-                  Full stack website and application developer
+                <p className="text-foreground text-lg font-medium leading-snug mb-4">
+                  I build things for the web, for Telegram and for your pocket — and I genuinely enjoy it.
                 </p>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  I'm a passionate full-stack developer with a love for creating elegant solutions to complex problems. With several years of experience in web development, I enjoy working with modern technologies and frameworks to build scalable, user-friendly applications.
-                  
-                  {"\n\n"}
-                  When I'm not coding, you can find me exploring new technologies, contributing to open-source projects, or sharing my knowledge through blog posts and tutorials. I believe in continuous learning and staying up-to-date with the latest trends in web development.
-                </p>
+                <div className="space-y-4 text-muted-foreground leading-relaxed">
+                  <p>
+                    It started with curiosity: how does a button on a screen actually <em>do</em> something? That question turned into years of building websites, apps and bots for real people with real problems. Today I take messy ideas and turn them into products that feel simple to use.
+                  </p>
+                  <p>
+                    I care about the small things — a page that loads fast, a form that doesn't confuse you, a bot that answers like it knows you. If you've got an idea you keep thinking about, I'd love to help you build it.
+                  </p>
+                  <p>
+                    Off the keyboard, I'm usually trying out something new, writing about what I've learned, or sketching the next thing I want to make.
+                  </p>
+                </div>
               </CardContent>
             </Card>
           </div>
